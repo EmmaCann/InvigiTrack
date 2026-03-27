@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find src:*)",
+      "Bash(find . -path ./node_modules -prune -o -type f \\\\\\(-name *auth* -o -name *login* -o -name *register* \\\\\\) -print)",
+      "Bash(find node_modules/next/dist/docs -type f -name *.md)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

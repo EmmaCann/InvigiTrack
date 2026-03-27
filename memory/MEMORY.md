@@ -1,0 +1,2 @@
+- [user_background.md](user_background.md) — User background: Laravel/MySQL dev learning Next.js stack
+- [project_auth.md](project_auth.md) — Auth system implementation decisions

@@ -1,10 +1,12 @@
-import { createClient } from "@supabase/supabase-js"
+import { createBrowserClient } from "@supabase/ssr"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-
-export const supabase = createClient(
-  supabaseUrl,
-  supabasePublishableKey
-)
+/**
+ * Client Supabase per i Client Components (browser).
+ * Viene ricreato ad ogni chiamata - @supabase/ssr gestisce internamente il singleton.
+ */
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  )
+}
