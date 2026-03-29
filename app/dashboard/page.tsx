@@ -15,28 +15,20 @@
  *   }
  */
 
-import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/data/auth"
+import { getProfileByEmail } from "@/lib/data/profiles"
 import { OnboardingDialog } from "@/components/auth/onboarding-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { logout } from "@/app/actions/auth"
-import type { Profile } from "@/types/database"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  // 1. Chi è loggato? → DAL auth
+  const user = await getCurrentUser()
 
-  // 1. Utente autenticato (garantito dal layout, ma lo riprendiamo)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // 2. Cerca il profilo nel DB per email
+  // 2. Ha un profilo nel DB? → DAL profiles
   // Analogia Laravel: Profile::where('email', $user->email)->first()
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("email", user!.email!)
-    .single<Profile>()
+  const profile = user ? await getProfileByEmail(user.email!) : null
 
   // 3. Nessun profilo = primo login → mostra onboarding
   if (!profile) {

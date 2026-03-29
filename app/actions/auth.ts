@@ -13,6 +13,8 @@
 
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/data/auth"
+import { insertProfile } from "@/lib/data/profiles"
 import type { OnboardingData } from "@/types/database"
 
 // ─── LOGIN con email e password ─────────────────────────────────────────────
@@ -66,29 +68,20 @@ export async function logout() {
 // ─── CREA PROFILO (onboarding primo login) ───────────────────────────────────
 
 export async function createProfile(data: OnboardingData) {
-  const supabase = await createClient()
+  // Chi è loggato? → DAL auth
+  const user = await getCurrentUser()
 
-  // Recuperiamo l'utente autenticato
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  if (!user) {
     return { error: "Utente non autenticato" }
   }
 
-  // Inseriamo il profilo nella tabella "profiles"
-  // Analogia Laravel: Profile::create([...])
-  const { error } = await supabase.from("profiles").insert({
-    email: user.email!,
-    full_name: data.full_name,
-    role_type: data.role_type,
-    default_hourly_rate: data.default_hourly_rate,
-  })
+  // Inserisce nel DB → DAL profiles
+  // Questa action non sa nulla di Supabase: sa solo che chiede
+  // di salvare un profilo e riceve ok o errore.
+  const result = await insertProfile(user.email!, data)
 
-  if (error) {
-    return { error: error.message }
+  if (result.error) {
+    return { error: result.error }
   }
 
   return { success: true }

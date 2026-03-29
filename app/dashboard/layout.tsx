@@ -10,20 +10,17 @@
  */
 
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/data/auth"
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
   // Doppio controllo: se per qualche motivo il middleware non ha rediretto
+  // Passiamo dal DAL invece di chiamare Supabase direttamente
+  const user = await getCurrentUser()
+
   if (!user) {
     redirect("/auth/login")
   }
