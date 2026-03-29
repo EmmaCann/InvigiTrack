@@ -1,17 +1,19 @@
 /**
  * LAYOUT DELLA DASHBOARD — Server Component.
  *
- * Questo layout avvolge TUTTE le pagine dentro /dashboard/*.
- * Analogia Blade: @extends('layouts.dashboard')
+ * Gestisce due layout distinti:
+ *
+ *  DESKTOP (≥ md / 768px):
+ *    [Sidebar fissa | Header + contenuto scrollabile]
+ *
+ *  MOBILE (< md):
+ *    [MobileHeader in alto | contenuto | BottomNav in basso]
  *
  * Responsabilità:
- *  1. Verifica che l'utente sia loggato (defense in depth)
- *  2. Fetcha il profilo UNA volta sola per tutta la dashboard
- *  3. Renderizza la struttura visiva: Sidebar | Header + contenuto
- *
- * Il profilo viene passato come prop all'Header (Client Component).
- * In questo modo l'Header conosce il nome dell'utente
- * senza dover fare un'altra chiamata al DB.
+ *  1. Verifica autenticazione
+ *  2. Fetcha profilo una sola volta per tutta la dashboard
+ *  3. Se nessun profilo → mostra solo i children (OnboardingDialog)
+ *  4. Se profilo trovato → layout completo responsive
  */
 
 import { redirect } from "next/navigation"
@@ -19,40 +21,72 @@ import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileByEmail } from "@/lib/data/profiles"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
+import { MobileHeader } from "@/components/layout/mobile-header"
+import { BottomNav } from "@/components/layout/bottom-nav"
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // 1. Utente autenticato?
+  // 1. Autenticazione
   const user = await getCurrentUser()
   if (!user) redirect("/auth/login")
 
-  // 2. Profilo nel DB?
-  //    Lo fetchiamo qui così non dobbiamo rifarlo in ogni pagina figlia
-  //    solo per mostrare nome/avatar nell'header.
+  // 2. Profilo
   const profile = await getProfileByEmail(user.email!)
-  if (!profile) redirect("/dashboard") // torna alla page.tsx che gestisce l'onboarding
 
+  // 3. Nessun profilo = primo login.
+  //    NON facciamo redirect (sarebbe un loop): la page.tsx
+  //    mostrerà l'OnboardingDialog. Renderizziamo solo i children
+  //    centrati sullo schermo.
+  if (!profile) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background p-4">
+        {children}
+      </div>
+    )
+  }
+
+  // 4. Layout completo
   return (
-    // Contenitore a tutta altezza diviso in due colonne:
-    // [sidebar fissa | area principale scrollabile]
-    <div className="flex h-screen overflow-hidden bg-background">
+    /*
+     * h-[100dvh] invece di h-screen:
+     * "dvh" = Dynamic Viewport Height — si adatta alla barra
+     * dell'indirizzo del browser mobile che può comparire/sparire.
+     * "vh" è statico e causa overflow su mobile.
+     */
+    <div className="flex h-[100dvh] overflow-hidden bg-background">
 
-      {/* ── Sidebar ──────────────────────────────────────────────────── */}
-      <Sidebar />
+      {/* ── Sidebar — solo desktop ─────────────────────────────────── */}
+      <div className="hidden md:flex">
+        <Sidebar />
+      </div>
 
-      {/* ── Area destra: header + contenuto ──────────────────────────── */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      {/* ── Colonna destra ────────────────────────────────────────── */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
 
-        {/* Header fisso in cima, riceve il profilo come prop */}
-        <Header profile={profile} />
+        {/* Header desktop */}
+        <div className="hidden md:block">
+          <Header profile={profile} />
+        </div>
 
-        {/* Contenuto della pagina — scrollabile */}
-        <main className="flex-1 overflow-y-auto p-6">
+        {/* Header mobile (logo + hamburger) */}
+        <div className="md:hidden">
+          <MobileHeader profile={profile} />
+        </div>
+
+        {/* Contenuto pagina scrollabile.
+            Su mobile: pb-0 perché BottomNav è fuori dal flusso scroll.
+            Su desktop: padding uniforme. */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
+
+        {/* Bottom nav — solo mobile */}
+        <div className="md:hidden">
+          <BottomNav />
+        </div>
 
       </div>
     </div>
