@@ -4,7 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server"
-import type { Profile, OnboardingData } from "@/types/database"
+import type { Profile, OnboardingData, PlatformRole } from "@/types/database"
 
 // ─── READ ─────────────────────────────────────────────────────────────────────
 
@@ -53,13 +53,15 @@ export async function insertProfile(
   userId: string,
   email: string,
   data: OnboardingData,
+  platformRole: PlatformRole = "user",
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { error } = await supabase.from("profiles").insert({
-    id: userId,   // ← critico: deve matchare auth.uid()
+    id: userId,
     email,
     full_name: data.full_name,
-    role_type: data.role_type,  // può essere null per non-invigilators
+    role_type: data.role_type,
+    platform_role: platformRole,
     default_hourly_rate: data.default_hourly_rate,
   })
   if (error) return { error: error.message }

@@ -9,6 +9,20 @@ import type { WorkCategory } from "@/types/database"
 // ─── READ ─────────────────────────────────────────────────────────────────────
 
 /**
+ * Recupera tutte le categorie (attive e non).
+ * Usato nell'onboarding admin per mostrare tutte le opzioni.
+ */
+export async function getAllCategories(): Promise<WorkCategory[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("work_categories")
+    .select("*")
+    .order("created_at")
+  if (error || !data) return []
+  return data as WorkCategory[]
+}
+
+/**
  * Recupera tutte le categorie attive.
  * Usato nella UI per mostrare le opzioni disponibili.
  */

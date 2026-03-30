@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Loader2 } from "lucide-react"
+import { Loader2, KeyRound } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,14 +14,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { login, register } from "@/app/actions/auth"
 
-// ─── Validazione ─────────────────────────────────────────────────────────────
+// ─── Schemi separati per login e registrazione ───────────────────────────────
 
-const authSchema = z.object({
-  email: z.string().email("Email non valida"),
+const loginSchema = z.object({
+  email:    z.string().email("Email non valida"),
   password: z.string().min(8, "Minimo 8 caratteri"),
 })
 
-type AuthFormValues = z.infer<typeof authSchema>
+const registerSchema = z.object({
+  email:      z.string().email("Email non valida"),
+  password:   z.string().min(8, "Minimo 8 caratteri"),
+  secret_key: z.string().optional(),  // opzionale — se corretta → account admin
+})
+
+type LoginValues    = z.infer<typeof loginSchema>
+type RegisterValues = z.infer<typeof registerSchema>
 
 // ─── Componente ──────────────────────────────────────────────────────────────
 
@@ -29,32 +36,41 @@ export function AuthForm() {
   const [serverError, setServerError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const form = useForm<AuthFormValues>({
-    resolver: zodResolver(authSchema),
+  const loginForm = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   })
 
-  function buildFormData(values: AuthFormValues): FormData {
+  const registerForm = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { email: "", password: "", secret_key: "" },
+  })
+
+  function resetErrors() {
+    setServerError(null)
+  }
+
+  async function handleLogin(values: LoginValues) {
+    setServerError(null)
+    setIsLoading(true)
     const fd = new FormData()
     fd.set("email", values.email)
     fd.set("password", values.password)
-    return fd
-  }
-
-  async function handleLogin(values: AuthFormValues) {
-    setServerError(null)
-    setIsLoading(true)
-    const result = await login(buildFormData(values))
+    const result = await login(fd)
     if (result?.error) {
       setServerError(result.error)
       setIsLoading(false)
     }
   }
 
-  async function handleRegister(values: AuthFormValues) {
+  async function handleRegister(values: RegisterValues) {
     setServerError(null)
     setIsLoading(true)
-    const result = await register(buildFormData(values))
+    const fd = new FormData()
+    fd.set("email", values.email)
+    fd.set("password", values.password)
+    if (values.secret_key) fd.set("secret_key", values.secret_key)
+    const result = await register(fd)
     if (result?.error) {
       setServerError(result.error)
       setIsLoading(false)
@@ -64,7 +80,7 @@ export function AuthForm() {
   return (
     <Card className="w-full max-w-[380px] border-border/60 shadow-xl shadow-black/[0.06]">
       <CardContent className="p-6">
-        <Tabs defaultValue="login" onValueChange={() => { setServerError(null); form.reset() }}>
+        <Tabs defaultValue="login" onValueChange={() => { resetErrors(); loginForm.reset(); registerForm.reset() }}>
 
           {/* ── Tab switcher ────────────────────────────────────────── */}
           <TabsList className="mb-5 grid w-full grid-cols-2 bg-muted/70">
@@ -85,22 +101,22 @@ export function AuthForm() {
               </p>
             </div>
 
-            <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+            <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
               <FieldGroup
                 id="login-email"
                 label="Email address"
                 type="email"
                 placeholder="you@example.com"
-                registration={form.register("email")}
-                error={form.formState.errors.email?.message}
+                registration={loginForm.register("email")}
+                error={loginForm.formState.errors.email?.message}
               />
               <FieldGroup
                 id="login-password"
                 label="Password"
                 type="password"
                 placeholder="••••••••"
-                registration={form.register("password")}
-                error={form.formState.errors.password?.message}
+                registration={loginForm.register("password")}
+                error={loginForm.formState.errors.password?.message}
               />
 
               {serverError && <ErrorBanner message={serverError} />}
@@ -120,23 +136,39 @@ export function AuthForm() {
               </p>
             </div>
 
-            <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-4">
+            <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
               <FieldGroup
                 id="register-email"
                 label="Email address"
                 type="email"
                 placeholder="you@example.com"
-                registration={form.register("email")}
-                error={form.formState.errors.email?.message}
+                registration={registerForm.register("email")}
+                error={registerForm.formState.errors.email?.message}
               />
               <FieldGroup
                 id="register-password"
                 label="Password"
                 type="password"
                 placeholder="Min. 8 characters"
-                registration={form.register("password")}
-                error={form.formState.errors.password?.message}
+                registration={registerForm.register("password")}
+                error={registerForm.formState.errors.password?.message}
               />
+
+              {/* ── Access code (opzionale) ───────────────────────── */}
+              <div className="space-y-1.5">
+                <Label htmlFor="secret_key" className="text-xs font-medium text-foreground/80 flex items-center gap-1.5">
+                  <KeyRound className="h-3 w-3 text-muted-foreground" />
+                  Access code
+                  <span className="text-muted-foreground font-normal">— optional</span>
+                </Label>
+                <Input
+                  id="secret_key"
+                  type="password"
+                  placeholder="Leave blank if you don't have one"
+                  className="h-9 text-sm"
+                  {...registerForm.register("secret_key")}
+                />
+              </div>
 
               {serverError && <ErrorBanner message={serverError} />}
 
@@ -159,7 +191,7 @@ export function AuthForm() {
   )
 }
 
-// ─── Sotto-componenti per pulizia ─────────────────────────────────────────────
+// ─── Sotto-componenti ─────────────────────────────────────────────────────────
 
 function FieldGroup({
   id, label, type, placeholder, registration, error,

@@ -24,8 +24,10 @@ export default async function DashboardPage() {
   const profile = user ? await getProfileByEmail(user.email!) : null
 
   // Primo login → onboarding
+  // Leggiamo isAdmin dai metadata Supabase Auth (impostato durante register)
   if (!profile) {
-    return <OnboardingDialog />
+    const isAdmin = user?.user_metadata?.platform_role === "admin"
+    return <OnboardingDialog isAdmin={isAdmin} />
   }
 
   // Dati placeholder — sostituiti con query reali quando avremo la tabella sessions
