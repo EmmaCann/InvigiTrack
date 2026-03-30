@@ -112,6 +112,12 @@ export interface OnboardingData {
   full_name: string
   role_type: InvigilationRole | null
   default_hourly_rate: number
+  /**
+   * Usato solo dall'admin: slug della categoria di lavoro primaria
+   * ('invigilation' | 'tutoring' | 'personal_training').
+   * Gli utenti normali sono sempre 'invigilation' automaticamente.
+   */
+  primary_category_slug?: string
 }
 
 /** Dati per creare una nuova sessione */
