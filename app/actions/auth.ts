@@ -63,30 +63,38 @@ export async function logout() {
 // ─── CREA PROFILO (onboarding primo login) ────────────────────────────────────
 
 export async function createProfile(data: OnboardingData) {
-  const user = await getCurrentUser()
-  if (!user) return { error: "Utente non autenticato" }
+  try {
+    const user = await getCurrentUser()
+    if (!user) return { error: "Utente non autenticato" }
 
-  // Legge il ruolo dai metadata Supabase Auth (impostato durante register)
-  const platformRole = user.user_metadata?.platform_role === "admin" ? "admin" : "user"
+    // Legge il ruolo dai metadata Supabase Auth (impostato durante register)
+    const platformRole = user.user_metadata?.platform_role === "admin" ? "admin" : "user"
 
-  // 1. Inserisce il profilo con id = auth.users.id (richiesto da RLS)
-  const profileResult = await insertProfile(user.id, user.email!, data, platformRole)
-  if (profileResult.error) return { error: profileResult.error }
-
-  // 2. Grant categorie
-  if (platformRole === "admin") {
-    // Admin → accesso a TUTTE le categorie (attive e future)
-    const all = await getAllCategories()
-    for (const cat of all) {
-      await grantCategoryAccess(user.id, cat.id)
+    // 1. Inserisce il profilo con id = auth.users.id (richiesto da RLS)
+    const profileResult = await insertProfile(user.id, user.email!, data, platformRole)
+    // Se il profilo esiste già (duplicate key), proseguiamo senza errore —
+    // l'utente ha già completato l'onboarding in un tentativo precedente.
+    if (profileResult.error && !profileResult.error.includes("duplicate key")) {
+      return { error: profileResult.error }
     }
-  } else {
-    // User normale → solo 'invigilation'
-    const category = await getCategoryBySlug(data.primary_category_slug ?? "invigilation")
-    if (category) {
-      await grantCategoryAccess(user.id, category.id)
+
+    // 2. Grant categorie (best-effort — un fallimento non blocca l'onboarding)
+    if (platformRole === "admin") {
+      const all = await getAllCategories()
+      for (const cat of all) {
+        await grantCategoryAccess(user.id, cat.id)
+      }
+    } else {
+      const slug = data.primary_category_slug ?? "invigilation"
+      const category = await getCategoryBySlug(slug)
+      if (category) {
+        await grantCategoryAccess(user.id, category.id)
+      }
     }
+
+    return { success: true }
+  } catch (err) {
+    console.error("[createProfile]", err)
+    return { error: err instanceof Error ? err.message : "Errore durante il salvataggio del profilo" }
   }
-
-  return { success: true }
 }

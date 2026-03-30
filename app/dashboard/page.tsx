@@ -13,7 +13,7 @@
  */
 
 import { getCurrentUser } from "@/lib/data/auth"
-import { getProfileByEmail } from "@/lib/data/profiles"
+import { getProfileById } from "@/lib/data/profiles"
 import { OnboardingDialog } from "@/components/auth/onboarding-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +21,7 @@ import { Clock, PoundSterling, AlertCircle, CalendarCheck } from "lucide-react"
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
-  const profile = user ? await getProfileByEmail(user.email!) : null
+  const profile = user ? await getProfileById(user.id) : null
 
   // Primo login → onboarding
   // Leggiamo isAdmin dai metadata Supabase Auth (impostato durante register)
