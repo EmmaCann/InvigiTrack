@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select"
 
 import { createProfile } from "@/app/actions/auth"
-import type { RoleType } from "@/types/database"
+import type { InvigilationRole } from "@/types/database"
 
 // ─── Schema validazione ──────────────────────────────────────────────────────
 
@@ -78,7 +78,7 @@ export function OnboardingDialog() {
 
     const result = await createProfile({
       full_name: values.full_name,
-      role_type: values.role_type as RoleType,
+      role_type: values.role_type as InvigilationRole,
       default_hourly_rate: values.default_hourly_rate,
     })
 
@@ -127,7 +127,7 @@ export function OnboardingDialog() {
             <Label htmlFor="role_type">Ruolo</Label>
             <Select
               onValueChange={(val) =>
-                form.setValue("role_type", val as RoleType, {
+                form.setValue("role_type", val as InvigilationRole, {
                   shouldValidate: true,
                 })
               }

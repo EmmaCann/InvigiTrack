@@ -1,63 +1,44 @@
 "use server"
 
 /**
- * SERVER ACTIONS — cosa sono?
- * Sono funzioni che girano SOLO sul server, ma puoi chiamarle dal client
- * come se fossero normali funzioni JS. Next.js le espone via POST HTTP
- * in modo trasparente. Analogia Laravel: come un Controller method,
- * ma senza dover definire la route manualmente.
+ * SERVER ACTIONS — Auth
  *
- * Il "use server" in cima al file indica che TUTTE le funzioni qui
- * sono Server Actions.
+ * Funzioni che girano sul server, chiamabili dal client come normali funzioni.
+ * Analogia Laravel: Controller methods, senza dover definire le route.
  */
 
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/data/auth"
 import { insertProfile } from "@/lib/data/profiles"
+import { getCategoryBySlug, grantCategoryAccess } from "@/lib/data/categories"
 import type { OnboardingData } from "@/types/database"
 
-// ─── LOGIN con email e password ─────────────────────────────────────────────
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
-
   const { error } = await supabase.auth.signInWithPassword({
-    email: formData.get("email") as string,
+    email:    formData.get("email") as string,
     password: formData.get("password") as string,
   })
-
-  if (error) {
-    // Restituiamo l'errore al client invece di fare redirect
-    return { error: error.message }
-  }
-
-  // redirect() lancia internamente un'eccezione speciale di Next.js —
-  // non va chiamato dentro un try/catch
+  if (error) return { error: error.message }
   redirect("/dashboard")
 }
 
-// ─── REGISTRAZIONE con email e password ─────────────────────────────────────
+// ─── REGISTRAZIONE ────────────────────────────────────────────────────────────
 
 export async function register(formData: FormData) {
   const supabase = await createClient()
-
   const { error } = await supabase.auth.signUp({
-    email: formData.get("email") as string,
+    email:    formData.get("email") as string,
     password: formData.get("password") as string,
   })
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  // Dopo la registrazione Supabase manda una mail di conferma.
-  // Se hai disabilitato la conferma email nelle impostazioni Supabase,
-  // l'utente è già loggato e redirect("/dashboard") funziona subito.
+  if (error) return { error: error.message }
   redirect("/dashboard")
 }
 
-// ─── LOGOUT ─────────────────────────────────────────────────────────────────
+// ─── LOGOUT ──────────────────────────────────────────────────────────────────
 
 export async function logout() {
   const supabase = await createClient()
@@ -65,23 +46,24 @@ export async function logout() {
   redirect("/auth/login")
 }
 
-// ─── CREA PROFILO (onboarding primo login) ───────────────────────────────────
+// ─── CREA PROFILO (onboarding primo login) ────────────────────────────────────
 
 export async function createProfile(data: OnboardingData) {
-  // Chi è loggato? → DAL auth
   const user = await getCurrentUser()
+  if (!user) return { error: "Utente non autenticato" }
 
-  if (!user) {
-    return { error: "Utente non autenticato" }
-  }
+  // 1. Inserisce il profilo con id = auth.users.id (fix RLS)
+  const profileResult = await insertProfile(user.id, user.email!, data)
+  if (profileResult.error) return { error: profileResult.error }
 
-  // Inserisce nel DB → DAL profiles
-  // Questa action non sa nulla di Supabase: sa solo che chiede
-  // di salvare un profilo e riceve ok o errore.
-  const result = await insertProfile(user.email!, data)
-
-  if (result.error) {
-    return { error: result.error }
+  // 2. Auto-grant: dà accesso alla categoria 'invigilation'
+  //    Ogni nuovo utente parte con invigilation — la owner può
+  //    aggiungere altre categorie manualmente dal dashboard Supabase.
+  const category = await getCategoryBySlug("invigilation")
+  if (category) {
+    await grantCategoryAccess(user.id, category.id)
+    // Se questo fallisce non blocchiamo — l'utente può sempre
+    // fare il grant manualmente. Non critico per l'onboarding.
   }
 
   return { success: true }

@@ -6,7 +6,12 @@
       "Bash(find node_modules/next/dist/docs -type f -name *.md)",
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
-      "Bash(find /c/invigitrack/app /c/invigitrack/components /c/invigitrack/lib /c/invigitrack/types -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))"
+      "Bash(find /c/invigitrack/app /c/invigitrack/components /c/invigitrack/lib /c/invigitrack/types -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(ls -la \"C:\\\\invigitrack\\\\node_modules\\\\next\\\\dist\\\\docs\"\" 2>/dev/null | head -20 || echo \"Directory not found \")",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }
