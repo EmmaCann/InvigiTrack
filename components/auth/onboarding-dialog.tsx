@@ -175,8 +175,8 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
                   <SelectValue placeholder="Seleziona il tuo ruolo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="invigilator">Invigilator</SelectItem>
-                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="invigilator">Invigilatore</SelectItem>
+                  <SelectItem value="supervisor">Supervisore</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -216,8 +216,8 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
                   <SelectValue placeholder="Seleziona il tipo di lavoro" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="invigilation">Exam Invigilation</SelectItem>
-                  <SelectItem value="tutoring">Private Tutoring</SelectItem>
+                  <SelectItem value="invigilation">Sorveglianza Esami</SelectItem>
+                  <SelectItem value="tutoring">Ripetizioni Private</SelectItem>
                   <SelectItem value="personal_training">Personal Training</SelectItem>
                 </SelectContent>
               </Select>
@@ -235,8 +235,8 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
                     <SelectValue placeholder="Seleziona il tuo ruolo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="invigilator">Invigilator</SelectItem>
-                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="invigilator">Invigilatore</SelectItem>
+                    <SelectItem value="supervisor">Supervisore</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>

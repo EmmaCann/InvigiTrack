@@ -1,5 +1,5 @@
 /**
- * PAGINA SESSIONS — Server Component.
+ * PAGINA SESSIONI — Server Component.
  * Fetcha i dati e li passa ai Client Components.
  */
 
@@ -23,11 +23,11 @@ export default async function SessionsPage() {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
-            Work Session Management
+            Gestione sessioni
           </p>
-          <h2 className="text-2xl font-bold text-foreground">Sessions</h2>
+          <h2 className="text-2xl font-bold text-foreground">Sessioni</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Log and manage all your work sessions
+            Registra e gestisci tutte le tue sessioni di lavoro
           </p>
         </div>
         <SessionDialog profile={profile} lastSession={sessions[0]} />

@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { login, register } from "@/app/actions/auth"
 
-// ─── Schemi separati per login e registrazione ───────────────────────────────
+// ─── Schemi ───────────────────────────────────────────────────────────────────
 
 const loginSchema = z.object({
   email:    z.string().email("Email non valida"),
@@ -24,7 +24,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   email:      z.string().email("Email non valida"),
   password:   z.string().min(8, "Minimo 8 caratteri"),
-  secret_key: z.string().optional(),  // opzionale — se corretta → account admin
+  secret_key: z.string().optional(),
 })
 
 type LoginValues    = z.infer<typeof loginSchema>
@@ -85,28 +85,28 @@ export function AuthForm() {
           {/* ── Tab switcher ────────────────────────────────────────── */}
           <TabsList className="mb-5 grid w-full grid-cols-2 bg-muted/70">
             <TabsTrigger value="login" className="text-sm font-medium">
-              Sign in
+              Accedi
             </TabsTrigger>
             <TabsTrigger value="register" className="text-sm font-medium">
-              Create account
+              Registrati
             </TabsTrigger>
           </TabsList>
 
-          {/* ── Sign in ─────────────────────────────────────────────── */}
+          {/* ── Accedi ──────────────────────────────────────────────── */}
           <TabsContent value="login">
             <div className="mb-5">
-              <h2 className="text-base font-semibold text-foreground">Welcome back</h2>
+              <h2 className="text-base font-semibold text-foreground">Bentornato/a</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Sign in to your InvigiTrack account
+                Accedi al tuo account InvigiTrack
               </p>
             </div>
 
             <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
               <FieldGroup
                 id="login-email"
-                label="Email address"
+                label="Indirizzo email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="tu@esempio.com"
                 registration={loginForm.register("email")}
                 error={loginForm.formState.errors.email?.message}
               />
@@ -122,26 +122,26 @@ export function AuthForm() {
               {serverError && <ErrorBanner message={serverError} />}
 
               <Button type="submit" className="w-full font-semibold" disabled={isLoading}>
-                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in…</> : "Sign in"}
+                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Accesso in corso…</> : "Accedi"}
               </Button>
             </form>
           </TabsContent>
 
-          {/* ── Create account ──────────────────────────────────────── */}
+          {/* ── Registrati ──────────────────────────────────────────── */}
           <TabsContent value="register">
             <div className="mb-5">
-              <h2 className="text-base font-semibold text-foreground">Create your account</h2>
+              <h2 className="text-base font-semibold text-foreground">Crea il tuo account</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Get started with InvigiTrack for free
+                Inizia a usare InvigiTrack gratuitamente
               </p>
             </div>
 
             <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
               <FieldGroup
                 id="register-email"
-                label="Email address"
+                label="Indirizzo email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="tu@esempio.com"
                 registration={registerForm.register("email")}
                 error={registerForm.formState.errors.email?.message}
               />
@@ -149,22 +149,22 @@ export function AuthForm() {
                 id="register-password"
                 label="Password"
                 type="password"
-                placeholder="Min. 8 characters"
+                placeholder="Min. 8 caratteri"
                 registration={registerForm.register("password")}
                 error={registerForm.formState.errors.password?.message}
               />
 
-              {/* ── Access code (opzionale) ───────────────────────── */}
+              {/* ── Codice di accesso (opzionale) ─────────────────── */}
               <div className="space-y-1.5">
                 <Label htmlFor="secret_key" className="text-xs font-medium text-foreground/80 flex items-center gap-1.5">
                   <KeyRound className="h-3 w-3 text-muted-foreground" />
-                  Access code
-                  <span className="text-muted-foreground font-normal">— optional</span>
+                  Codice di accesso
+                  <span className="text-muted-foreground font-normal">— opzionale</span>
                 </Label>
                 <Input
                   id="secret_key"
                   type="password"
-                  placeholder="Leave blank if you don't have one"
+                  placeholder="Lascia vuoto se non ne hai uno"
                   className="h-9 text-sm"
                   {...registerForm.register("secret_key")}
                 />
@@ -173,13 +173,13 @@ export function AuthForm() {
               {serverError && <ErrorBanner message={serverError} />}
 
               <Button type="submit" className="w-full font-semibold" disabled={isLoading}>
-                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account…</> : "Create account"}
+                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creazione account…</> : "Crea account"}
               </Button>
 
               <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
-                By creating an account you agree to our{" "}
-                <span className="text-primary cursor-pointer hover:underline">Terms of Service</span>
-                {" "}and{" "}
+                Creando un account accetti i nostri{" "}
+                <span className="text-primary cursor-pointer hover:underline">Termini di Servizio</span>
+                {" "}e la{" "}
                 <span className="text-primary cursor-pointer hover:underline">Privacy Policy</span>.
               </p>
             </form>

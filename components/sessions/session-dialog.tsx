@@ -156,9 +156,9 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
       <Pencil className="h-3.5 w-3.5" />
     </Button>
   ) : (
-    <Button size="sm" className="gap-2 font-semibold shadow-sm">
-      <Plus className="h-4 w-4" />
-      New Session
+    <Button size="sm" className="gap-2 font-semibold rounded-xl shadow-md shadow-primary/25 px-4 h-9">
+      <Plus className="h-4 w-4" strokeWidth={2.5} />
+      Nuova Sessione
     </Button>
   )
 
@@ -168,17 +168,17 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
         {trigger ?? defaultTrigger}
       </DialogTrigger>
 
-      <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden rounded-2xl border-white/60 shadow-2xl shadow-black/[0.15]">
         {/* ── Header colorato ──────────────────────────────────────── */}
-        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 pt-6 pb-5 border-b border-border/50">
+        <div className="bg-gradient-to-br from-primary/10 via-primary/[0.05] to-blue-50/50 px-6 pt-6 pb-5 border-b border-primary/10">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
-              {isEdit ? "Edit Session" : "Log New Session"}
+              {isEdit ? "Modifica Sessione" : "Nuova Sessione"}
             </DialogTitle>
             <p className="text-sm text-muted-foreground mt-0.5">
               {isEdit
-                ? "Update the details of this session."
-                : "Record a new work session and track your earnings."}
+                ? "Aggiorna i dettagli di questa sessione."
+                : "Registra una nuova sessione di lavoro e traccia i tuoi guadagni."}
             </p>
           </DialogHeader>
 
@@ -190,9 +190,9 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
               className="mt-4 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/10 transition-colors w-full"
             >
               <Copy className="h-3.5 w-3.5 shrink-0" />
-              Copy from last session —{" "}
+              Copia dall&apos;ultima sessione —{" "}
               <span className="font-semibold truncate">
-                {(lastSession.metadata as { exam_name?: string }).exam_name ?? "previous session"}
+                {(lastSession.metadata as { exam_name?: string }).exam_name ?? "sessione precedente"}
               </span>
             </button>
           )}
@@ -214,7 +214,7 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
                     <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Duration</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Durata</p>
                     <p className="text-sm font-bold text-foreground">{preview.duration}</p>
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
                     <PoundSterling className="h-3.5 w-3.5 text-emerald-600" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Estimated</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Stimato</p>
                     <p className="text-sm font-bold text-emerald-600">£{preview.earned.toFixed(2)}</p>
                   </div>
                 </div>
@@ -235,25 +235,25 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
               </div>
             ) : (
               <p className="text-xs text-muted-foreground text-center py-0.5">
-                Set start and end times to see estimated earnings
+                Imposta orario inizio e fine per vedere il guadagno stimato
               </p>
             )}
           </div>
 
-          {/* Date + Times */}
+          {/* Data + Orari */}
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-3 sm:col-span-1">
-              <Field label="Date" error={form.formState.errors.session_date?.message}>
+              <Field label="Data" error={form.formState.errors.session_date?.message}>
                 <Input type="date" className="h-10" {...form.register("session_date")} />
               </Field>
             </div>
             <div>
-              <Field label="Start" error={form.formState.errors.start_time?.message}>
+              <Field label="Inizio" error={form.formState.errors.start_time?.message}>
                 <Input type="time" className="h-10" {...form.register("start_time")} />
               </Field>
             </div>
             <div>
-              <Field label="End" error={form.formState.errors.end_time?.message}>
+              <Field label="Fine" error={form.formState.errors.end_time?.message}>
                 <Input type="time" className="h-10" {...form.register("end_time")} />
               </Field>
             </div>
@@ -261,24 +261,24 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
 
           <Separator />
 
-          {/* Exam + Location */}
-          <Field label="Exam name" error={form.formState.errors.exam_name?.message}>
+          {/* Esame + Sede */}
+          <Field label="Nome esame" error={form.formState.errors.exam_name?.message}>
             <Input
               className="h-10"
-              placeholder="e.g. A-Level Mathematics Paper 1"
+              placeholder="es. A-Level Mathematics Paper 1"
               {...form.register("exam_name")}
             />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Location / School" error={form.formState.errors.location?.message}>
+            <Field label="Sede / Scuola" error={form.formState.errors.location?.message}>
               <Input
                 className="h-10"
-                placeholder="e.g. Westfield Academy"
+                placeholder="es. Westfield Academy"
                 {...form.register("location")}
               />
             </Field>
-            <Field label="Role" error={form.formState.errors.role_type?.message}>
+            <Field label="Ruolo" error={form.formState.errors.role_type?.message}>
               <Select
                 defaultValue={form.getValues("role_type")}
                 onValueChange={(v) =>
@@ -289,14 +289,14 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="invigilator">Invigilator</SelectItem>
-                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="invigilator">Invigilatore</SelectItem>
+                  <SelectItem value="supervisor">Supervisore</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
           </div>
 
-          <Field label="Hourly rate (£)" error={form.formState.errors.hourly_rate?.message}>
+          <Field label="Tariffa oraria (£)" error={form.formState.errors.hourly_rate?.message}>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">£</span>
               <Input
@@ -309,9 +309,9 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
             </div>
           </Field>
 
-          <Field label="Notes" error={form.formState.errors.notes?.message}>
+          <Field label="Note" error={form.formState.errors.notes?.message}>
             <Textarea
-              placeholder="Any additional details about this session..."
+              placeholder="Dettagli aggiuntivi su questa sessione..."
               className="resize-none text-sm"
               rows={2}
               {...form.register("notes")}
@@ -333,12 +333,12 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              Cancel
+              Annulla
             </Button>
             <Button type="submit" className="flex-1 font-semibold" disabled={isLoading}>
               {isLoading
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</>
-                : isEdit ? "Save Changes" : "Log Session"
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvataggio…</>
+                : isEdit ? "Salva modifiche" : "Registra sessione"
               }
             </Button>
           </div>

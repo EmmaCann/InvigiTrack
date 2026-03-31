@@ -9,41 +9,42 @@ import {
   Download,
   Clock,
   ChevronRight,
+  Check,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { SessionDialog } from "./session-dialog"
 import { changePaymentStatus, removeSession } from "@/app/actions/sessions"
 import type { Session, Profile, PaymentStatus } from "@/types/database"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const STATUS_CYCLE: Record<PaymentStatus, PaymentStatus> = {
-  unpaid:  "pending",
-  pending: "paid",
-  paid:    "unpaid",
-}
-
 const STATUS_CONFIG: Record<PaymentStatus, { label: string; className: string; dot: string }> = {
   unpaid: {
-    label: "Unpaid",
+    label: "Non pagato",
     className: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50",
     dot: "bg-amber-400",
   },
   pending: {
-    label: "Pending",
+    label: "In attesa",
     className: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/50",
     dot: "bg-blue-400",
   },
   paid: {
-    label: "Paid",
+    label: "Pagato",
     className: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/50",
     dot: "bg-emerald-400",
   },
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-GB", {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("it-IT", {
     weekday: "short",
     day:     "numeric",
     month:   "short",
@@ -53,7 +54,7 @@ function formatDate(dateStr: string) {
 function formatTime(t: string) { return t.slice(0, 5) }
 
 function formatMonthKey(dateStr: string) {
-  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-GB", {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("it-IT", {
     month: "long",
     year:  "numeric",
   })
@@ -84,7 +85,7 @@ function thisMonthStats(sessions: Session[]) {
 }
 
 function exportCSV(sessions: Session[]) {
-  const headers = ["Date","Start","End","Duration (min)","Location","Exam","Role","Rate (£)","Earned (£)","Status"]
+  const headers = ["Data","Inizio","Fine","Durata (min)","Sede","Esame","Ruolo","Tariffa (£)","Guadagno (£)","Stato"]
   const rows = sessions.map((s) => {
     const meta = s.metadata as { exam_name?: string; role_type?: string }
     return [
@@ -103,7 +104,7 @@ function exportCSV(sessions: Session[]) {
   const csv  = [headers, ...rows].map((r) => r.join(",")).join("\n")
   const blob = new Blob([csv], { type: "text/csv" })
   const url  = URL.createObjectURL(blob)
-  const a    = Object.assign(document.createElement("a"), { href: url, download: `sessions-${todayStr()}.csv` })
+  const a    = Object.assign(document.createElement("a"), { href: url, download: `sessioni-${todayStr()}.csv` })
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -128,9 +129,9 @@ export function SessionList({ sessions, profile }: Props) {
   const grouped = groupByMonth(sessions)
   const stats   = thisMonthStats(sessions)
 
-  function handleStatusClick(session: Session) {
+  function handleStatusChange(session: Session, next: PaymentStatus) {
     startTransition(async () => {
-      await changePaymentStatus(session.id, STATUS_CYCLE[session.payment_status])
+      await changePaymentStatus(session.id, next)
       router.refresh()
     })
   }
@@ -146,13 +147,13 @@ export function SessionList({ sessions, profile }: Props) {
   // ── Empty state ────────────────────────────────────────────────────────────
   if (sessions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 py-24 text-center">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/50 glass-sm py-24 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
           <CalendarCheck className="h-7 w-7 text-primary" />
         </div>
-        <p className="text-base font-semibold text-foreground">No sessions yet</p>
+        <p className="text-base font-semibold text-foreground">Nessuna sessione</p>
         <p className="mt-1.5 max-w-xs text-sm text-muted-foreground">
-          Log your first session using the <strong>New Session</strong> button above.
+          Registra la prima sessione con il pulsante <strong>Nuova Sessione</strong> in alto.
         </p>
       </div>
     )
@@ -161,15 +162,15 @@ export function SessionList({ sessions, profile }: Props) {
   return (
     <div className="space-y-6">
 
-      {/* ── Stats this month ───────────────────────────────────────── */}
+      {/* ── Stats questo mese ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "This month",    value: `${stats.count}`,                   sub: "sessions",      color: "text-foreground"   },
-          { label: "Hours logged",  value: `${stats.hours.toFixed(1)}`,         sub: "hours",         color: "text-blue-600"     },
-          { label: "Total earned",  value: `£${stats.earned.toFixed(2)}`,       sub: "this month",    color: "text-emerald-600"  },
-          { label: "Awaiting",      value: `£${stats.unpaid.toFixed(2)}`,       sub: "unpaid",        color: "text-amber-600"    },
+          { label: "Questo mese",    value: `${stats.count}`,                   sub: "sessioni",      color: "text-foreground"   },
+          { label: "Ore registrate", value: `${stats.hours.toFixed(1)}`,         sub: "ore",           color: "text-blue-600"     },
+          { label: "Guadagno",       value: `£${stats.earned.toFixed(2)}`,       sub: "questo mese",   color: "text-emerald-600"  },
+          { label: "In attesa",      value: `£${stats.unpaid.toFixed(2)}`,       sub: "non pagate",    color: "text-amber-600"    },
         ].map((s) => (
-          <div key={s.label} className="rounded-2xl border border-border bg-card px-4 py-3.5 shadow-sm">
+          <div key={s.label} className="glass rounded-2xl px-4 py-3.5 shadow-sm shadow-black/[0.04]">
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{s.label}</p>
             <p className={`mt-1 text-xl font-bold ${s.color}`}>{s.value}</p>
             <p className="text-[11px] text-muted-foreground">{s.sub}</p>
@@ -186,21 +187,21 @@ export function SessionList({ sessions, profile }: Props) {
           onClick={() => exportCSV(sessions)}
         >
           <Download className="h-3.5 w-3.5" />
-          Export CSV
+          Esporta CSV
         </Button>
       </div>
 
-      {/* ── Grouped list ───────────────────────────────────────────── */}
+      {/* ── Lista raggruppata ──────────────────────────────────────── */}
       <div className="space-y-8">
         {Array.from(grouped.entries()).map(([month, items]) => {
-          const monthTotal  = items.reduce((a, s) => a + s.earned, 0)
-          const monthHours  = items.reduce((a, s) => a + s.duration_minutes / 60, 0)
+          const monthTotal = items.reduce((a, s) => a + s.earned, 0)
+          const monthHours = items.reduce((a, s) => a + s.duration_minutes / 60, 0)
 
           return (
             <div key={month}>
               {/* Month header */}
               <div className="mb-3 flex items-center gap-3">
-                <h3 className="text-sm font-bold text-foreground">{month}</h3>
+                <h3 className="text-sm font-bold text-foreground capitalize">{month}</h3>
                 <div className="h-px flex-1 bg-border" />
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
@@ -223,16 +224,16 @@ export function SessionList({ sessions, profile }: Props) {
                   return (
                     <div
                       key={session.id}
-                      className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center"
+                      className="group relative flex flex-col gap-3 rounded-2xl glass px-4 py-3.5 shadow-sm shadow-black/[0.04] transition-all hover:shadow-md hover:shadow-primary/[0.08] hover:border-primary/20 sm:flex-row sm:items-center"
                     >
                       {/* Status accent bar */}
-                      <div className={`absolute left-0 top-3 bottom-3 w-0.5 rounded-full ${statusConf.dot}`} />
+                      <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-full ${statusConf.dot}`} />
 
                       {/* Left: info */}
-                      <div className="flex min-w-0 flex-1 flex-col gap-1 pl-3">
+                      <div className="flex min-w-0 flex-1 flex-col gap-1 pl-4">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-sm text-foreground truncate">
-                            {meta.exam_name ?? "Session"}
+                            {meta.exam_name ?? "Sessione"}
                           </span>
                           <span className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium capitalize text-muted-foreground">
                             {meta.role_type ?? profile.role_type}
@@ -240,7 +241,7 @@ export function SessionList({ sessions, profile }: Props) {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                          <span>{formatDate(session.session_date)}</span>
+                          <span className="capitalize">{formatDate(session.session_date)}</span>
                           <span className="text-border">·</span>
                           <span>{formatTime(session.start_time)} – {formatTime(session.end_time)}</span>
                           <span className="text-border">·</span>
@@ -263,20 +264,37 @@ export function SessionList({ sessions, profile }: Props) {
                       </div>
 
                       {/* Right: earned + status + actions */}
-                      <div className="flex items-center gap-3 pl-3 sm:pl-0">
+                      <div className="flex items-center gap-3 pl-4 sm:pl-0">
                         <span className="text-base font-bold text-foreground tabular-nums">
                           £{session.earned.toFixed(2)}
                         </span>
 
-                        {/* Status badge cliccabile */}
-                        <button
-                          onClick={() => handleStatusClick(session)}
-                          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all cursor-pointer ${statusConf.className}`}
-                          title="Click to change payment status"
-                        >
-                          <span className={`h-1.5 w-1.5 rounded-full ${statusConf.dot}`} />
-                          {statusConf.label}
-                        </button>
+                        {/* Payment status dropdown */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all cursor-pointer ${statusConf.className}`}
+                            >
+                              <span className={`h-1.5 w-1.5 rounded-full ${statusConf.dot}`} />
+                              {statusConf.label}
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-36 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+                            {(["unpaid", "pending", "paid"] as PaymentStatus[]).map((s) => (
+                              <DropdownMenuItem
+                                key={s}
+                                className="flex items-center gap-2 text-xs cursor-pointer"
+                                onClick={() => handleStatusChange(session, s)}
+                              >
+                                <span className={`h-1.5 w-1.5 rounded-full ${STATUS_CONFIG[s].dot}`} />
+                                {STATUS_CONFIG[s].label}
+                                {session.payment_status === s && (
+                                  <Check className="ml-auto h-3 w-3 text-primary" />
+                                )}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
 
                         {/* Azioni — visibili all'hover */}
                         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -289,13 +307,13 @@ export function SessionList({ sessions, profile }: Props) {
                                 disabled={isDel}
                                 className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
                               >
-                                {isDel ? "…" : "Delete"}
+                                {isDel ? "…" : "Elimina"}
                               </button>
                               <button
                                 onClick={() => setConfirmId(null)}
                                 className="rounded-lg px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
                               >
-                                Cancel
+                                Annulla
                               </button>
                             </div>
                           ) : (

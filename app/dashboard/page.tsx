@@ -1,147 +1,211 @@
-/**
- * PAGINA DASHBOARD — Server Component.
- *
- * Due casi:
- *  - Nessun profilo → mostra OnboardingDialog (primo login)
- *  - Profilo trovato → mostra la dashboard con le stat card
- *
- * Nota: il layout.tsx fetcha già il profilo per l'header.
- * Questa pagina lo fetcha di nuovo per gestire il caso
- * "nessun profilo" (onboarding). È accettabile perché:
- *  a) il caso è raro (solo al primo login)
- *  b) Next.js memorizza le chiamate al DB nello stesso render cycle
- */
-
 import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
+import { getPaymentSummary, getSessionsByUser } from "@/lib/data/sessions"
 import { OnboardingDialog } from "@/components/auth/onboarding-dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Clock, PoundSterling, AlertCircle, CalendarCheck } from "lucide-react"
+import { Clock, PoundSterling, AlertCircle, CalendarCheck, ArrowRight, MapPin, ShieldCheck } from "lucide-react"
+import Link from "next/link"
+import type { Session } from "@/types/database"
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatTime(t: string) { return t.slice(0, 5) }
+
+const STATUS_STYLE: Record<string, string> = {
+  unpaid:  "bg-amber-100/80 text-amber-700 border-amber-200/60",
+  pending: "bg-blue-100/80 text-blue-700 border-blue-200/60",
+  paid:    "bg-emerald-100/80 text-emerald-700 border-emerald-200/60",
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  unpaid:  "Non pagato",
+  pending: "In attesa",
+  paid:    "Pagato",
+}
+
+// ─── Pagina ───────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
   const profile = user ? await getProfileById(user.id) : null
 
-  // Primo login → onboarding
-  // Leggiamo isAdmin dai metadata Supabase Auth (impostato durante register)
   if (!profile) {
     const isAdmin = user?.user_metadata?.platform_role === "admin"
     return <OnboardingDialog isAdmin={isAdmin} />
   }
 
-  // Dati placeholder — sostituiti con query reali quando avremo la tabella sessions
+  const [summary, allSessions] = await Promise.all([
+    getPaymentSummary(user!.id),
+    getSessionsByUser(user!.id),
+  ])
+
+  const recentSessions = allSessions.slice(0, 5)
+  const displayName    = profile.full_name ?? profile.email
+
   const stats = [
     {
-      label: "Total Hours",
-      value: "—",
-      sub: "this month",
-      icon: Clock,
-      color: "text-primary",
-      bg: "bg-primary/10",
-    },
-    {
-      label: "Total Earned",
-      value: "—",
-      sub: "expected earnings",
-      icon: PoundSterling,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-    },
-    {
-      label: "Unpaid",
-      value: "—",
-      sub: "awaiting payment",
-      icon: AlertCircle,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
-    },
-    {
-      label: "Upcoming",
-      value: "—",
-      sub: "scheduled sessions",
-      icon: CalendarCheck,
+      label: "Ore questo mese",
+      value: summary.total_hours > 0 ? `${summary.total_hours.toFixed(1)}h` : "—",
+      sub:   summary.total_hours > 0 ? "registrate" : "nessuna sessione",
+      icon:  Clock,
       color: "text-blue-600",
-      bg: "bg-blue-50",
+      bg:    "bg-blue-500/10",
+    },
+    {
+      label: "Guadagno totale",
+      value: summary.total_earned > 0 ? `£${summary.total_earned.toFixed(2)}` : "—",
+      sub:   "storico",
+      icon:  PoundSterling,
+      color: "text-emerald-600",
+      bg:    "bg-emerald-500/10",
+    },
+    {
+      label: "Non pagato",
+      value: summary.total_unpaid > 0 ? `£${summary.total_unpaid.toFixed(2)}` : "—",
+      sub:   summary.total_unpaid > 0 ? "in attesa" : "tutto in ordine",
+      icon:  AlertCircle,
+      color: summary.total_unpaid > 0 ? "text-amber-600" : "text-muted-foreground",
+      bg:    summary.total_unpaid > 0 ? "bg-amber-500/10" : "bg-muted/50",
+    },
+    {
+      label: "Sessioni",
+      value: allSessions.length > 0 ? `${allSessions.length}` : "—",
+      sub:   "totali",
+      icon:  CalendarCheck,
+      color: "text-primary",
+      bg:    "bg-primary/10",
     },
   ]
-
-  const displayName = profile.full_name ?? profile.email
 
   return (
     <div className="space-y-6">
 
-      {/* ── Intestazione pagina ─────────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
-            Welcome back
+            Bentornato/a
           </p>
           <h2 className="text-2xl font-bold text-foreground">{displayName}</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Academic Overview
+            Ecco il riepilogo della tua attività
           </p>
         </div>
-        <Badge variant="secondary" className="capitalize text-xs">
-          {profile.role_type}
-        </Badge>
+        {profile.platform_role === "admin" && (
+          <Badge variant="secondary" className="gap-1 text-[11px] bg-primary/10 text-primary border-primary/20">
+            <ShieldCheck className="h-3 w-3" /> Admin
+          </Badge>
+        )}
       </div>
 
       {/* ── Stat cards ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className="shadow-none border-border">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div key={stat.label} className="glass rounded-2xl px-4 py-4 shadow-sm shadow-black/[0.04]">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {stat.label}
               </p>
-              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${stat.bg}`}>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${stat.bg}`}>
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </div>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{stat.sub}</p>
-            </CardContent>
-          </Card>
+            </div>
+            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{stat.sub}</p>
+          </div>
         ))}
       </div>
 
-      {/* ── Sezione sessioni recenti ────────────────────────────────── */}
-      <Card className="shadow-none border-border">
-        <CardHeader className="px-5 pt-5 pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Recent Sessions</CardTitle>
-            <a
-              href="/dashboard/sessions"
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              View all →
-            </a>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Detailed log of your latest invigilation activity
-          </p>
-        </CardHeader>
-        <CardContent className="px-5 pb-8">
-          {/* Empty state — rimosso quando avremo dati reali */}
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-              <CalendarCheck className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium text-foreground">No sessions yet</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Your invigilation sessions will appear here once logged.
+      {/* ── Sessioni recenti ───────────────────────────────────────── */}
+      <div className="glass rounded-2xl shadow-sm shadow-black/[0.04]">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+          <div>
+            <h3 className="text-base font-semibold text-foreground">Sessioni recenti</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Le tue ultime sessioni registrate
             </p>
-            <a
-              href="/dashboard/sessions"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              + Log First Session
-            </a>
           </div>
-        </CardContent>
-      </Card>
+          <Link
+            href="/dashboard/sessions"
+            className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            Vedi tutte <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        <div className="px-5 pb-5">
+          {recentSessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/8 mb-3">
+                <CalendarCheck className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm font-medium text-foreground">Nessuna sessione</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Registra la prima sessione per vederla qui.
+              </p>
+              <Link
+                href="/dashboard/sessions"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                + Prima Sessione
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recentSessions.map((session: Session) => {
+                const meta = session.metadata as { exam_name?: string; role_type?: string }
+                return (
+                  <div
+                    key={session.id}
+                    className="flex items-center gap-4 rounded-xl border border-white/40 bg-white/40 px-3.5 py-3 transition-colors hover:bg-white/60"
+                  >
+                    {/* Data */}
+                    <div className="w-10 shrink-0 text-center">
+                      <p className="text-base font-bold text-foreground leading-none">
+                        {new Date(session.session_date + "T00:00:00").getDate()}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground uppercase">
+                        {new Date(session.session_date + "T00:00:00").toLocaleDateString("it-IT", { month: "short" })}
+                      </p>
+                    </div>
+
+                    <div className="h-8 w-px bg-border/60" />
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {meta.exam_name ?? "Sessione"}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                        <span>{formatTime(session.start_time)} – {formatTime(session.end_time)}</span>
+                        {session.location && (
+                          <>
+                            <span>·</span>
+                            <span className="flex items-center gap-0.5">
+                              <MapPin className="h-3 w-3" />
+                              {session.location}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Earned + Status */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-sm font-bold text-foreground tabular-nums">
+                        £{session.earned.toFixed(2)}
+                      </span>
+                      <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_STYLE[session.payment_status]}`}>
+                        {STATUS_LABEL[session.payment_status] ?? session.payment_status}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
 
     </div>
   )
