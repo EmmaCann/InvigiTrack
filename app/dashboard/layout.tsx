@@ -18,7 +18,7 @@
 
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/data/auth"
-import { getProfileByEmail } from "@/lib/data/profiles"
+import { getProfileById } from "@/lib/data/profiles"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
@@ -34,7 +34,7 @@ export default async function DashboardLayout({
   if (!user) redirect("/auth/login")
 
   // 2. Profilo
-  const profile = await getProfileByEmail(user.email!)
+  const profile = await getProfileById(user.id)
 
   // 3. Nessun profilo = primo login.
   //    NON facciamo redirect (sarebbe un loop): la page.tsx

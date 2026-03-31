@@ -1,37 +1,41 @@
 /**
  * PAGINA SESSIONS — Server Component.
- * Placeholder — la costruiamo nel prossimo sprint.
+ * Fetcha i dati e li passa ai Client Components.
  */
 
-import { Card, CardContent } from "@/components/ui/card"
-import { CalendarCheck } from "lucide-react"
+import { getCurrentUser } from "@/lib/data/auth"
+import { getProfileById } from "@/lib/data/profiles"
+import { getSessionsByUser } from "@/lib/data/sessions"
+import { SessionSheet } from "@/components/sessions/session-sheet"
+import { SessionList } from "@/components/sessions/session-list"
 
-export default function SessionsPage() {
+export default async function SessionsPage() {
+  const user     = await getCurrentUser()
+  const profile  = user ? await getProfileById(user.id) : null
+  const sessions = user ? await getSessionsByUser(user.id) : []
+
+  if (!user || !profile) return null
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
-            Academic Session Management
+            Work Session Management
           </p>
           <h2 className="text-2xl font-bold text-foreground">Sessions</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Log and manage all your work sessions
+          </p>
         </div>
-        <button className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
-          + New Session
-        </button>
+        <SessionSheet profile={profile} lastSession={sessions[0]} />
       </div>
 
-      <Card className="shadow-none border-border">
-        <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted mb-4">
-            <CalendarCheck className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <p className="text-base font-semibold text-foreground">Coming soon</p>
-          <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-            Session management is being built. You'll be able to log, track and manage all your invigilation sessions here.
-          </p>
-        </CardContent>
-      </Card>
+      {/* ── Lista ──────────────────────────────────────────────────── */}
+      <SessionList sessions={sessions} profile={profile} />
+
     </div>
   )
 }

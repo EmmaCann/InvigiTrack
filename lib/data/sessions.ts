@@ -153,6 +153,41 @@ export async function insertSession(
 }
 
 /**
+ * Aggiorna i dati di una sessione esistente.
+ * Ricalcola earned in base ai nuovi orari e tariffa.
+ */
+export async function updateSession(
+  sessionId: string,
+  data: CreateSessionData,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  const durationMinutes = calcDurationMinutes(data.start_time, data.end_time)
+  if (durationMinutes <= 0) {
+    return { error: "L'orario di fine deve essere dopo l'orario di inizio" }
+  }
+
+  const earned = calcEarned(durationMinutes, data.hourly_rate)
+
+  const { error } = await supabase
+    .from("sessions")
+    .update({
+      session_date: data.session_date,
+      start_time:   data.start_time,
+      end_time:     data.end_time,
+      location:     data.location ?? null,
+      hourly_rate:  data.hourly_rate,
+      earned,
+      metadata:     data.metadata,
+      notes:        data.notes ?? null,
+    })
+    .eq("id", sessionId)
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+/**
  * Aggiorna lo stato di pagamento di una sessione.
  * Imposta paid_at automaticamente quando lo status diventa 'paid'.
  */
