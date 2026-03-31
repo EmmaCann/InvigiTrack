@@ -12,7 +12,9 @@
       "Bash(git stash:*)",
       "Bash(ls -la \"C:\\\\invigitrack\\\\node_modules\\\\next\\\\dist\\\\docs\"\" 2>/dev/null | head -20 || echo \"Directory not found \")",
       "mcp__Claude_Preview__preview_start",
-      "Bash(npx shadcn@latest add textarea separator --yes)"
+      "Bash(npx shadcn@latest add textarea separator --yes)",
+      "Bash(npx shadcn@latest add dialog tooltip --yes)",
+      "Bash(npx shadcn@latest add tooltip --yes)"
     ]
   }
 }

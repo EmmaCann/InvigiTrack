@@ -6,7 +6,7 @@
 import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
 import { getSessionsByUser } from "@/lib/data/sessions"
-import { SessionSheet } from "@/components/sessions/session-sheet"
+import { SessionDialog } from "@/components/sessions/session-dialog"
 import { SessionList } from "@/components/sessions/session-list"
 
 export default async function SessionsPage() {
@@ -30,7 +30,7 @@ export default async function SessionsPage() {
             Log and manage all your work sessions
           </p>
         </div>
-        <SessionSheet profile={profile} lastSession={sessions[0]} />
+        <SessionDialog profile={profile} lastSession={sessions[0]} />
       </div>
 
       {/* ── Lista ──────────────────────────────────────────────────── */}
