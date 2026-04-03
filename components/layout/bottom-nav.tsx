@@ -86,20 +86,20 @@ function NavTab({
       href={href}
       className={cn(
         "flex flex-1 flex-col items-center justify-center gap-1 rounded-xl py-1.5 transition-colors",
-        active ? "text-teal-800" : "text-muted-foreground"
+        active ? "text-primary" : "text-muted-foreground"
       )}
     >
       <Icon
         className={cn(
           "h-[1.15rem] w-[1.15rem] shrink-0 transition-transform active:scale-90",
-          active && "text-teal-700"
+          active && "text-primary"
         )}
         strokeWidth={active ? 2.35 : 1.85}
       />
       <span
         className={cn(
           "text-[10px] font-semibold leading-none",
-          active ? "text-teal-800" : "text-muted-foreground"
+          active ? "text-primary" : "text-muted-foreground"
         )}
       >
         {label}

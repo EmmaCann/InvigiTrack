@@ -54,9 +54,9 @@ export function Header({ profile }: { profile: Profile }) {
         <button
           type="button"
           onClick={() => openDashboardSearch()}
-          className="flex w-full max-w-md items-center gap-3 rounded-2xl border border-white/80 bg-gradient-to-r from-white/55 via-white/45 to-teal-50/35 px-3.5 py-2 text-left shadow-[0_8px_30px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl backdrop-saturate-150 transition-all hover:border-teal-200/60 hover:from-white/65 hover:shadow-[0_12px_36px_rgba(13,148,136,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/30"
+          className="flex w-full max-w-md items-center gap-3 rounded-2xl border border-white/80 bg-gradient-to-r from-white/55 via-white/45 to-primary/8 px-3.5 py-2 text-left shadow-[0_8px_30px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl backdrop-saturate-150 transition-all hover:border-primary/25 hover:from-white/65 hover:shadow-[0_12px_36px_rgba(37,99,235,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         >
-          <Search className="h-4 w-4 shrink-0 text-teal-800/45" aria-hidden />
+          <Search className="h-4 w-4 shrink-0 text-primary/55" aria-hidden />
           <span className="flex-1 truncate text-sm text-slate-500">
             Cerca sessioni, esami, pagine…
           </span>

@@ -85,13 +85,13 @@ export function SearchSpotlight({
       <div
         className={cn(
           "relative w-full max-w-xl overflow-hidden rounded-2xl border border-white/70",
-          "bg-gradient-to-b from-white/75 via-white/65 to-teal-50/35",
+          "bg-gradient-to-b from-white/75 via-white/65 to-primary/8",
           "shadow-[0_24px_80px_rgba(15,118,110,0.12),0_0_0_1px_rgba(255,255,255,0.8)_inset]",
           "backdrop-blur-2xl backdrop-saturate-[1.35]"
         )}
       >
         <div className="flex items-center gap-3 border-b border-white/50 px-4 py-3.5">
-          <Search className="h-5 w-5 shrink-0 text-teal-800/50" />
+          <Search className="h-5 w-5 shrink-0 text-primary/55" />
           <input
             ref={inputRef}
             value={query}
@@ -121,7 +121,7 @@ export function SearchSpotlight({
                     onClick={() => onOpenChange(false)}
                     className={cn(
                       "flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                      "hover:bg-teal-50/80 focus-visible:bg-teal-50/80 focus-visible:outline-none"
+                      "hover:bg-primary/[0.08] focus-visible:bg-primary/[0.08] focus-visible:outline-none"
                     )}
                   >
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -130,7 +130,7 @@ export function SearchSpotlight({
                         <span className="text-xs text-muted-foreground">{e.hint}</span>
                       )}
                     </span>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-teal-700/40" />
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-primary/45" />
                   </Link>
                 </li>
               ))}

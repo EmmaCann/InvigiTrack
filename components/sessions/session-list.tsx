@@ -172,7 +172,7 @@ export function SessionList({ sessions, profile }: Props) {
         ].map((s) => (
           <div
             key={s.label}
-            className="relative overflow-hidden rounded-2xl border border-white/75 bg-gradient-to-br from-white/48 via-teal-50/25 to-white/35 px-4 py-3.5 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl backdrop-saturate-150"
+            className="glass rounded-2xl px-4 py-3.5 shadow-sm shadow-black/[0.04]"
           >
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{s.label}</p>
             <p className={`mt-1 text-xl font-bold ${s.color}`}>{s.value}</p>
@@ -227,18 +227,13 @@ export function SessionList({ sessions, profile }: Props) {
                   return (
                     <div
                       key={session.id}
-                      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl rounded-r-xl border border-teal-100/45 bg-gradient-to-br from-teal-50/40 via-white/38 to-white/28 py-3.5 pl-4 pr-5 shadow-[0_10px_40px_rgba(15,23,42,0.055)] backdrop-blur-xl backdrop-saturate-[1.4] transition-all hover:border-teal-200/55 hover:shadow-[0_14px_44px_rgba(13,148,136,0.1)] sm:flex-row sm:items-center"
+                      className="group relative flex flex-col gap-3 rounded-2xl glass px-4 py-3.5 shadow-sm shadow-black/[0.04] transition-all hover:shadow-md hover:shadow-primary/[0.08] hover:border-primary/20 sm:flex-row sm:items-center"
                     >
-                      <span
-                        className="absolute right-0 top-1/2 z-[1] h-[58%] w-1 -translate-y-1/2 rounded-full bg-teal-600 shadow-[2px_0_14px_rgba(13,148,136,0.32)]"
-                        aria-hidden
-                      />
-
                       {/* Status accent bar */}
-                      <div className={`absolute left-0 top-3 bottom-3 z-[1] w-[3px] rounded-full ${statusConf.dot}`} />
+                      <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-full ${statusConf.dot}`} />
 
                       {/* Left: info */}
-                      <div className="flex min-w-0 flex-1 flex-col gap-1 pl-4 pr-2">
+                      <div className="flex min-w-0 flex-1 flex-col gap-1 pl-4">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-sm text-foreground truncate">
                             {meta.exam_name ?? "Sessione"}

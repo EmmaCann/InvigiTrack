@@ -23,6 +23,12 @@ const STATUS_LABEL: Record<string, string> = {
   paid:    "Pagato",
 }
 
+const SESSION_STRIPE: Record<string, string> = {
+  paid:    "bg-emerald-500 shadow-[0_0_14px_rgba(16,185,129,0.4)]",
+  pending: "bg-blue-500 shadow-[0_0_14px_rgba(59,130,246,0.35)]",
+  unpaid:  "bg-emerald-500 shadow-[0_0_14px_rgba(16,185,129,0.35)]",
+}
+
 // ─── Pagina ───────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
@@ -78,16 +84,16 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
 
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
+          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
             Bentornato/a
           </p>
-          <h2 className="text-2xl font-bold text-foreground">{displayName}</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">{displayName}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Ecco il riepilogo della tua attività
           </p>
         </div>
@@ -98,45 +104,47 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* ── Stat cards ─────────────────────────────────────────────── */}
+      {/* ── Stat cards — vetro dashboard ───────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="relative overflow-hidden rounded-2xl border border-white/78 bg-gradient-to-br from-white/52 via-white/38 to-teal-50/22 px-4 py-4 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl backdrop-saturate-150"
+            className="glass-dashboard rounded-2xl px-5 py-5 transition-shadow hover:shadow-[0_12px_40px_rgba(15,23,42,0.08)]"
           >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 {stat.label}
               </p>
-              <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${stat.bg}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${stat.bg}`}>
+                <stat.icon className={`h-[1.05rem] w-[1.05rem] ${stat.color}`} />
               </div>
             </div>
-            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{stat.sub}</p>
+            <p className={`text-[1.65rem] font-bold leading-tight tabular-nums ${stat.color}`}>
+              {stat.value}
+            </p>
+            <p className="mt-1.5 text-xs text-muted-foreground">{stat.sub}</p>
           </div>
         ))}
       </div>
 
       {/* ── Sessioni recenti ───────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/78 bg-gradient-to-b from-white/50 via-white/36 to-teal-50/18 shadow-[0_12px_48px_rgba(15,23,42,0.06)] backdrop-blur-xl backdrop-saturate-150">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      <div className="glass-dashboard rounded-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-white/50 px-5 pb-4 pt-5">
           <div>
             <h3 className="text-base font-semibold text-foreground">Sessioni recenti</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Le tue ultime sessioni registrate
             </p>
           </div>
           <Link
             href="/dashboard/sessions"
-            className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            className="mt-0.5 flex shrink-0 items-center gap-1 text-xs font-semibold text-primary hover:underline"
           >
             Vedi tutte <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
 
-        <div className="px-5 pb-5">
+        <div className="p-4 sm:p-5">
           {recentSessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/8 mb-3">
@@ -154,42 +162,46 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {recentSessions.map((session: Session) => {
                 const meta = session.metadata as { exam_name?: string; role_type?: string }
+                const stripe = SESSION_STRIPE[session.payment_status] ?? SESSION_STRIPE.unpaid
                 return (
                   <div
                     key={session.id}
-                    className="group relative flex items-center gap-4 overflow-hidden rounded-2xl rounded-r-xl border border-teal-100/45 bg-gradient-to-r from-teal-50/35 via-white/35 to-white/28 py-3 pl-3.5 pr-5 shadow-[0_8px_32px_rgba(15,23,42,0.05)] backdrop-blur-xl backdrop-saturate-[1.35] transition-all hover:border-teal-200/50"
+                    className="glass-dashboard relative flex flex-wrap items-center gap-4 overflow-hidden rounded-xl px-4 py-3.5 pr-5 transition-[box-shadow] hover:shadow-[0_8px_28px_rgba(15,23,42,0.08)] sm:flex-nowrap"
                   >
                     <span
-                      className="absolute right-0 top-1/2 h-1/2 w-1 -translate-y-1/2 rounded-full bg-teal-600 shadow-[2px_0_12px_rgba(13,148,136,0.28)]"
+                      className={`absolute right-0 top-2 bottom-2 w-[3px] rounded-l-full opacity-95 ${stripe}`}
                       aria-hidden
                     />
+
                     {/* Data */}
-                    <div className="w-10 shrink-0 text-center">
-                      <p className="text-base font-bold text-foreground leading-none">
+                    <div className="w-11 shrink-0 text-center">
+                      <p className="text-lg font-bold leading-none text-foreground tabular-nums">
                         {new Date(session.session_date + "T00:00:00").getDate()}
                       </p>
-                      <p className="text-[10px] text-muted-foreground uppercase">
+                      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                         {new Date(session.session_date + "T00:00:00").toLocaleDateString("it-IT", { month: "short" })}
                       </p>
                     </div>
 
-                    <div className="h-8 w-px bg-border/60" />
+                    <div className="hidden h-10 w-px shrink-0 bg-border/50 sm:block" />
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">
                         {meta.exam_name ?? "Sessione"}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                        <span>{formatTime(session.start_time)} – {formatTime(session.end_time)}</span>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                        <span>
+                          {formatTime(session.start_time)} – {formatTime(session.end_time)}
+                        </span>
                         {session.location && (
                           <>
-                            <span>·</span>
+                            <span className="text-border">·</span>
                             <span className="flex items-center gap-0.5">
-                              <MapPin className="h-3 w-3" />
+                              <MapPin className="h-3 w-3 shrink-0" />
                               {session.location}
                             </span>
                           </>
@@ -198,11 +210,13 @@ export default async function DashboardPage() {
                     </div>
 
                     {/* Earned + Status */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-sm font-bold text-foreground tabular-nums">
+                    <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-end">
+                      <span className="text-base font-bold tabular-nums text-foreground">
                         £{session.earned.toFixed(2)}
                       </span>
-                      <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_STYLE[session.payment_status]}`}>
+                      <span
+                        className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_STYLE[session.payment_status]}`}
+                      >
                         {STATUS_LABEL[session.payment_status] ?? session.payment_status}
                       </span>
                     </div>
