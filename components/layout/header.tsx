@@ -80,7 +80,7 @@ export function Header({ profile }: { profile: Profile }) {
         {/* Notifiche */}
         <button
           type="button"
-          className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-white/75 bg-white/45 text-muted-foreground shadow-sm backdrop-blur-md transition-all hover:bg-white/65 hover:text-foreground"
+          className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-white/75 bg-white/45 text-muted-foreground shadow-sm backdrop-blur-md transition-all hover:bg-white/65 hover:text-foreground"
         >
           <Bell className="h-4 w-4" />
           {/* Dot notifica — mostralo solo se ci sono notifiche */}

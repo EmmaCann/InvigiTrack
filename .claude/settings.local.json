@@ -14,7 +14,11 @@
       "mcp__Claude_Preview__preview_start",
       "Bash(npx shadcn@latest add textarea separator --yes)",
       "Bash(npx shadcn@latest add dialog tooltip --yes)",
-      "Bash(npx shadcn@latest add tooltip --yes)"
+      "Bash(npx shadcn@latest add tooltip --yes)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:65145)",
+      "Bash(netstat -ano)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(findstr :3000)"
     ]
   }
 }

@@ -176,7 +176,7 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
 
       <DialogContent
         showCloseButton
-        className="flex max-h-[min(90vh,760px)] w-full max-w-[520px] flex-col gap-0 overflow-hidden rounded-2xl border border-white/80 bg-background p-0 shadow-2xl shadow-primary/10 ring-1 ring-primary/10 sm:max-w-[520px]"
+        className="flex max-h-[min(90vh,760px)] w-full max-w-[520px] flex-col gap-0 overflow-hidden rounded-2xl border border-white/80 bg-background p-0 shadow-2xl shadow-primary/10 ring-1 ring-primary/10 sm:max-w-[820px]"
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
           {/* Header */}
@@ -313,8 +313,8 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="invigilator">Invigilatore</SelectItem>
-                    <SelectItem value="supervisor">Supervisore</SelectItem>
+                    <SelectItem value="invigilator">Invigilator</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>

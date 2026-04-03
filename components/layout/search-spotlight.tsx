@@ -77,20 +77,19 @@ export function SearchSpotlight({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]"
+        className="absolute inset-0 cursor-default bg-black/25 backdrop-blur-[3px]"
         aria-label="Chiudi ricerca"
         onClick={() => onOpenChange(false)}
       />
 
       <div
         className={cn(
-          "relative w-full max-w-xl overflow-hidden rounded-2xl border border-white/70",
-          "bg-gradient-to-b from-white/75 via-white/65 to-primary/8",
-          "shadow-[0_24px_80px_rgba(15,118,110,0.12),0_0_0_1px_rgba(255,255,255,0.8)_inset]",
-          "backdrop-blur-2xl backdrop-saturate-[1.35]"
+          "relative w-full max-w-xl overflow-hidden rounded-2xl",
+          "border border-white/40 bg-white/75 shadow-2xl shadow-black/[0.22]",
+          "backdrop-blur-2xl backdrop-saturate-[1.8]"
         )}
       >
-        <div className="flex items-center gap-3 border-b border-white/50 px-4 py-3.5">
+        <div className="flex items-center gap-3 border-b border-black/[0.07] px-4 py-3.5">
           <Search className="h-5 w-5 shrink-0 text-primary/55" />
           <input
             ref={inputRef}
@@ -120,8 +119,8 @@ export function SearchSpotlight({
                     href={e.href}
                     onClick={() => onOpenChange(false)}
                     className={cn(
-                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                      "hover:bg-primary/[0.08] focus-visible:bg-primary/[0.08] focus-visible:outline-none"
+                      "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+                      "hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
                     )}
                   >
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -138,7 +137,7 @@ export function SearchSpotlight({
           )}
         </div>
 
-        <p className="border-t border-white/50 px-4 py-2.5 text-[11px] text-muted-foreground">
+        <p className="border-t border-black/[0.07] px-4 py-2.5 text-[11px] text-muted-foreground">
           Suggerimento: usa <kbd className="rounded border border-white/60 bg-white/40 px-1 font-mono text-[10px]">⌘K</kbd>{" "}
           o <kbd className="rounded border border-white/60 bg-white/40 px-1 font-mono text-[10px]">Ctrl K</kbd> da
           qualsiasi pagina.

@@ -17,10 +17,10 @@ export default async function SessionsPage() {
   if (!user || !profile) return null
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
 
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between ">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
             Gestione sessioni
