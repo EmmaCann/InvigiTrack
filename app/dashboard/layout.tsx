@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
 import { BottomNav } from "@/components/layout/bottom-nav"
+import { DashboardSearchLayer } from "@/components/layout/dashboard-search-layer"
 
 export default async function DashboardLayout({
   children,
@@ -30,6 +31,8 @@ export default async function DashboardLayout({
 
       {/* ── Gradient mesh background ─────────────────────────────── */}
       <GradientMesh />
+
+      <DashboardSearchLayer />
 
       {/* ── Sidebar — solo desktop ─────────────────────────────────── */}
       <div className="hidden md:flex">

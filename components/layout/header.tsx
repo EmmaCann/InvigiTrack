@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { logout } from "@/app/actions/auth"
+import { openDashboardSearch } from "@/components/layout/dashboard-search-layer"
 import type { Profile } from "@/types/database"
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -36,7 +37,7 @@ export function Header({ profile }: { profile: Profile }) {
   const page = pageTitles[pathname] ?? { title: "InvigiTrack", subtitle: "" }
 
   return (
-    <header className="glass flex h-[3.75rem] shrink-0 items-center justify-between border-b border-white/60 px-5">
+    <header className="glass flex h-[3.75rem] shrink-0 items-center justify-between border-b border-white/55 px-5">
 
       {/* Titolo pagina */}
       <div className="min-w-0">
@@ -48,16 +49,21 @@ export function Header({ profile }: { profile: Profile }) {
         )}
       </div>
 
-      {/* Centro — barra di ricerca */}
-      <div className="hidden lg:flex flex-1 max-w-xs mx-6">
-        <div className="flex w-full items-center gap-2 rounded-xl border border-white/70 bg-white/60 px-3 py-1.5 transition-all focus-within:bg-white/80 focus-within:border-primary/30 focus-within:shadow-sm">
-          <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-          <input
-            type="text"
-            placeholder="Cerca sessioni, esami..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50 text-foreground"
-          />
-        </div>
+      {/* Centro — ricerca (apre Spotlight stile vetro) */}
+      <div className="mx-4 hidden min-w-0 max-w-md flex-1 justify-center md:flex lg:mx-8">
+        <button
+          type="button"
+          onClick={() => openDashboardSearch()}
+          className="flex w-full max-w-md items-center gap-3 rounded-2xl border border-white/80 bg-gradient-to-r from-white/55 via-white/45 to-teal-50/35 px-3.5 py-2 text-left shadow-[0_8px_30px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl backdrop-saturate-150 transition-all hover:border-teal-200/60 hover:from-white/65 hover:shadow-[0_12px_36px_rgba(13,148,136,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/30"
+        >
+          <Search className="h-4 w-4 shrink-0 text-teal-800/45" aria-hidden />
+          <span className="flex-1 truncate text-sm text-slate-500">
+            Cerca sessioni, esami, pagine…
+          </span>
+          <kbd className="hidden shrink-0 rounded-md border border-white/70 bg-white/55 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm sm:inline-block">
+            ⌘K
+          </kbd>
+        </button>
       </div>
 
       {/* Destra */}
@@ -72,7 +78,10 @@ export function Header({ profile }: { profile: Profile }) {
         )}
 
         {/* Notifiche */}
-        <button className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-white/70 bg-white/60 text-muted-foreground hover:bg-white/80 hover:text-foreground transition-all">
+        <button
+          type="button"
+          className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-white/75 bg-white/45 text-muted-foreground shadow-sm backdrop-blur-md transition-all hover:bg-white/65 hover:text-foreground"
+        >
           <Bell className="h-4 w-4" />
           {/* Dot notifica — mostralo solo se ci sono notifiche */}
           {/* <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500" /> */}

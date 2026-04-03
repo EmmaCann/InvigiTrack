@@ -101,7 +101,10 @@ export default async function DashboardPage() {
       {/* ── Stat cards ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="glass rounded-2xl px-4 py-4 shadow-sm shadow-black/[0.04]">
+          <div
+            key={stat.label}
+            className="relative overflow-hidden rounded-2xl border border-white/78 bg-gradient-to-br from-white/52 via-white/38 to-teal-50/22 px-4 py-4 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl backdrop-saturate-150"
+          >
             <div className="flex items-center justify-between mb-3">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {stat.label}
@@ -117,7 +120,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Sessioni recenti ───────────────────────────────────────── */}
-      <div className="glass rounded-2xl shadow-sm shadow-black/[0.04]">
+      <div className="relative overflow-hidden rounded-2xl border border-white/78 bg-gradient-to-b from-white/50 via-white/36 to-teal-50/18 shadow-[0_12px_48px_rgba(15,23,42,0.06)] backdrop-blur-xl backdrop-saturate-150">
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div>
             <h3 className="text-base font-semibold text-foreground">Sessioni recenti</h3>
@@ -157,8 +160,12 @@ export default async function DashboardPage() {
                 return (
                   <div
                     key={session.id}
-                    className="flex items-center gap-4 rounded-xl border border-white/40 bg-white/40 px-3.5 py-3 transition-colors hover:bg-white/60"
+                    className="group relative flex items-center gap-4 overflow-hidden rounded-2xl rounded-r-xl border border-teal-100/45 bg-gradient-to-r from-teal-50/35 via-white/35 to-white/28 py-3 pl-3.5 pr-5 shadow-[0_8px_32px_rgba(15,23,42,0.05)] backdrop-blur-xl backdrop-saturate-[1.35] transition-all hover:border-teal-200/50"
                   >
+                    <span
+                      className="absolute right-0 top-1/2 h-1/2 w-1 -translate-y-1/2 rounded-full bg-teal-600 shadow-[2px_0_12px_rgba(13,148,136,0.28)]"
+                      aria-hidden
+                    />
                     {/* Data */}
                     <div className="w-10 shrink-0 text-center">
                       <p className="text-base font-bold text-foreground leading-none">

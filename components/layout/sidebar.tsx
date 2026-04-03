@@ -7,30 +7,38 @@ import { cn } from "@/lib/utils"
 import { NAV_ITEMS, SETTINGS_ITEM, isActiveRoute } from "./nav-items"
 
 function NavLink({
-  href, label, icon: Icon, active,
+  href,
+  label,
+  icon: Icon,
+  active,
 }: {
-  href: string; label: string; icon: React.ElementType; active: boolean
+  href: string
+  label: string
+  icon: React.ElementType
+  active: boolean
 }) {
   return (
     <Link
       href={href}
       className={cn(
-        // mx-3 so the bar at -right-3 lands flush at the aside's inner right edge
-        "group relative mx-3 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150",
+        "group relative mx-2 flex items-center gap-3 rounded-l-xl py-2.5 pl-3 pr-4 text-[11px] font-semibold uppercase tracking-[0.1em] transition-all duration-200",
         active
-          ? "bg-primary/[0.08] text-primary font-semibold"
-          : "font-medium text-muted-foreground hover:bg-black/[0.04] hover:text-foreground"
+          ? "bg-teal-50/95 text-teal-900 shadow-[inset_0_0_0_1px_rgba(13,148,136,0.12)]"
+          : "text-slate-500 hover:bg-black/[0.035] hover:text-foreground"
       )}
     >
       {active && (
-        <span className="absolute -right-3 inset-y-1.5 w-[5px] rounded-full bg-primary shadow-sm shadow-primary/40" />
+        <span
+          className="absolute right-0 top-1/2 h-[64%] w-1 -translate-y-1/2 rounded-full bg-teal-600 shadow-[2px_0_12px_rgba(13,148,136,0.35)]"
+          aria-hidden
+        />
       )}
       <Icon
         className={cn(
-          "h-[1.05rem] w-[1.05rem] shrink-0 transition-colors duration-150",
-          active ? "text-primary" : "text-muted-foreground/60 group-hover:text-foreground"
+          "h-[1.05rem] w-[1.05rem] shrink-0 transition-colors duration-200",
+          active ? "text-teal-800" : "text-slate-400 group-hover:text-foreground"
         )}
-        strokeWidth={active ? 2.3 : 1.8}
+        strokeWidth={active ? 2.35 : 1.85}
       />
       <span className="truncate">{label}</span>
     </Link>
@@ -41,25 +49,33 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="glass-strong flex h-full w-56 shrink-0 flex-col border-r border-white/50 shadow-lg shadow-black/[0.06]">
+    <aside className="glass-strong flex h-full w-56 shrink-0 flex-col border-r border-white/55 shadow-lg shadow-teal-900/[0.04]">
 
-      {/* ── Logo ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col items-center gap-2.5 border-b border-white/40 px-4 py-5">
-        <Image
-          src="/logo.png"
-          alt="InvigiTrack"
-          width={40}
-          height={44}
-          className="shrink-0"
-          priority
-        />
-        <p className="text-[15px] font-bold tracking-tight text-foreground">InvigiTrack</p>
-      </div>
+      {/* Brand */}
+      <Link
+        href="/dashboard"
+        className="group flex items-center gap-3 border-b border-white/50 px-3.5 py-4 transition-colors hover:bg-white/35"
+      >
+        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-white via-white to-teal-50 shadow-md shadow-teal-900/8 ring-1 ring-white/90 ring-inset">
+          <Image
+            src="/logo.png"
+            alt=""
+            width={34}
+            height={38}
+            className="size-8 object-contain opacity-[0.92] transition-transform duration-300 group-hover:scale-[1.04]"
+            priority
+          />
+        </div>
+        <div className="min-w-0 flex-1 text-left leading-tight">
+          <p className="text-[15px] font-bold tracking-tight text-foreground">InvigiTrack</p>
+          <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-teal-800/55">
+            Precisione accademica
+          </p>
+        </div>
+      </Link>
 
-      {/* ── Nav ──────────────────────────────────────────────────── */}
-      {/* No px on nav — NavLink uses mx-3 so the accent bar can bleed to sidebar edge */}
       <nav className="flex-1 overflow-y-auto py-4">
-        <p className="mb-2 px-6 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+        <p className="mb-2 px-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400/90">
           Menu
         </p>
         {NAV_ITEMS.map((item) => (
@@ -73,8 +89,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* ── Impostazioni ─────────────────────────────────────────── */}
-      <div className="border-t border-white/40 py-3">
+      <div className="border-t border-white/50 py-3">
         <NavLink
           href={SETTINGS_ITEM.href}
           label={SETTINGS_ITEM.label}

@@ -153,28 +153,50 @@
   :focus-visible { @apply outline-none ring-2 ring-ring ring-offset-1; }
 }
 
-/* ─── Glass utilities ──────────────────────────────────────────────────────── */
+/* ─── Glass utilities — più “vetro” (blur + bordo chiaro + alone) ─────────── */
 @layer utilities {
   .glass {
-    background: rgba(255, 255, 255, 0.78);
-    backdrop-filter: blur(16px) saturate(1.6);
-    -webkit-backdrop-filter: blur(16px) saturate(1.6);
-    border: 1px solid rgba(255, 255, 255, 0.70);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 12px rgba(0,0,0,0.03);
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.62) 0%,
+      rgba(255, 255, 255, 0.48) 55%,
+      rgba(255, 255, 255, 0.38) 100%
+    );
+    backdrop-filter: blur(22px) saturate(1.65);
+    -webkit-backdrop-filter: blur(22px) saturate(1.65);
+    border: 1px solid rgba(255, 255, 255, 0.88);
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 12px 40px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
   }
 
   .glass-sm {
-    background: rgba(255, 255, 255, 0.68);
-    backdrop-filter: blur(10px) saturate(1.5);
-    -webkit-backdrop-filter: blur(10px) saturate(1.5);
-    border: 1px solid rgba(255, 255, 255, 0.60);
+    background: linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.4) 100%
+    );
+    backdrop-filter: blur(14px) saturate(1.55);
+    -webkit-backdrop-filter: blur(14px) saturate(1.55);
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    box-shadow:
+      0 8px 28px rgba(15, 23, 42, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.75);
   }
 
   .glass-strong {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(24px) saturate(1.8);
-    -webkit-backdrop-filter: blur(24px) saturate(1.8);
-    border: 1px solid rgba(255, 255, 255, 0.75);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 4px 24px rgba(0,0,0,0.04);
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.78) 0%,
+      rgba(255, 255, 255, 0.62) 100%
+    );
+    backdrop-filter: blur(28px) saturate(1.75);
+    -webkit-backdrop-filter: blur(28px) saturate(1.75);
+    border: 1px solid rgba(255, 255, 255, 0.82);
+    box-shadow:
+      0 1px 3px rgba(15, 23, 42, 0.05),
+      0 16px 48px rgba(15, 23, 42, 0.055),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
   }
 }
