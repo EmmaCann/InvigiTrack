@@ -1,28 +1,28 @@
-import { getCurrentUser } from "@/lib/data/auth"
+import { getCurrentUser }    from "@/lib/data/auth"
+import { getProfileById }    from "@/lib/data/profiles"
 import { getSessionsByUser } from "@/lib/data/sessions"
-import { CalendarView } from "@/components/calendar/calendar-view"
+import { CalendarView }      from "@/components/calendar/calendar-view"
 
 export default async function CalendarPage() {
   const user     = await getCurrentUser()
+  const profile  = user ? await getProfileById(user.id) : null
   const sessions = user ? await getSessionsByUser(user.id) : []
+
+  if (!user || !profile) return null
 
   return (
     <div className="space-y-6">
-
-      {/* ── Header ─────────────────────────────────────────────────── */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
-          Vista mensile
+          Vista calendario
         </p>
         <h2 className="text-2xl font-bold text-foreground">Calendario</h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Visualizza le tue sessioni nel calendario
+          Visualizza e gestisci le tue sessioni nel calendario
         </p>
       </div>
 
-      {/* ── Calendario ─────────────────────────────────────────────── */}
-      <CalendarView sessions={sessions} />
-
+      <CalendarView sessions={sessions} profile={profile} />
     </div>
   )
 }

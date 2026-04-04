@@ -75,10 +75,13 @@ interface Props {
   profile: Profile
   session?: Session
   lastSession?: Session
+  defaultDate?: string       // pre-compila session_date (dal calendario)
+  defaultStartTime?: string  // pre-compila start_time (dal click su slot orario)
   trigger?: React.ReactNode
+  onSuccess?: () => void     // callback dopo salvataggio (per il calendario)
 }
 
-export function SessionDialog({ profile, session, lastSession, trigger }: Props) {
+export function SessionDialog({ profile, session, lastSession, defaultDate, defaultStartTime, trigger, onSuccess }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isLoading, setLoading] = useState(false)
@@ -100,8 +103,8 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
       }
     }
     return {
-      session_date: todayISO(),
-      start_time: "",
+      session_date: defaultDate ?? todayISO(),
+      start_time: defaultStartTime ?? "",
       end_time: "",
       location: "",
       exam_name: "",
@@ -153,6 +156,7 @@ export function SessionDialog({ profile, session, lastSession, trigger }: Props)
     }
     setOpen(false)
     router.refresh()
+    onSuccess?.()
   }
 
   const defaultTrigger = isEdit ? (

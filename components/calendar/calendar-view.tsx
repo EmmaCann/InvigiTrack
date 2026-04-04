@@ -1,9 +1,38 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronLeft, ChevronRight, MapPin } from "lucide-react"
+import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { Session } from "@/types/database"
+import { useEffect, useRef } from "react"
+import { DayPanel } from "./day-panel"
+import { WeekGrid, getWeekStart } from "./week-grid"
+import { SessionDialog } from "@/components/sessions/session-dialog"
+import type { Session, Profile } from "@/types/database"
+
+// ─── SlotDialog — apre SessionDialog programmaticamente ──────────────────────
+
+function SlotDialog({
+  profile, lastSession, slotDate, slotTime, onClose,
+}: {
+  profile: Profile
+  lastSession?: Session
+  slotDate: string
+  slotTime: string | null
+  onClose: () => void
+}) {
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => { triggerRef.current?.click() }, [])
+  return (
+    <SessionDialog
+      profile={profile}
+      lastSession={lastSession}
+      defaultDate={slotDate}
+      defaultStartTime={slotTime ?? undefined}
+      onSuccess={onClose}
+      trigger={<button ref={triggerRef} className="hidden" />}
+    />
+  )
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -13,34 +42,83 @@ const STATUS_DOT: Record<string, string> = {
   paid:    "bg-emerald-400",
 }
 
-function formatTime(t: string) { return t.slice(0, 5) }
-
 const DAY_LABELS = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]
 
-// ─── Component ────────────────────────────────────────────────────────────────
+type CalView = "month" | "week"
+
+function toDateStr(year: number, month: number, day: number): string {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d)
+  r.setDate(r.getDate() + n)
+  return r
+}
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
   sessions: Session[]
+  profile:  Profile
 }
 
-export function CalendarView({ sessions }: Props) {
+// ─── Componente ──────────────────────────────────────────────────────────────
+
+export function CalendarView({ sessions, profile }: Props) {
   const today = new Date()
-  const [current, setCurrent] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
+  today.setHours(0, 0, 0, 0)
+
+  const [view,        setView]        = useState<CalView>("month")
+  const [current,     setCurrent]     = useState(new Date(today.getFullYear(), today.getMonth(), 1))
+  const [weekStart,   setWeekStart]   = useState(() => getWeekStart(today))
   const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate())
+  const [selMonth,    setSelMonth]    = useState(today.getMonth())
+  const [selYear,     setSelYear]     = useState(today.getFullYear())
+  const [slotDate,    setSlotDate]    = useState<string | null>(null)
+  const [slotTime,    setSlotTime]    = useState<string | null>(null)
+  const [dialogOpen,  setDialogOpen]  = useState(false)
 
   const year  = current.getFullYear()
   const month = current.getMonth()
 
-  // Month label
-  const monthLabel = current.toLocaleDateString("it-IT", { month: "long", year: "numeric" })
+  // ── Month label + navigazione ────────────────────────────────────────────────
+  const monthLabel = view === "month"
+    ? current.toLocaleDateString("it-IT", { month: "long", year: "numeric" })
+    : (() => {
+        const wEnd = addDays(weekStart, 6)
+        const from = weekStart.toLocaleDateString("it-IT", { day: "numeric", month: "short" })
+        const to   = wEnd.toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })
+        return `${from} – ${to}`
+      })()
 
-  // Sessions for current month
+  function prev() {
+    if (view === "month") setCurrent(new Date(year, month - 1, 1))
+    else setWeekStart((w) => addDays(w, -7))
+  }
+  function next() {
+    if (view === "month") setCurrent(new Date(year, month + 1, 1))
+    else setWeekStart((w) => addDays(w, 7))
+  }
+  function goToday() {
+    setCurrent(new Date(today.getFullYear(), today.getMonth(), 1))
+    setWeekStart(getWeekStart(today))
+    setSelectedDay(today.getDate())
+    setSelMonth(today.getMonth())
+    setSelYear(today.getFullYear())
+  }
+
+  // ── Sessioni del mese corrente ───────────────────────────────────────────────
   const monthSessions = sessions.filter((s) => {
     const d = new Date(s.session_date + "T00:00:00")
     return d.getMonth() === month && d.getFullYear() === year
   })
 
-  // Group by day number
+  const monthTotalMins  = monthSessions.reduce((a, s) => a + s.duration_minutes, 0)
+  const monthHours      = Math.floor(monthTotalMins / 60)
+  const monthExtraMins  = monthTotalMins % 60
+
+  // Raggruppa per giorno (mese corrente)
   const byDay = new Map<number, Session[]>()
   for (const s of monthSessions) {
     const day = new Date(s.session_date + "T00:00:00").getDate()
@@ -48,7 +126,12 @@ export function CalendarView({ sessions }: Props) {
     byDay.get(day)!.push(s)
   }
 
-  // Build calendar grid (Mon-first)
+  // Sessioni per il pannello laterale (giorno selezionato)
+  const selDateStr     = selectedDay ? toDateStr(selYear, selMonth, selectedDay) : null
+  const selectedSessions = sessions.filter((s) => s.session_date === selDateStr)
+  const lastSession    = sessions[0]
+
+  // ── Griglia mensile ──────────────────────────────────────────────────────────
   const firstDow  = (new Date(year, month, 1).getDay() + 6) % 7
   const daysCount = new Date(year, month + 1, 0).getDate()
   const cells: (number | null)[] = [
@@ -60,162 +143,206 @@ export function CalendarView({ sessions }: Props) {
   const isToday = (d: number) =>
     d === today.getDate() && month === today.getMonth() && year === today.getFullYear()
 
-  const selectedSessions = selectedDay ? (byDay.get(selectedDay) ?? []) : []
-  const selectedDate = selectedDay
-    ? new Date(year, month, selectedDay).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })
-    : null
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+  function selectMonthDay(day: number) {
+    setSelectedDay(day)
+    setSelMonth(month)
+    setSelYear(year)
+  }
 
-  function prev() { setCurrent(new Date(year, month - 1, 1)) }
-  function next() { setCurrent(new Date(year, month + 1, 1)) }
+  function selectWeekDay(day: number, m: number, y: number) {
+    setSelectedDay(day)
+    setSelMonth(m)
+    setSelYear(y)
+  }
+
+  function handleSlotClick(dateStr: string, startTime: string) {
+    setSlotDate(dateStr)
+    setSlotTime(startTime)
+    setDialogOpen(true)
+  }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+    <div className="space-y-4">
 
-      {/* ── Griglia calendario ───────────────────────────────────── */}
-      <div className="glass rounded-2xl shadow-sm shadow-black/[0.04] overflow-hidden">
+      {/* ── Header: navigazione + toggle vista ─────────────────────── */}
+      <div className="flex flex-wrap items-center gap-3">
 
-        {/* Header mese */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/40">
+        {/* Frecce + Oggi */}
+        <div className="flex items-center gap-1">
           <button
             onClick={prev}
-            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/60 transition-colors text-muted-foreground hover:text-foreground"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/60 hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <h3 className="text-sm font-bold capitalize text-foreground">{monthLabel}</h3>
+          <button
+            onClick={goToday}
+            className="cursor-pointer rounded-lg border border-border/50 bg-white/60 px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-white/90"
+          >
+            Oggi
+          </button>
           <button
             onClick={next}
-            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/60 transition-colors text-muted-foreground hover:text-foreground"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/60 hover:text-foreground"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Intestazioni giorno */}
-        <div className="grid grid-cols-7 border-b border-white/40">
-          {DAY_LABELS.map((d) => (
-            <div key={d} className="py-2.5 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {d}
-            </div>
-          ))}
-        </div>
+        {/* Label periodo */}
+        <h3 className="text-sm font-bold capitalize text-foreground flex-1">{monthLabel}</h3>
 
-        {/* Celle giorni */}
-        <div className="grid grid-cols-7">
-          {cells.map((day, i) => {
-            const daySessions = day ? (byDay.get(day) ?? []) : []
-            const active      = day !== null && day === selectedDay
-            const todayCell   = day !== null && isToday(day)
-            const isWeekend   = (i % 7) >= 5
-
-            return (
-              <button
-                key={i}
-                disabled={day === null}
-                onClick={() => day && setSelectedDay(day)}
-                className={cn(
-                  "relative min-h-[72px] p-2 text-left transition-all border-b border-r border-white/30",
-                  day === null  ? "bg-white/5 cursor-default"
-                  : active      ? "bg-primary/10"
-                  : isWeekend   ? "bg-white/20 hover:bg-white/40"
-                  :               "hover:bg-white/40",
-                  i % 7 === 6 && "border-r-0"
-                )}
-              >
-                {day && (
-                  <>
-                    <span className={cn(
-                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
-                      todayCell ? "bg-primary text-primary-foreground"
-                      : active  ? "bg-primary/20 text-primary"
-                      :           "text-foreground"
-                    )}>
-                      {day}
-                    </span>
-
-                    {/* Session dots / entries */}
-                    <div className="mt-1 space-y-0.5">
-                      {daySessions.slice(0, 2).map((s) => {
-                        const meta = s.metadata as { exam_name?: string }
-                        return (
-                          <div
-                            key={s.id}
-                            className="flex items-center gap-1 rounded px-1 py-0.5 bg-primary/10"
-                          >
-                            <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", STATUS_DOT[s.payment_status])} />
-                            <span className="truncate text-[10px] font-medium text-primary/80">
-                              {meta.exam_name ?? "Sessione"}
-                            </span>
-                          </div>
-                        )
-                      })}
-                      {daySessions.length > 2 && (
-                        <p className="text-[10px] text-muted-foreground px-1">
-                          +{daySessions.length - 2} altri
-                        </p>
-                      )}
-                    </div>
-                  </>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* ── Dettaglio giorno selezionato ─────────────────────────── */}
-      <div className="glass rounded-2xl shadow-sm shadow-black/[0.04] p-4 h-fit">
-        {selectedDate ? (
-          <>
-            <div className="mb-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary mb-0.5">
-                Giorno selezionato
-              </p>
-              <h4 className="text-sm font-bold capitalize text-foreground">{selectedDate}</h4>
-            </div>
-
-            {selectedSessions.length === 0 ? (
-              <div className="py-8 text-center">
-                <p className="text-sm text-muted-foreground">Nessuna sessione</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {selectedSessions.map((s) => {
-                  const meta = s.metadata as { exam_name?: string; role_type?: string }
-                  return (
-                    <div key={s.id} className="rounded-xl border border-white/50 bg-white/50 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-semibold text-foreground leading-tight">
-                          {meta.exam_name ?? "Sessione"}
-                        </p>
-                        <span className={cn(
-                          "h-2 w-2 mt-1 shrink-0 rounded-full",
-                          STATUS_DOT[s.payment_status]
-                        )} />
-                      </div>
-                      <div className="mt-1.5 space-y-1 text-xs text-muted-foreground">
-                        <p>{formatTime(s.start_time)} – {formatTime(s.end_time)}</p>
-                        {s.location && (
-                          <p className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {s.location}
-                          </p>
-                        )}
-                        <p className="font-semibold text-foreground">£{s.earned.toFixed(2)}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">Seleziona un giorno per vedere le sessioni</p>
+        {/* Mini-stats (solo mensile) */}
+        {view === "month" && monthSessions.length > 0 && (
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span>
+              <span className="font-semibold text-foreground">{monthSessions.length}</span> sessioni
+            </span>
+            <span className="text-border">·</span>
+            <span>
+              <span className="font-semibold text-foreground">
+                {monthHours}h{monthExtraMins > 0 ? ` ${monthExtraMins}min` : ""}
+              </span> lavorate
+            </span>
           </div>
         )}
+
+        {/* Toggle Month / Week */}
+        <div className="flex rounded-lg border border-border/40 bg-muted/30 p-0.5">
+          <button
+            onClick={() => setView("month")}
+            className={cn(
+              "flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all",
+              view === "month" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            Mese
+          </button>
+          <button
+            onClick={() => setView("week")}
+            className={cn(
+              "flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all",
+              view === "week" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <CalendarDays className="h-3.5 w-3.5" />
+            Settimana
+          </button>
+        </div>
+
+        {/* Bottone nuova sessione globale */}
+        <SessionDialog profile={profile} lastSession={lastSession} />
       </div>
 
+      {/* ── Layout principale ─────────────────────────────────────── */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+
+        {/* Vista mensile */}
+        {view === "month" && (
+          <div className="glass rounded-2xl overflow-hidden shadow-sm shadow-black/[0.04]">
+            {/* Intestazioni giorno */}
+            <div className="grid grid-cols-7 border-b border-white/40">
+              {DAY_LABELS.map((d) => (
+                <div key={d} className="py-2.5 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* Celle */}
+            <div className="grid grid-cols-7">
+              {cells.map((day, i) => {
+                const daySessions = day ? (byDay.get(day) ?? []) : []
+                const active      = day !== null && day === selectedDay && selMonth === month && selYear === year
+                const todayCell   = day !== null && isToday(day)
+                const isWeekend   = (i % 7) >= 5
+
+                return (
+                  <button
+                    key={i}
+                    disabled={day === null}
+                    onClick={() => day && selectMonthDay(day)}
+                    className={cn(
+                      "relative min-h-[72px] p-2 text-left transition-all border-b border-r border-white/30",
+                      day === null  ? "bg-white/5 cursor-default"
+                      : active      ? "bg-primary/10"
+                      : isWeekend   ? "bg-slate-50/40 hover:bg-white/40"
+                      :               "hover:bg-white/40",
+                      i % 7 === 6 && "border-r-0",
+                    )}
+                  >
+                    {day && (
+                      <>
+                        <span className={cn(
+                          "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                          todayCell ? "bg-primary text-primary-foreground"
+                          : active  ? "bg-primary/20 text-primary"
+                          :           "text-foreground",
+                        )}>
+                          {day}
+                        </span>
+
+                        <div className="mt-1 space-y-0.5">
+                          {daySessions.slice(0, 2).map((s) => {
+                            const meta = s.metadata as { exam_name?: string }
+                            return (
+                              <div key={s.id} className="flex items-center gap-1 rounded px-1 py-0.5 bg-primary/10">
+                                <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", STATUS_DOT[s.payment_status])} />
+                                <span className="truncate text-[10px] font-medium text-primary/80">
+                                  {meta.exam_name ?? "Sessione"}
+                                </span>
+                              </div>
+                            )
+                          })}
+                          {daySessions.length > 2 && (
+                            <p className="text-[10px] text-muted-foreground px-1">
+                              +{daySessions.length - 2} altri
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Vista settimanale */}
+        {view === "week" && (
+          <WeekGrid
+            weekStart={weekStart}
+            sessions={sessions}
+            selectedDay={selectedDay}
+            onSelectDay={selectWeekDay}
+            onSlotClick={handleSlotClick}
+          />
+        )}
+
+        {/* Pannello dettaglio giorno (sempre visibile a destra) */}
+        <DayPanel
+          selectedDay={selectedDay}
+          year={selYear}
+          month={selMonth}
+          sessions={selectedSessions}
+          profile={profile}
+          lastSession={lastSession}
+        />
+      </div>
+
+      {/* Dialog slot (aperto da click su slot orario nella vista settimana) */}
+      {dialogOpen && slotDate && (
+        <SlotDialog
+          profile={profile}
+          lastSession={lastSession}
+          slotDate={slotDate}
+          slotTime={slotTime}
+          onClose={() => { setDialogOpen(false); setSlotDate(null); setSlotTime(null) }}
+        />
+      )}
     </div>
   )
 }
