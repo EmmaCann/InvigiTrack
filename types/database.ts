@@ -105,6 +105,33 @@ export interface Session {
   updated_at: string
 }
 
+// ─── Pagamenti ────────────────────────────────────────────────────────────────
+
+export type PaymentMethod = "bank_transfer" | "cash" | "other"
+
+/** Riga della tabella `payments` */
+export interface Payment {
+  id:           string
+  user_id:      string
+  payment_date: string          // "2026-04-01"
+  amount:       number          // importo effettivamente ricevuto
+  method:       PaymentMethod
+  reference:    string | null   // es. numero CRO bonifico
+  notes:        string | null
+  created_at:   string
+}
+
+/** Riga della tabella `payment_sessions` */
+export interface PaymentSession {
+  payment_id: string
+  session_id: string
+}
+
+/** Payment arricchito con le sessioni collegate (per lo storico) */
+export interface PaymentWithSessions extends Payment {
+  sessions: Session[]
+}
+
 // ─── Tipi per form e Server Actions ──────────────────────────────────────────
 
 /** Dati raccolti durante l'onboarding */

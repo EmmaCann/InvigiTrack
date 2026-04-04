@@ -297,7 +297,7 @@ export default async function DashboardPage() {
                   )
                 })}
                 <Link
-                  href="/dashboard/sessions"
+                  href="/dashboard/payments"
                   className="mt-1 flex w-full items-center justify-center rounded-xl border border-primary/20 bg-primary/5 py-2 text-xs font-bold uppercase tracking-[0.1em] text-primary transition-colors hover:bg-primary/10"
                 >
                   Risolvi tutto
