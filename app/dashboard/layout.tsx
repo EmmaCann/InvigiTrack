@@ -67,12 +67,12 @@ export default async function DashboardLayout({
 function GradientMesh() {
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      {/* Sfondo base — bianco caldo, professionale */}
-      <div className="absolute inset-0 bg-[#f4f6fb]" />
-      {/* Blob top-right — molto sottile */}
-      <div className="absolute -right-40 -top-40 h-[700px] w-[700px] rounded-full bg-blue-300/[0.12] blur-[120px]" />
+      {/* Sfondo base — quasi bianco, leggerissima tinta fredda */}
+      <div className="absolute inset-0 bg-[#f3f6fc]" />
+      {/* Blob top-right */}
+      <div className="absolute -right-40 -top-40 h-[700px] w-[700px] rounded-full bg-blue-300/[0.16] blur-[120px]" />
       {/* Blob bottom-left */}
-      <div className="absolute -bottom-40 -left-40 h-[600px] w-[600px] rounded-full bg-indigo-200/[0.10] blur-[110px]" />
+      <div className="absolute -bottom-40 -left-40 h-[600px] w-[600px] rounded-full bg-indigo-200/[0.14] blur-[110px]" />
     </div>
   )
 }

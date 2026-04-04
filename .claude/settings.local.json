@@ -18,7 +18,11 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:65145)",
       "Bash(netstat -ano)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
-      "Bash(findstr :3000)"
+      "Bash(findstr :3000)",
+      "Bash(dir \"C:\\\\invigitrack\\\\public\")",
+      "Bash(dir \"C:\\\\invigitrack\\\\app\" /b)",
+      "Bash(powershell -Command \"Copy-Item ''C:\\\\invigitrack\\\\public\\\\logo.png'' ''C:\\\\invigitrack\\\\app\\\\icon.png'' -Force\")",
+      "Bash(del \"C:\\\\invigitrack\\\\app\\\\favicon.ico\")"
     ]
   }
 }

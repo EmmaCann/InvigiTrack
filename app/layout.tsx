@@ -24,9 +24,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: "InvigiTrack",
-    template: "%s · InvigiTrack",   // es: "Sessions · InvigiTrack"
+    template: "%s · InvigiTrack",
   },
   description: "Academic invigilation session management platform",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 }
 
 export default function RootLayout({
