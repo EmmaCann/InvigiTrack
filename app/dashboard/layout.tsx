@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
+import { getNextEvent } from "@/lib/data/calendar-events"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
@@ -26,6 +27,8 @@ export default async function DashboardLayout({
     )
   }
 
+  const nextEvent = await getNextEvent(user.id)
+
   return (
     <div className="relative flex h-[100dvh] overflow-hidden">
 
@@ -36,7 +39,7 @@ export default async function DashboardLayout({
 
       {/* ── Sidebar — solo desktop ─────────────────────────────────── */}
       <div className="hidden md:flex">
-        <Sidebar />
+        <Sidebar nextEvent={nextEvent} />
       </div>
 
       {/* ── Colonna destra ────────────────────────────────────────── */}

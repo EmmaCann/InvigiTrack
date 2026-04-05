@@ -51,12 +51,11 @@ interface Props {
   sessions:       Session[]
   selectedDay:    number | null
   onSelectDay:    (day: number, month: number, year: number) => void
-  onSlotClick:    (dateStr: string, startTime: string) => void
 }
 
 // ─── Componente ──────────────────────────────────────────────────────────────
 
-export function WeekGrid({ weekStart, sessions, selectedDay, onSelectDay, onSlotClick }: Props) {
+export function WeekGrid({ weekStart, sessions, selectedDay, onSelectDay }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const today = new Date()
@@ -76,12 +75,6 @@ export function WeekGrid({ weekStart, sessions, selectedDay, onSelectDay, onSlot
 
   // Ore da mostrare
   const hours = Array.from({ length: DAY_END - DAY_START }, (_, i) => DAY_START + i)
-
-  function handleSlotClick(day: Date, hourVal: number) {
-    const hh = String(hourVal).padStart(2, "0")
-    onSlotClick(toDateStr(day), `${hh}:00`)
-    onSelectDay(day.getDate(), day.getMonth(), day.getFullYear())
-  }
 
   return (
     <div className="glass rounded-2xl overflow-hidden flex flex-col" style={{ maxHeight: "calc(100vh - 280px)" }}>
@@ -141,7 +134,7 @@ export function WeekGrid({ weekStart, sessions, selectedDay, onSelectDay, onSlot
               {days.map((day, di) => (
                 <button
                   key={di}
-                  onClick={() => handleSlotClick(day, hour)}
+                  onClick={() => onSelectDay(day.getDate(), day.getMonth(), day.getFullYear())}
                   className={cn(
                     "cursor-pointer relative h-14 transition-colors",
                     di < 6 && "border-r border-white/20",

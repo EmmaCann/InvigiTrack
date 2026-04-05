@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { CalendarClock, MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, SETTINGS_ITEM, isActiveRoute } from "./nav-items"
+import type { CalendarEvent } from "@/types/database"
 
 function NavLink({
   href,
@@ -40,7 +41,23 @@ function NavLink({
   )
 }
 
-export function Sidebar() {
+function formatShiftDate(dateStr: string): string {
+  const today    = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
+
+  const todayStr    = today.toISOString().split("T")[0]
+  const tomorrowStr = tomorrow.toISOString().split("T")[0]
+
+  if (dateStr === todayStr)    return "Oggi"
+  if (dateStr === tomorrowStr) return "Domani"
+
+  const date = new Date(dateStr + "T00:00:00")
+  const label = date.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
   const pathname = usePathname()
 
   return (
@@ -99,11 +116,20 @@ export function Sidebar() {
               Next Shift
             </p>
           </div>
-          <p className="text-sm font-bold text-foreground">Tomorrow, 09:00</p>
-          <div className="mt-0.5 flex items-center gap-1">
-            <MapPin className="h-3 w-3 shrink-0 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">Exam Hall A, Cambridge</p>
-          </div>
+          {nextEvent ? (
+            <>
+              <p className="text-sm font-bold text-foreground">{formatShiftDate(nextEvent.event_date)}</p>
+              <p className="truncate text-sm font-semibold text-foreground">{nextEvent.title}</p>
+              {nextEvent.location && (
+                <div className="mt-0.5 flex items-center gap-1">
+                  <MapPin className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">{nextEvent.location}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground">Nessun turno in programma</p>
+          )}
         </div>
       </div>
 

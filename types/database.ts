@@ -105,6 +105,30 @@ export interface Session {
   updated_at: string
 }
 
+// ─── Calendario ───────────────────────────────────────────────────────────────
+
+/** Riga della tabella `calendar_events` */
+export interface CalendarEvent {
+  id:                   string
+  user_id:              string
+  event_date:           string        // "2026-04-28"
+  title:                string
+  location:             string | null
+  notes:                string | null
+  is_converted:         boolean       // true quando è stata creata una sessione da questo evento
+  converted_session_id: string | null // id della sessione creata
+  created_at:           string
+  updated_at:           string
+}
+
+/** Dati per creare un nuovo evento calendario */
+export interface CreateEventData {
+  event_date: string
+  title:      string
+  location?:  string
+  notes?:     string
+}
+
 // ─── Pagamenti ────────────────────────────────────────────────────────────────
 
 export type PaymentMethod = "bank_transfer" | "cash" | "other"

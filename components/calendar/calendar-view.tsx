@@ -1,38 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid } from "lucide-react"
+import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useEffect, useRef } from "react"
 import { DayPanel } from "./day-panel"
 import { WeekGrid, getWeekStart } from "./week-grid"
-import { SessionDialog } from "@/components/sessions/session-dialog"
-import type { Session, Profile } from "@/types/database"
-
-// ─── SlotDialog — apre SessionDialog programmaticamente ──────────────────────
-
-function SlotDialog({
-  profile, lastSession, slotDate, slotTime, onClose,
-}: {
-  profile: Profile
-  lastSession?: Session
-  slotDate: string
-  slotTime: string | null
-  onClose: () => void
-}) {
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  useEffect(() => { triggerRef.current?.click() }, [])
-  return (
-    <SessionDialog
-      profile={profile}
-      lastSession={lastSession}
-      defaultDate={slotDate}
-      defaultStartTime={slotTime ?? undefined}
-      onSuccess={onClose}
-      trigger={<button ref={triggerRef} className="hidden" />}
-    />
-  )
-}
+import { EventDialog } from "./event-dialog"
+import type { Session, CalendarEvent, Profile } from "@/types/database"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,12 +34,13 @@ function addDays(d: Date, n: number): Date {
 
 interface Props {
   sessions: Session[]
+  events:   CalendarEvent[]
   profile:  Profile
 }
 
 // ─── Componente ──────────────────────────────────────────────────────────────
 
-export function CalendarView({ sessions, profile }: Props) {
+export function CalendarView({ sessions, events, profile }: Props) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -75,9 +50,6 @@ export function CalendarView({ sessions, profile }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate())
   const [selMonth,    setSelMonth]    = useState(today.getMonth())
   const [selYear,     setSelYear]     = useState(today.getFullYear())
-  const [slotDate,    setSlotDate]    = useState<string | null>(null)
-  const [slotTime,    setSlotTime]    = useState<string | null>(null)
-  const [dialogOpen,  setDialogOpen]  = useState(false)
 
   const year  = current.getFullYear()
   const month = current.getMonth()
@@ -126,10 +98,23 @@ export function CalendarView({ sessions, profile }: Props) {
     byDay.get(day)!.push(s)
   }
 
-  // Sessioni per il pannello laterale (giorno selezionato)
-  const selDateStr     = selectedDay ? toDateStr(selYear, selMonth, selectedDay) : null
+  // Appuntamenti del mese corrente, raggruppati per giorno
+  const monthEvents = events.filter((ev) => {
+    const d = new Date(ev.event_date + "T00:00:00")
+    return d.getMonth() === month && d.getFullYear() === year
+  })
+  const eventsByDay = new Map<number, CalendarEvent[]>()
+  for (const ev of monthEvents) {
+    const day = new Date(ev.event_date + "T00:00:00").getDate()
+    if (!eventsByDay.has(day)) eventsByDay.set(day, [])
+    eventsByDay.get(day)!.push(ev)
+  }
+
+  // Sessioni / eventi per il pannello laterale (giorno selezionato)
+  const selDateStr       = selectedDay ? toDateStr(selYear, selMonth, selectedDay) : null
   const selectedSessions = sessions.filter((s) => s.session_date === selDateStr)
-  const lastSession    = sessions[0]
+  const selectedEvents   = events.filter((ev) => ev.event_date === selDateStr)
+  const lastSession      = sessions[0]
 
   // ── Griglia mensile ──────────────────────────────────────────────────────────
   const firstDow  = (new Date(year, month, 1).getDay() + 6) % 7
@@ -154,12 +139,6 @@ export function CalendarView({ sessions, profile }: Props) {
     setSelectedDay(day)
     setSelMonth(m)
     setSelYear(y)
-  }
-
-  function handleSlotClick(dateStr: string, startTime: string) {
-    setSlotDate(dateStr)
-    setSlotTime(startTime)
-    setDialogOpen(true)
   }
 
   return (
@@ -232,8 +211,16 @@ export function CalendarView({ sessions, profile }: Props) {
           </button>
         </div>
 
-        {/* Bottone nuova sessione globale */}
-        <SessionDialog profile={profile} lastSession={lastSession} />
+        {/* Bottone nuovo evento */}
+        <EventDialog
+          defaultDate={selDateStr ?? new Date().toISOString().split("T")[0]}
+          trigger={
+            <button className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition-colors hover:bg-primary/90">
+              <Plus className="h-4 w-4" strokeWidth={2.5} />
+              Nuovo Evento
+            </button>
+          }
+        />
       </div>
 
       {/* ── Layout principale ─────────────────────────────────────── */}
@@ -255,9 +242,11 @@ export function CalendarView({ sessions, profile }: Props) {
             <div className="grid grid-cols-7">
               {cells.map((day, i) => {
                 const daySessions = day ? (byDay.get(day) ?? []) : []
+                const dayEvents   = day ? (eventsByDay.get(day) ?? []) : []
                 const active      = day !== null && day === selectedDay && selMonth === month && selYear === year
                 const todayCell   = day !== null && isToday(day)
                 const isWeekend   = (i % 7) >= 5
+                const totalItems  = daySessions.length + dayEvents.length
 
                 return (
                   <button
@@ -265,7 +254,7 @@ export function CalendarView({ sessions, profile }: Props) {
                     disabled={day === null}
                     onClick={() => day && selectMonthDay(day)}
                     className={cn(
-                      "relative min-h-[72px] p-2 text-left transition-all border-b border-r border-white/30",
+                      "relative min-h-[96px] p-2 text-left transition-all border-b border-r border-white/30",
                       day === null  ? "bg-white/5 cursor-default"
                       : active      ? "bg-primary/10"
                       : isWeekend   ? "bg-slate-50/40 hover:bg-white/40"
@@ -285,6 +274,7 @@ export function CalendarView({ sessions, profile }: Props) {
                         </span>
 
                         <div className="mt-1 space-y-0.5">
+                          {/* Sessioni lavorative */}
                           {daySessions.slice(0, 2).map((s) => {
                             const meta = s.metadata as { exam_name?: string }
                             return (
@@ -296,9 +286,21 @@ export function CalendarView({ sessions, profile }: Props) {
                               </div>
                             )
                           })}
-                          {daySessions.length > 2 && (
+                          {/* Appuntamenti calendario */}
+                          {dayEvents.slice(0, daySessions.length >= 2 ? 0 : 2 - daySessions.length).map((ev) => (
+                            <div key={ev.id} className="flex items-center gap-1 rounded px-1 py-0.5 bg-violet-50">
+                              <span className={cn(
+                                "h-1.5 w-1.5 shrink-0 rounded-sm",
+                                ev.is_converted ? "bg-emerald-400" : "bg-violet-400",
+                              )} />
+                              <span className="truncate text-[10px] font-medium text-violet-700">
+                                {ev.title}
+                              </span>
+                            </div>
+                          ))}
+                          {totalItems > 2 && (
                             <p className="text-[10px] text-muted-foreground px-1">
-                              +{daySessions.length - 2} altri
+                              +{totalItems - 2} altri
                             </p>
                           )}
                         </div>
@@ -307,6 +309,27 @@ export function CalendarView({ sessions, profile }: Props) {
                   </button>
                 )
               })}
+            </div>
+
+            {/* Legenda */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/30 px-3 py-2.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Legenda</span>
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                <span className="text-[10px] text-muted-foreground">Non pagata</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[10px] text-muted-foreground">Pagata</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-sm bg-violet-400" />
+                <span className="text-[10px] text-muted-foreground">Evento</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-sm bg-emerald-400" />
+                <span className="text-[10px] text-muted-foreground">Registrato</span>
+              </div>
             </div>
           </div>
         )}
@@ -318,7 +341,6 @@ export function CalendarView({ sessions, profile }: Props) {
             sessions={sessions}
             selectedDay={selectedDay}
             onSelectDay={selectWeekDay}
-            onSlotClick={handleSlotClick}
           />
         )}
 
@@ -328,21 +350,12 @@ export function CalendarView({ sessions, profile }: Props) {
           year={selYear}
           month={selMonth}
           sessions={selectedSessions}
+          events={selectedEvents}
           profile={profile}
           lastSession={lastSession}
         />
       </div>
 
-      {/* Dialog slot (aperto da click su slot orario nella vista settimana) */}
-      {dialogOpen && slotDate && (
-        <SlotDialog
-          profile={profile}
-          lastSession={lastSession}
-          slotDate={slotDate}
-          slotTime={slotTime}
-          onClose={() => { setDialogOpen(false); setSlotDate(null); setSlotTime(null) }}
-        />
-      )}
     </div>
   )
 }

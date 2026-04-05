@@ -180,7 +180,7 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
 
       <DialogContent
         showCloseButton
-        className="flex max-h-[min(90vh,760px)] w-full max-w-[520px] flex-col gap-0 overflow-hidden rounded-2xl border border-white/80 bg-background p-0 shadow-2xl shadow-primary/10 ring-1 ring-primary/10 sm:max-w-[820px]"
+        className="flex max-h-[min(90vh,760px)] w-full max-w-[520px] flex-col gap-0 overflow-hidden rounded-2xl border border-white/60 bg-white/92 p-0 shadow-2xl shadow-primary/10 backdrop-blur-2xl sm:max-w-[820px]"
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
           {/* Header */}
@@ -273,7 +273,7 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-3 sm:col-span-1">
                 <Field label="Data" error={form.formState.errors.session_date?.message}>
-                  <Input type="date" className="h-11 rounded-xl" {...form.register("session_date")} />
+                  <Input type="date" max={todayISO()} className="h-11 rounded-xl" {...form.register("session_date")} />
                 </Field>
               </div>
               <div>
@@ -355,7 +355,7 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
             )}
           </div>
 
-          <div className="flex shrink-0 gap-3 border-t border-border/60 bg-muted/25 px-6 py-4">
+          <div className="flex shrink-0 gap-3 border-t border-white/50 bg-white/30 px-6 py-4 backdrop-blur-sm">
             <Button
               type="button"
               variant="outline"
