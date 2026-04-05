@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TYPES — la "forma" dei dati del database.
  *
  * Questi tipi rispecchiano esattamente le tabelle Supabase.
@@ -8,7 +8,7 @@
  * ma separati dal codice che fa le query.
  */
 
-// ─── Enum / Union types ───────────────────────────────────────────────────────
+// --- Enum / Union types -------------------------------------------------------
 
 /** Ruolo all'interno di una sessione di invigilation */
 export type InvigilationRole = "invigilator" | "supervisor"
@@ -19,7 +19,7 @@ export type PlatformRole = "user" | "admin"
 /** Stato del pagamento di una sessione */
 export type PaymentStatus = "unpaid" | "pending" | "paid"
 
-// ─── Metadata JSONB — tipizzati per categoria ─────────────────────────────────
+// --- Metadata JSONB — tipizzati per categoria ---------------------------------
 //
 // Il campo metadata nella tabella sessions è JSONB (JSON flessibile nel DB).
 // Ogni categoria ha la sua "forma" di metadata.
@@ -52,7 +52,7 @@ export type SessionMetadata =
   | PersonalTrainingMetadata
   | Record<string, unknown>
 
-// ─── Tabelle del database ─────────────────────────────────────────────────────
+// --- Tabelle del database -----------------------------------------------------
 
 /** Riga della tabella `profiles` */
 export interface Profile {
@@ -105,7 +105,7 @@ export interface Session {
   updated_at: string
 }
 
-// ─── Calendario ───────────────────────────────────────────────────────────────
+// --- Calendario ---------------------------------------------------------------
 
 /** Riga della tabella `calendar_events` */
 export interface CalendarEvent {
@@ -131,7 +131,7 @@ export interface CreateEventData {
   category_id?: string  // workspace attivo al momento della creazione
 }
 
-// ─── Pagamenti ────────────────────────────────────────────────────────────────
+// --- Pagamenti ----------------------------------------------------------------
 
 export type PaymentMethod = "bank_transfer" | "cash" | "other"
 
@@ -158,7 +158,7 @@ export interface PaymentWithSessions extends Payment {
   sessions: Session[]
 }
 
-// ─── Tipi per form e Server Actions ──────────────────────────────────────────
+// --- Tipi per form e Server Actions ------------------------------------------
 
 /** Dati raccolti durante l'onboarding */
 export interface OnboardingData {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DAL — Work Categories
  * Query sulla tabella `work_categories` e `user_category_access`.
  */
@@ -6,7 +6,7 @@
 import { createClient } from "@/lib/supabase/server"
 import type { WorkCategory } from "@/types/database"
 
-// ─── READ ─────────────────────────────────────────────────────────────────────
+// --- READ ---------------------------------------------------------------------
 
 /**
  * Recupera tutte le categorie (attive e non).
@@ -94,7 +94,7 @@ export async function getUserCategories(userId: string): Promise<WorkCategory[]>
   })) as WorkCategory[]
 }
 
-// ─── WRITE ────────────────────────────────────────────────────────────────────
+// --- WRITE --------------------------------------------------------------------
 
 /**
  * Concede l'accesso a una categoria a un utente.

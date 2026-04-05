@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation"
+﻿import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
 import { getNextEvent, getEventsByUser } from "@/lib/data/calendar-events"
@@ -60,17 +60,17 @@ export default async function DashboardLayout({
   return (
     <div className="relative flex h-[100dvh] overflow-hidden">
 
-      {/* ── Gradient mesh background ─────────────────────────────── */}
+      {/* -- Gradient mesh background ------------------------------- */}
       <GradientMesh />
 
       <DashboardSearchLayer recentSessions={recentSessions} upcomingEvents={upcomingEvents} />
 
-      {/* ── Sidebar — solo desktop ─────────────────────────────────── */}
+      {/* -- Sidebar — solo desktop ----------------------------------- */}
       <div className="hidden md:flex">
         <Sidebar nextEvent={nextEvent} />
       </div>
 
-      {/* ── Colonna destra ────────────────────────────────────────── */}
+      {/* -- Colonna destra ------------------------------------------ */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
 
         <div className="hidden md:block">

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import Image from "next/image"
@@ -63,7 +63,7 @@ export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
   return (
     <aside className="glass-strong flex h-full w-64 shrink-0 flex-col border-r border-white/55 shadow-lg shadow-primary/[0.06]">
 
-      {/* ── Logo ─────────────────────────────────────────────────── */}
+      {/* -- Logo --------------------------------------------------- */}
       <Link
         href="/dashboard"
         className="group flex items-center gap-3.5 border-b border-white/50 px-5 py-[1.1rem] transition-colors hover:bg-white/30"
@@ -82,7 +82,7 @@ export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
         </div>
       </Link>
 
-      {/* ── Nav ──────────────────────────────────────────────────── */}
+      {/* -- Nav ---------------------------------------------------- */}
       <nav className="flex-1 overflow-y-auto py-4">
         <p className="mb-2 px-6 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
           Menu
@@ -107,7 +107,7 @@ export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
         />
       </nav>
 
-      {/* ── Next Shift ───────────────────────────────────────────── */}
+      {/* -- Next Shift --------------------------------------------- */}
       <div className="px-3 pb-8">
         <div className="rounded-xl border border-border/50 bg-muted/50 px-4 py-4">
           <div className="mb-1.5 flex items-center gap-1.5">

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useMemo, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -29,7 +29,7 @@ import { changePaymentStatus, removeSession } from "@/app/actions/sessions"
 import { cn } from "@/lib/utils"
 import type { Session, Profile, PaymentStatus } from "@/types/database"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 const STATUS_CONFIG: Record<
   PaymentStatus,
@@ -129,14 +129,14 @@ const DATE_RANGE_LABELS: Record<DateRange, string> = {
 
 const PAGE_SIZE = 10
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// --- Props --------------------------------------------------------------------
 
 interface Props {
   sessions: Session[]
   profile:  Profile
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function SessionList({ sessions, profile }: Props) {
   const router = useRouter()
@@ -144,7 +144,7 @@ export function SessionList({ sessions, profile }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmId, setConfirmId]   = useState<string | null>(null)
 
-  // ── Filtri ──────────────────────────────────────────────────────────────────
+  // -- Filtri ------------------------------------------------------------------
   const [search,         setSearch]         = useState("")
   const [dateRange,      setDateRange]      = useState<DateRange>("all")
   const [locationFilter, setLocationFilter] = useState("all")
@@ -208,7 +208,7 @@ export function SessionList({ sessions, profile }: Props) {
     setPage(0)
   }
 
-  // ── Actions ─────────────────────────────────────────────────────────────────
+  // -- Actions -----------------------------------------------------------------
   function handleStatusChange(session: Session, next: PaymentStatus) {
     startTransition(async () => {
       await changePaymentStatus(session.id, next)
@@ -224,7 +224,7 @@ export function SessionList({ sessions, profile }: Props) {
     router.refresh()
   }
 
-  // ── Empty state ────────────────────────────────────────────────────────────
+  // -- Empty state ------------------------------------------------------------
   if (sessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/50 glass-sm py-24 text-center">
@@ -242,7 +242,7 @@ export function SessionList({ sessions, profile }: Props) {
   return (
     <div className="space-y-5">
 
-      {/* ── Stats ──────────────────────────────────────────────────── */}
+      {/* -- Stats ---------------------------------------------------- */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Totale sessioni", value: `${stats.count}`,              sub: "filtrate",  color: "text-foreground"  },
@@ -258,7 +258,7 @@ export function SessionList({ sessions, profile }: Props) {
         ))}
       </div>
       <div className="pt-12 space-y-5">
-      {/* ── Azioni rapide ──────────────────────────────────────────────── */}
+      {/* -- Azioni rapide ------------------------------------------------ */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{filtered.length} sessioni filtrate</span>
@@ -271,7 +271,7 @@ export function SessionList({ sessions, profile }: Props) {
           Esporta CSV
         </button>
       </div>
-      {/* ── Filter bar — glass unificata ───────────────────────────── */}
+      {/* -- Filter bar — glass unificata ----------------------------- */}
       <div className="glass-dashboard flex items-center divide-x divide-border/30 overflow-hidden rounded-2xl">
         {/* Search */}
         <div className="flex min-w-0 flex-1 items-center gap-2.5 px-4 py-3">
@@ -369,7 +369,7 @@ export function SessionList({ sessions, profile }: Props) {
 
       </div>
 
-      {/* ── Lista raggruppata ──────────────────────────────────────── */}
+      {/* -- Lista raggruppata ---------------------------------------- */}
       {paginated.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-sm font-medium text-foreground">Nessuna sessione trovata</p>
@@ -530,7 +530,7 @@ export function SessionList({ sessions, profile }: Props) {
         </div>
       )}
 
-      {/* ── Paginazione ────────────────────────────────────────────── */}
+      {/* -- Paginazione ---------------------------------------------- */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-border/30 pt-4">
           <p className="text-xs text-muted-foreground">

@@ -1,4 +1,4 @@
-"use server"
+﻿"use server"
 
 /**
  * SERVER ACTIONS — Auth
@@ -14,7 +14,7 @@ import { insertProfile } from "@/lib/data/profiles"
 import { getCategoryBySlug, grantCategoryAccess } from "@/lib/data/categories"
 import type { OnboardingData } from "@/types/database"
 
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
+// --- LOGIN --------------------------------------------------------------------
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -26,7 +26,7 @@ export async function login(formData: FormData) {
   redirect("/dashboard")
 }
 
-// ─── REGISTRAZIONE ────────────────────────────────────────────────────────────
+// --- REGISTRAZIONE ------------------------------------------------------------
 
 export async function register(formData: FormData) {
   const supabase = await createClient()
@@ -52,7 +52,7 @@ export async function register(formData: FormData) {
   redirect("/dashboard")
 }
 
-// ─── LOGOUT ──────────────────────────────────────────────────────────────────
+// --- LOGOUT ------------------------------------------------------------------
 
 export async function logout() {
   const supabase = await createClient()
@@ -60,7 +60,7 @@ export async function logout() {
   redirect("/auth/login")
 }
 
-// ─── CREA PROFILO (onboarding primo login) ────────────────────────────────────
+// --- CREA PROFILO (onboarding primo login) ------------------------------------
 
 export async function createProfile(data: OnboardingData) {
   try {

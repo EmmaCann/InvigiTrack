@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 /**
  * Dialog di onboarding — mostrato SOLO al primo login.
@@ -43,7 +43,7 @@ import { Badge } from "@/components/ui/badge"
 import { createProfile } from "@/app/actions/auth"
 import type { InvigilationRole } from "@/types/database"
 
-// ─── Schema USER (invariato) ──────────────────────────────────────────────────
+// --- Schema USER (invariato) --------------------------------------------------
 
 const userSchema = z.object({
   full_name: z.string().min(2, "Il nome deve avere almeno 2 caratteri"),
@@ -56,7 +56,7 @@ const userSchema = z.object({
     .max(999, "Tariffa troppo alta"),
 })
 
-// ─── Schema ADMIN ─────────────────────────────────────────────────────────────
+// --- Schema ADMIN -------------------------------------------------------------
 // role_type è obbligatorio solo se primary_category = 'invigilation'
 
 const adminSchema = z.object({
@@ -82,20 +82,20 @@ const adminSchema = z.object({
 type UserValues  = z.infer<typeof userSchema>
 type AdminValues = z.infer<typeof adminSchema>
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
   const router = useRouter()
   const [serverError, setServerError] = useState<string | null>(null)
   const [isLoading, setIsLoading]     = useState(false)
 
-  // ── Form USER ──────────────────────────────────────────────────────────────
+  // -- Form USER --------------------------------------------------------------
   const userForm = useForm<UserValues>({
     resolver: zodResolver(userSchema),
     defaultValues: { full_name: "", role_type: undefined, default_hourly_rate: 12.5 },
   })
 
-  // ── Form ADMIN ─────────────────────────────────────────────────────────────
+  // -- Form ADMIN -------------------------------------------------------------
   const adminForm = useForm<AdminValues>({
     resolver: zodResolver(adminSchema),
     defaultValues: {
@@ -109,7 +109,7 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
   // Traccia la categoria selezionata dall'admin per mostrare/nascondere il campo role
   const selectedCategory = adminForm.watch("primary_category")
 
-  // ── Submit USER ────────────────────────────────────────────────────────────
+  // -- Submit USER ------------------------------------------------------------
   async function onSubmitUser(values: UserValues) {
     setServerError(null)
     setIsLoading(true)
@@ -122,7 +122,7 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
     router.refresh()
   }
 
-  // ── Submit ADMIN ───────────────────────────────────────────────────────────
+  // -- Submit ADMIN -----------------------------------------------------------
   async function onSubmitAdmin(values: AdminValues) {
     setServerError(null)
     setIsLoading(true)
@@ -158,7 +158,7 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
           </DialogDescription>
         </DialogHeader>
 
-        {/* ── FORM USER ─────────────────────────────────────────────────── */}
+        {/* -- FORM USER --------------------------------------------------- */}
         {!isAdmin && (
           <form onSubmit={userForm.handleSubmit(onSubmitUser)} className="space-y-4">
             <Field label="Nome completo" error={userForm.formState.errors.full_name?.message}>
@@ -195,7 +195,7 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
           </form>
         )}
 
-        {/* ── FORM ADMIN ────────────────────────────────────────────────── */}
+        {/* -- FORM ADMIN -------------------------------------------------- */}
         {isAdmin && (
           <form onSubmit={adminForm.handleSubmit(onSubmitAdmin)} className="space-y-4">
             <Field label="Nome completo" error={adminForm.formState.errors.full_name?.message}>
@@ -260,7 +260,7 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
   )
 }
 
-// ─── Sotto-componenti ─────────────────────────────────────────────────────────
+// --- Sotto-componenti ---------------------------------------------------------
 
 function Field({
   label, error, children,

@@ -1,4 +1,4 @@
-"use server"
+﻿"use server"
 
 import { revalidatePath } from "next/cache"
 import { getCurrentUser }     from "@/lib/data/auth"
@@ -18,7 +18,7 @@ function revalidate() {
   revalidatePath("/dashboard")
 }
 
-// ─── Crea evento calendario ───────────────────────────────────────────────────
+// --- Crea evento calendario ---------------------------------------------------
 
 export async function createEvent(
   data: CreateEventData,
@@ -35,7 +35,7 @@ export async function createEvent(
   return { success: true }
 }
 
-// ─── Modifica evento ──────────────────────────────────────────────────────────
+// --- Modifica evento ----------------------------------------------------------
 
 export async function editEvent(
   eventId: string,
@@ -51,7 +51,7 @@ export async function editEvent(
   return { success: true }
 }
 
-// ─── Elimina evento ───────────────────────────────────────────────────────────
+// --- Elimina evento -----------------------------------------------------------
 
 export async function removeEvent(
   eventId: string,
@@ -66,7 +66,7 @@ export async function removeEvent(
   return { success: true }
 }
 
-// ─── Converti evento in sessione ──────────────────────────────────────────────
+// --- Converti evento in sessione ----------------------------------------------
 //
 // Questa è l'azione "centrale": prende un evento calendario (pianificato)
 // e ci crea sopra una sessione (lavorata), pre-compilando i dati comuni.

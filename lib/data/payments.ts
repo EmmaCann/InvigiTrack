@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DAL — Payments
  * Query sulle tabelle `payments` e `payment_sessions`.
  */
@@ -6,7 +6,7 @@
 import { createClient } from "@/lib/supabase/server"
 import type { Payment, PaymentMethod, PaymentWithSessions, Session } from "@/types/database"
 
-// ─── READ ─────────────────────────────────────────────────────────────────────
+// --- READ ---------------------------------------------------------------------
 
 /**
  * Tutti i pagamenti di un utente, dal più recente.
@@ -39,7 +39,7 @@ export async function getPaymentsByUser(userId: string): Promise<PaymentWithSess
   }))
 }
 
-// ─── WRITE ────────────────────────────────────────────────────────────────────
+// --- WRITE --------------------------------------------------------------------
 
 /**
  * Crea un pagamento e lo collega alle sessioni indicate.

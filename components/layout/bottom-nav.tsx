@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 /**
  * BOTTOM NAV — Client Component.
@@ -37,7 +37,7 @@ export function BottomNav() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
 
-      {/* ── Items sinistri ────────────────────────────────────────────── */}
+      {/* -- Items sinistri ---------------------------------------------- */}
       {leftItems.map((item) => (
         <NavTab
           key={item.href}
@@ -48,7 +48,7 @@ export function BottomNav() {
         />
       ))}
 
-      {/* ── Bottone "+" centrale ──────────────────────────────────────── */}
+      {/* -- Bottone "+" centrale ---------------------------------------- */}
       <div className="flex flex-1 items-center justify-center">
         <Link
           href="/dashboard/sessions"
@@ -59,7 +59,7 @@ export function BottomNav() {
         </Link>
       </div>
 
-      {/* ── Items destri ──────────────────────────────────────────────── */}
+      {/* -- Items destri ------------------------------------------------ */}
       {rightItems.map((item) => (
         <NavTab
           key={item.href}
@@ -74,7 +74,7 @@ export function BottomNav() {
   )
 }
 
-// ─── Singolo tab ─────────────────────────────────────────────────────────────
+// --- Singolo tab -------------------------------------------------------------
 
 function NavTab({
   href, label, icon: Icon, active,

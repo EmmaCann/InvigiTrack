@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -120,7 +120,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
             ) : (
               <div className="space-y-2.5">
 
-                {/* ── Sessioni lavorative ────────────────────────────── */}
+                {/* -- Sessioni lavorative ------------------------------ */}
                 {sessions.map((s) => {
                   const meta   = s.metadata as { exam_name?: string }
                   const isConf = confirmSessionId === s.id
@@ -170,7 +170,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                   )
                 })}
 
-                {/* ── Eventi calendario ────────────────────────── */}
+                {/* -- Eventi calendario -------------------------- */}
                 {events.map((ev) => {
                   const isConf    = confirmEventId === ev.id
                   const isDel     = deletingId === ev.id

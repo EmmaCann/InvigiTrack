@@ -1,10 +1,10 @@
-"use client"
+﻿"use client"
 
 import { useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { Session } from "@/types/database"
 
-// ─── Config ──────────────────────────────────────────────────────────────────
+// --- Config ------------------------------------------------------------------
 
 const DAY_START = 6   // 06:00
 const DAY_END   = 23  // 23:00
@@ -44,7 +44,7 @@ function addDays(d: Date, n: number): Date {
   return r
 }
 
-// ─── Props ───────────────────────────────────────────────────────────────────
+// --- Props -------------------------------------------------------------------
 
 interface Props {
   weekStart:      Date
@@ -53,7 +53,7 @@ interface Props {
   onSelectDay:    (day: number, month: number, year: number) => void
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function WeekGrid({ weekStart, sessions, selectedDay, onSelectDay }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)

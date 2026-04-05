@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
@@ -9,7 +9,7 @@ import {
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, SETTINGS_ITEM } from "./nav-items"
 
-// ─── Tipi ────────────────────────────────────────────────────────────────────
+// --- Tipi --------------------------------------------------------------------
 
 type EntryType = "page" | "action" | "session" | "event"
 
@@ -29,7 +29,7 @@ interface Group {
   entries: Entry[]
 }
 
-// ─── Icone per le sezioni di navigazione ─────────────────────────────────────
+// --- Icone per le sezioni di navigazione -------------------------------------
 
 const NAV_ICONS: Record<string, React.ElementType> = {
   "/dashboard":            LayoutDashboard,
@@ -40,7 +40,7 @@ const NAV_ICONS: Record<string, React.ElementType> = {
   "/dashboard/settings":   Settings,
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// --- Props --------------------------------------------------------------------
 
 interface Props {
   open:         boolean
@@ -49,7 +49,7 @@ interface Props {
   upcomingEvents?: { id: string; title: string; date: string; location?: string }[]
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcomingEvents = [] }: Props) {
   const router    = useRouter()
@@ -58,7 +58,7 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
   const [query,   setQuery]   = useState("")
   const [selIdx,  setSelIdx]  = useState(0)
 
-  // ── Tutti gli entry statici ───────────────────────────────────────────────
+  // -- Tutti gli entry statici -----------------------------------------------
   const staticGroups = useMemo<Group[]>(() => {
     const pages: Entry[] = [
       ...NAV_ITEMS.map((i) => ({
@@ -126,7 +126,7 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
     ]
   }, [])
 
-  // ── Entry dinamici da dati ────────────────────────────────────────────────
+  // -- Entry dinamici da dati ------------------------------------------------
   const dynamicGroups = useMemo<Group[]>(() => {
     const groups: Group[] = []
 
@@ -163,7 +163,7 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
     return groups
   }, [recentSessions, upcomingEvents])
 
-  // ── Filtra per query ─────────────────────────────────────────────────────
+  // -- Filtra per query -----------------------------------------------------
   const allGroups = useMemo<Group[]>(() => {
     const q = query.trim().toLowerCase()
     const allG = [...staticGroups, ...dynamicGroups]
@@ -183,17 +183,17 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
   // Lista piatta per navigazione con tastiera
   const flatEntries = useMemo(() => allGroups.flatMap((g) => g.entries), [allGroups])
 
-  // ── Reset selezione al cambio query ──────────────────────────────────────
+  // -- Reset selezione al cambio query --------------------------------------
   useEffect(() => { setSelIdx(0) }, [query])
 
-  // ── Focus input all'apertura ──────────────────────────────────────────────
+  // -- Focus input all'apertura ----------------------------------------------
   useEffect(() => {
     if (!open) { setQuery(""); return }
     const t = window.setTimeout(() => inputRef.current?.focus(), 50)
     return () => window.clearTimeout(t)
   }, [open])
 
-  // ── Blocca scroll body ────────────────────────────────────────────────────
+  // -- Blocca scroll body ----------------------------------------------------
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
@@ -201,7 +201,7 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
     return () => { document.body.style.overflow = prev }
   }, [open])
 
-  // ── Navigazione tastiera ─────────────────────────────────────────────────
+  // -- Navigazione tastiera -------------------------------------------------
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Escape") { onOpenChange(false); return }
     if (e.key === "ArrowDown") {
@@ -226,7 +226,7 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
     }
   }, [flatEntries, selIdx, router, onOpenChange])
 
-  // ── Esegui entry ──────────────────────────────────────────────────────────
+  // -- Esegui entry ----------------------------------------------------------
   function execute(entry: Entry) {
     if (entry.href) router.push(entry.href)
     else entry.action?.()

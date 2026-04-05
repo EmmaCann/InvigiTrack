@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -6,7 +6,7 @@ import { CheckCircle2, Clock, Euro, X, Sparkles } from "lucide-react"
 import { convertEventToSession } from "@/app/actions/calendar-events"
 import type { CalendarEvent, Profile, InvigilationRole } from "@/types/database"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 function calcPreview(start: string, end: string, rate: number) {
   const [sh, sm] = start.split(":").map(Number)
@@ -25,7 +25,7 @@ function calcPreview(start: string, end: string, rate: number) {
 const inputCls =
   "w-full rounded-xl border border-border/60 bg-white/70 px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary/60"
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// --- Props --------------------------------------------------------------------
 
 interface Props {
   event:   CalendarEvent
@@ -33,7 +33,7 @@ interface Props {
   onClose: () => void
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function ConvertEventDialog({ event, profile, onClose }: Props) {
   const router = useRouter()

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PAGINA PAGAMENTI — Server Component.
  * Fetcha sessioni non pagate e storico pagamenti, li passa al client.
  */
@@ -42,7 +42,7 @@ export default async function PaymentsPage() {
   return (
     <div className="space-y-6">
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
+      {/* -- Header --------------------------------------------------- */}
       <div className="flex items-start justify-between">
         <div>
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-primary">
@@ -55,7 +55,7 @@ export default async function PaymentsPage() {
         </div>
       </div>
 
-      {/* ── Lista ──────────────────────────────────────────────────── */}
+      {/* -- Lista ---------------------------------------------------- */}
       <PaymentList
         unpaidSessions={unpaidSessions}
         payments={payments}

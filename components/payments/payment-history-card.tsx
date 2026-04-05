@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -14,7 +14,7 @@ import {
 import { removePayment } from "@/app/actions/payments"
 import type { PaymentWithSessions } from "@/types/database"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 const METHOD_LABEL: Record<string, string> = {
   bank_transfer: "Bonifico",
@@ -40,13 +40,13 @@ function formatDateShort(dateStr: string) {
   })
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// --- Props --------------------------------------------------------------------
 
 interface Props {
   payment: PaymentWithSessions
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function PaymentHistoryCard({ payment }: Props) {
   const router         = useRouter()

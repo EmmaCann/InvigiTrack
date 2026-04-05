@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import Image from "next/image"
@@ -25,7 +25,7 @@ export function MobileHeader({ profile }: { profile: Profile }) {
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-white/40 glass px-4">
 
-      {/* ── Logo ──────────────────────────────────────────────────────── */}
+      {/* -- Logo -------------------------------------------------------- */}
       <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-white via-white to-primary/10 shadow-sm ring-1 ring-primary/15">
           <Image src="/logo.png" alt="InvigiTrack" width={26} height={28} className="size-7 object-contain" priority />
@@ -44,7 +44,7 @@ export function MobileHeader({ profile }: { profile: Profile }) {
           <Search className="h-4 w-4" />
         </Button>
 
-      {/* ── Hamburger → Sheet ─────────────────────────────────────────── */}
+      {/* -- Hamburger → Sheet ------------------------------------------- */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="h-9 w-9">

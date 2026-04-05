@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/data/auth"
+﻿import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
 import { getPaymentSummary, getSessionsByUser } from "@/lib/data/sessions"
 import { getPendingEvents } from "@/lib/data/calendar-events"
@@ -9,7 +9,7 @@ import { Clock, Euro, AlertCircle, CalendarCheck, ArrowRight, MapPin, ShieldChec
 import Link from "next/link"
 import type { Session } from "@/types/database"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 function formatTime(t: string) { return t.slice(0, 5) }
 
@@ -26,7 +26,7 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 
-// ─── Pagina ───────────────────────────────────────────────────────────────────
+// --- Pagina -------------------------------------------------------------------
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
@@ -104,7 +104,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-7">
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
+      {/* -- Header --------------------------------------------------- */}
       <div className="flex items-start justify-between">
         <div>
           <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
@@ -122,7 +122,7 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* ── Stat cards — vetro dashboard ───────────────────────────── */}
+      {/* -- Stat cards — vetro dashboard ----------------------------- */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
           <div
@@ -145,10 +145,10 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* ── Main content — 2 colonne ───────────────────────────────── */}
+      {/* -- Main content — 2 colonne --------------------------------- */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_300px]">
 
-        {/* ── Sessioni recenti (sinistra) ───────────────────────────── */}
+        {/* -- Sessioni recenti (sinistra) ----------------------------- */}
         <div className="glass-dashboard rounded-2xl">
           <div className="flex items-start justify-between gap-4 border-b border-white/50 px-5 pb-4 pt-5">
             <div>
@@ -239,7 +239,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Destra — Hours Trend + Unpaid Alerts ─────────────────── */}
+        {/* -- Destra — Hours Trend + Unpaid Alerts ------------------- */}
         <div className="flex flex-col gap-4">
 
           {/* Hours Trend */}

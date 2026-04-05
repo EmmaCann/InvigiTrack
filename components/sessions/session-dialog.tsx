@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
@@ -181,7 +181,7 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
 
-          {/* ── Header compatto ───────────────────────────────────────────── */}
+          {/* -- Header compatto --------------------------------------------- */}
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-black/[0.06] px-6 py-4 pr-14">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -211,10 +211,10 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
             )}
           </div>
 
-          {/* ── Corpo — due colonne su sm+ ────────────────────────────────── */}
+          {/* -- Corpo — due colonne su sm+ ---------------------------------- */}
           <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
 
-            {/* ── Colonna sinistra: data/ora/tariffa/preview ────────────────── */}
+            {/* -- Colonna sinistra: data/ora/tariffa/preview ------------------ */}
             <div className="flex shrink-0 flex-col gap-4 border-b border-black/[0.06] p-5 sm:w-[248px] sm:border-b-0 sm:border-r">
 
               {/* Preview live */}
@@ -285,7 +285,7 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
               </Field>
             </div>
 
-            {/* ── Colonna destra: dettagli esame ───────────────────────────── */}
+            {/* -- Colonna destra: dettagli esame ----------------------------- */}
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
 
               <Field label="Nome esame" error={form.formState.errors.exam_name?.message}>
@@ -337,7 +337,7 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
             </div>
           </div>
 
-          {/* ── Footer ───────────────────────────────────────────────────── */}
+          {/* -- Footer ----------------------------------------------------- */}
           <div className="flex shrink-0 gap-3 border-t border-black/[0.06] bg-muted/20 px-5 py-3.5">
             <Button
               type="button"

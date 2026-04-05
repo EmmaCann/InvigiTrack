@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { usePathname } from "next/navigation"
@@ -132,7 +132,7 @@ export function Header({
 
             <DropdownMenuSeparator />
 
-            {/* ── Workspace section ─────────────────────────── */}
+            {/* -- Workspace section --------------------------- */}
             {!addingWorkspace ? (
               <>
                 {/* Lista workspace correnti */}

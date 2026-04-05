@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -6,7 +6,7 @@ import { Plus, Pencil, X, CalendarDays, MapPin, AlignLeft } from "lucide-react"
 import { createEvent, editEvent } from "@/app/actions/calendar-events"
 import type { CalendarEvent } from "@/types/database"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -22,7 +22,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const inputCls =
   "w-full rounded-xl border border-border/60 bg-white/70 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors focus:border-primary/60"
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// --- Props --------------------------------------------------------------------
 
 interface Props {
   defaultDate?: string        // pre-compila event_date (dal click sul giorno)
@@ -30,7 +30,7 @@ interface Props {
   trigger?:     React.ReactNode
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function EventDialog({ defaultDate, event, trigger }: Props) {
   const router  = useRouter()

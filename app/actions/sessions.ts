@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/lib/data/auth"
-import { getProfileById } from "@/lib/data/profiles"
-import { getCategoryBySlug } from "@/lib/data/categories"
+import { getActiveWorkspace } from "@/lib/workspace"
 import {
   insertSession,
   updateSession,
@@ -21,13 +20,8 @@ export async function createSession(data: CreateSessionData) {
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
 
-  const profile = await getProfileById(user.id)
-  if (!profile) return { error: "Profilo non trovato" }
-
-  // Usa la categoria del profilo come default — per ora sempre invigilation
-  const slug = profile.role_type ? "invigilation" : "invigilation"
-  const category = await getCategoryBySlug(slug)
-  if (!category) return { error: "Categoria non trovata. Contatta l'amministratore." }
+  // Usa il workspace attivo per determinare la categoria della sessione
+  const { category } = await getActiveWorkspace(user.id)
 
   const result = await insertSession(user.id, category.id, data)
   if (result.error) return { error: result.error }

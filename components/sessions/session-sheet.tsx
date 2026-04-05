@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 /**
  * Sheet per creare o modificare una sessione.
@@ -39,7 +39,7 @@ import { Separator } from "@/components/ui/separator"
 import { createSession, editSession } from "@/app/actions/sessions"
 import type { Profile, Session, InvigilationRole } from "@/types/database"
 
-// ─── Schema ───────────────────────────────────────────────────────────────────
+// --- Schema -------------------------------------------------------------------
 
 const sessionSchema = z.object({
   session_date:  z.string().min(1, "Seleziona una data"),
@@ -54,7 +54,7 @@ const sessionSchema = z.object({
 
 type SessionValues = z.infer<typeof sessionSchema>
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 function calcPreview(start: string, end: string, rate: number) {
   const [sh, sm] = start.split(":").map(Number)
@@ -74,7 +74,7 @@ function todayISO() {
   return new Date().toISOString().split("T")[0]
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// --- Props --------------------------------------------------------------------
 
 interface Props {
   profile:       Profile
@@ -83,7 +83,7 @@ interface Props {
   trigger?:      React.ReactNode
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function SessionSheet({ profile, session, lastSession, trigger }: Props) {
   const router = useRouter()
@@ -175,7 +175,7 @@ export function SessionSheet({ profile, session, lastSession, trigger }: Props) 
     router.refresh()
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // -- Render ----------------------------------------------------------------
 
   const defaultTrigger = isEdit ? (
     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -318,7 +318,7 @@ export function SessionSheet({ profile, session, lastSession, trigger }: Props) 
   )
 }
 
-// ─── Sotto-componente ─────────────────────────────────────────────────────────
+// --- Sotto-componente ---------------------------------------------------------
 
 function Field({
   label, error, children,

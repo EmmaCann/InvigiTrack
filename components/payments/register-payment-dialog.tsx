@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { registerPayment } from "@/app/actions/payments"
 import type { Session, PaymentMethod } from "@/types/database"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 const METHOD_OPTIONS: { value: PaymentMethod; label: string; icon: React.ElementType }[] = [
   { value: "bank_transfer", label: "Bonifico",  icon: CreditCard },
@@ -25,7 +25,7 @@ function formatDate(dateStr: string) {
   })
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// --- Props --------------------------------------------------------------------
 
 interface Props {
   sessions:  Session[]      // sessioni selezionate
@@ -33,7 +33,7 @@ interface Props {
   onSuccess: () => void
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
   const router   = useRouter()

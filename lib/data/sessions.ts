@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DAL — Sessions
  * Tutte le query sulla tabella `sessions` vivono qui.
  *
@@ -11,7 +11,7 @@
 import { createClient } from "@/lib/supabase/server"
 import type { Session, CreateSessionData, PaymentStatus } from "@/types/database"
 
-// ─── Calcoli locali ───────────────────────────────────────────────────────────
+// --- Calcoli locali -----------------------------------------------------------
 
 /**
  * Calcola i minuti tra due orari nel formato "HH:MM".
@@ -30,7 +30,7 @@ function calcEarned(durationMinutes: number, hourlyRate: number): number {
   return Math.round((durationMinutes / 60) * hourlyRate * 100) / 100
 }
 
-// ─── READ ─────────────────────────────────────────────────────────────────────
+// --- READ ---------------------------------------------------------------------
 
 /**
  * Tutte le sessioni di un utente, dalla più recente.
@@ -126,7 +126,7 @@ export async function getPaymentSummary(
   }
 }
 
-// ─── WRITE ────────────────────────────────────────────────────────────────────
+// --- WRITE --------------------------------------------------------------------
 
 /**
  * Inserisce una nuova sessione.

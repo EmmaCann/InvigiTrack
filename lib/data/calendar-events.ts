@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DAL — Calendar Events
  * Query sulla tabella `calendar_events`.
  */
@@ -6,7 +6,7 @@
 import { createClient } from "@/lib/supabase/server"
 import type { CalendarEvent, CreateEventData } from "@/types/database"
 
-// ─── READ ─────────────────────────────────────────────────────────────────────
+// --- READ ---------------------------------------------------------------------
 
 export async function getEventsByUser(
   userId: string,
@@ -44,7 +44,7 @@ export async function getPendingEvents(
   return data as CalendarEvent[]
 }
 
-// ─── WRITE ────────────────────────────────────────────────────────────────────
+// --- WRITE --------------------------------------------------------------------
 
 export async function insertEvent(
   userId: string,

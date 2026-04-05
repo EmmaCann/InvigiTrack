@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PAGINA SESSIONI — Server Component.
  * Fetcha i dati e li passa ai Client Components.
  */
@@ -22,7 +22,7 @@ export default async function SessionsPage() {
   return (
     <div className="space-y-6 ">
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
+      {/* -- Header --------------------------------------------------- */}
       <div className="flex items-start justify-between ">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
@@ -36,7 +36,7 @@ export default async function SessionsPage() {
         <SessionDialog profile={profile} lastSession={sessions[0]} />
       </div>
 
-      {/* ── Lista ──────────────────────────────────────────────────── */}
+      {/* -- Lista ---------------------------------------------------- */}
       <SessionList sessions={sessions} profile={profile} />
 
     </div>

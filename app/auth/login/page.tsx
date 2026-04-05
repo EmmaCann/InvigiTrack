@@ -1,4 +1,4 @@
-import { AuthForm } from "@/components/auth/auth-form"
+﻿import { AuthForm } from "@/components/auth/auth-form"
 import Image from "next/image"
 
 export default function LoginPage() {
@@ -12,7 +12,7 @@ export default function LoginPage() {
         `,
       }}
     >
-      {/* ── Logo ──────────────────────────────────────────────────────── */}
+      {/* -- Logo -------------------------------------------------------- */}
       <div className="mb-8 flex flex-col items-center gap-3">
         <Image src="/logo.png" alt="InvigiTrack" width={48} height={53} priority />
         <div className="text-center">
@@ -25,10 +25,10 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ── Form ──────────────────────────────────────────────────────── */}
+      {/* -- Form -------------------------------------------------------- */}
       <AuthForm />
 
-      {/* ── Footer ────────────────────────────────────────────────────── */}
+      {/* -- Footer ------------------------------------------------------ */}
       <p className="mt-8 text-xs text-muted-foreground">
         © {new Date().getFullYear()} InvigiTrack · Tutti i diritti riservati
       </p>

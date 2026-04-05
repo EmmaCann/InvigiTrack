@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DAL — Profiles
  * Tutte le query sulla tabella `profiles` vivono qui.
  */
@@ -6,7 +6,7 @@
 import { createClient } from "@/lib/supabase/server"
 import type { Profile, OnboardingData, PlatformRole } from "@/types/database"
 
-// ─── READ ─────────────────────────────────────────────────────────────────────
+// --- READ ---------------------------------------------------------------------
 
 /**
  * Cerca un profilo per email.
@@ -39,7 +39,7 @@ export async function getProfileById(userId: string): Promise<Profile | null> {
   return data
 }
 
-// ─── WRITE ────────────────────────────────────────────────────────────────────
+// --- WRITE --------------------------------------------------------------------
 
 /**
  * Inserisce un nuovo profilo nel database.

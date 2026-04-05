@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Plus } from "lucide-react"
@@ -8,7 +8,7 @@ import { WeekGrid, getWeekStart } from "./week-grid"
 import { EventDialog } from "./event-dialog"
 import type { Session, CalendarEvent, Profile } from "@/types/database"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 const STATUS_DOT: Record<string, string> = {
   unpaid:  "bg-amber-400",
@@ -30,7 +30,7 @@ function addDays(d: Date, n: number): Date {
   return r
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// --- Props --------------------------------------------------------------------
 
 interface Props {
   sessions: Session[]
@@ -38,7 +38,7 @@ interface Props {
   profile:  Profile
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function CalendarView({ sessions, events, profile }: Props) {
   const today = new Date()
@@ -54,7 +54,7 @@ export function CalendarView({ sessions, events, profile }: Props) {
   const year  = current.getFullYear()
   const month = current.getMonth()
 
-  // ── Month label + navigazione ────────────────────────────────────────────────
+  // -- Month label + navigazione ------------------------------------------------
   const monthLabel = view === "month"
     ? current.toLocaleDateString("it-IT", { month: "long", year: "numeric" })
     : (() => {
@@ -80,7 +80,7 @@ export function CalendarView({ sessions, events, profile }: Props) {
     setSelYear(today.getFullYear())
   }
 
-  // ── Sessioni del mese corrente ───────────────────────────────────────────────
+  // -- Sessioni del mese corrente -----------------------------------------------
   const monthSessions = sessions.filter((s) => {
     const d = new Date(s.session_date + "T00:00:00")
     return d.getMonth() === month && d.getFullYear() === year
@@ -116,7 +116,7 @@ export function CalendarView({ sessions, events, profile }: Props) {
   const selectedEvents   = events.filter((ev) => ev.event_date === selDateStr)
   const lastSession      = sessions[0]
 
-  // ── Griglia mensile ──────────────────────────────────────────────────────────
+  // -- Griglia mensile ----------------------------------------------------------
   const firstDow  = (new Date(year, month, 1).getDay() + 6) % 7
   const daysCount = new Date(year, month + 1, 0).getDate()
   const cells: (number | null)[] = [
@@ -128,7 +128,7 @@ export function CalendarView({ sessions, events, profile }: Props) {
   const isToday = (d: number) =>
     d === today.getDate() && month === today.getMonth() && year === today.getFullYear()
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
+  // -- Handlers -----------------------------------------------------------------
   function selectMonthDay(day: number) {
     setSelectedDay(day)
     setSelMonth(month)
@@ -144,7 +144,7 @@ export function CalendarView({ sessions, events, profile }: Props) {
   return (
     <div className="space-y-4">
 
-      {/* ── Header: navigazione + toggle vista ─────────────────────── */}
+      {/* -- Header: navigazione + toggle vista ----------------------- */}
       <div className="flex flex-wrap items-center gap-3">
 
         {/* Frecce + Oggi */}
@@ -223,7 +223,7 @@ export function CalendarView({ sessions, events, profile }: Props) {
         />
       </div>
 
-      {/* ── Layout principale ─────────────────────────────────────── */}
+      {/* -- Layout principale --------------------------------------- */}
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
 
         {/* Vista mensile */}

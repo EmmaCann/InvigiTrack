@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useMemo } from "react"
 import { CheckSquare, Square, AlertCircle, CheckCircle2, History, Download, Search, Calendar, ChevronDown, Check, X, Filter } from "lucide-react"
@@ -13,7 +13,7 @@ import { RegisterPaymentDialog } from "./register-payment-dialog"
 import { PaymentHistoryCard } from "./payment-history-card"
 import type { Session, PaymentWithSessions } from "@/types/database"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + "T00:00:00").toLocaleDateString("it-IT", {
@@ -43,7 +43,7 @@ function exportPaymentsCSV(payments: PaymentWithSessions[]) {
   URL.revokeObjectURL(url)
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// --- Props --------------------------------------------------------------------
 
 interface Props {
   unpaidSessions: Session[]
@@ -55,7 +55,7 @@ interface Props {
 
 type Tab = "pending" | "history"
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function PaymentList({
   unpaidSessions,
@@ -68,12 +68,12 @@ export function PaymentList({
   const [selected,    setSelected]    = useState<Set<string>>(new Set())
   const [showModal,   setShowModal]   = useState(false)
 
-  // ── Filtri storico ───────────────────────────────────────────────────────────
+  // -- Filtri storico -----------------------------------------------------------
   const [historySearch,   setHistorySearch]   = useState("")
   const [historyMethod,   setHistoryMethod]   = useState<"all" | "bank_transfer" | "cash" | "other">("all")
   const [historyDateRange, setHistoryDateRange] = useState<"all" | "30d" | "3m" | "1y">("all")
 
-  // ── Selezione ───────────────────────────────────────────────────────────────
+  // -- Selezione ---------------------------------------------------------------
   function toggle(id: string) {
     setSelected((prev) => {
       const next = new Set(prev)
@@ -131,7 +131,7 @@ export function PaymentList({
   return (
     <div className="space-y-5">
 
-      {/* ── Summary bar ──────────────────────────────────────────────── */}
+      {/* -- Summary bar ------------------------------------------------ */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
           { label: "In attesa",       value: `€${summaryUnpaid.toFixed(2)}`,     color: "text-amber-600",   bg: "bg-amber-500/8" },
@@ -145,7 +145,7 @@ export function PaymentList({
         ))}
       </div>
 
-      {/* ── Tab switcher ─────────────────────────────────────────────── */}
+      {/* -- Tab switcher ----------------------------------------------- */}
       <div className="flex gap-1 rounded-xl border border-border/40 bg-muted/30 p-1">
         {([
           { value: "pending" as Tab, label: "Da Pagare",         icon: AlertCircle, count: unpaidSessions.length },
@@ -173,7 +173,7 @@ export function PaymentList({
         ))}
       </div>
 
-      {/* ── Tab: Da Pagare ───────────────────────────────────────────── */}
+      {/* -- Tab: Da Pagare --------------------------------------------- */}
       {tab === "pending" && (
         <div className="space-y-3">
 
@@ -267,7 +267,7 @@ export function PaymentList({
         </div>
       )}
 
-      {/* ── Tab: Storico ─────────────────────────────────────────────── */}
+      {/* -- Tab: Storico ----------------------------------------------- */}
       {tab === "history" && (
         <div className="space-y-3">
 
@@ -376,7 +376,7 @@ export function PaymentList({
         </div>
       )}
 
-      {/* ── Toolbar contestuale (selezione attiva) ───────────────────── */}
+      {/* -- Toolbar contestuale (selezione attiva) --------------------- */}
       {selected.size > 0 && tab === "pending" && (
         <div className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/50 bg-foreground/95 px-5 py-3.5 shadow-2xl shadow-black/30 backdrop-blur-xl">
           <div className="text-sm text-white/80">
@@ -398,7 +398,7 @@ export function PaymentList({
         </div>
       )}
 
-      {/* ── Modal ────────────────────────────────────────────────────── */}
+      {/* -- Modal ------------------------------------------------------ */}
       {showModal && (
         <RegisterPaymentDialog
           sessions={selectedSessions}

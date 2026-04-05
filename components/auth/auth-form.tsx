@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { useForm } from "react-hook-form"
@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { login, register } from "@/app/actions/auth"
 
-// ─── Schemi ───────────────────────────────────────────────────────────────────
+// --- Schemi -------------------------------------------------------------------
 
 const loginSchema = z.object({
   email:    z.string().email("Email non valida"),
@@ -30,7 +30,7 @@ const registerSchema = z.object({
 type LoginValues    = z.infer<typeof loginSchema>
 type RegisterValues = z.infer<typeof registerSchema>
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// --- Componente --------------------------------------------------------------
 
 export function AuthForm() {
   const [serverError, setServerError] = useState<string | null>(null)
@@ -82,7 +82,7 @@ export function AuthForm() {
       <CardContent className="p-6">
         <Tabs defaultValue="login" onValueChange={() => { resetErrors(); loginForm.reset(); registerForm.reset() }}>
 
-          {/* ── Tab switcher ────────────────────────────────────────── */}
+          {/* -- Tab switcher ------------------------------------------ */}
           <TabsList className="mb-5 grid w-full grid-cols-2 bg-muted/70">
             <TabsTrigger value="login" className="text-sm font-medium">
               Accedi
@@ -92,7 +92,7 @@ export function AuthForm() {
             </TabsTrigger>
           </TabsList>
 
-          {/* ── Accedi ──────────────────────────────────────────────── */}
+          {/* -- Accedi ------------------------------------------------ */}
           <TabsContent value="login">
             <div className="mb-5">
               <h2 className="text-base font-semibold text-foreground">Bentornato/a</h2>
@@ -127,7 +127,7 @@ export function AuthForm() {
             </form>
           </TabsContent>
 
-          {/* ── Registrati ──────────────────────────────────────────── */}
+          {/* -- Registrati -------------------------------------------- */}
           <TabsContent value="register">
             <div className="mb-5">
               <h2 className="text-base font-semibold text-foreground">Crea il tuo account</h2>
@@ -154,7 +154,7 @@ export function AuthForm() {
                 error={registerForm.formState.errors.password?.message}
               />
 
-              {/* ── Codice di accesso (opzionale) ─────────────────── */}
+              {/* -- Codice di accesso (opzionale) ------------------- */}
               <div className="space-y-1.5">
                 <Label htmlFor="secret_key" className="text-xs font-medium text-foreground/80 flex items-center gap-1.5">
                   <KeyRound className="h-3 w-3 text-muted-foreground" />
@@ -191,7 +191,7 @@ export function AuthForm() {
   )
 }
 
-// ─── Sotto-componenti ─────────────────────────────────────────────────────────
+// --- Sotto-componenti ---------------------------------------------------------
 
 function FieldGroup({
   id, label, type, placeholder, registration, error,
