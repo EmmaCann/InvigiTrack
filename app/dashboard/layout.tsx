@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
-import { getNextEvent } from "@/lib/data/calendar-events"
+import { getNextEvent, getEventsByUser } from "@/lib/data/calendar-events"
+import { getSessionsByUser } from "@/lib/data/sessions"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
@@ -29,13 +30,37 @@ export default async function DashboardLayout({
 
   const nextEvent = await getNextEvent(user.id)
 
+  // Dati per spotlight search
+  const [allSessions, allEvents] = await Promise.all([
+    getSessionsByUser(user.id),
+    getEventsByUser(user.id),
+  ])
+  const today = new Date().toISOString().split("T")[0]
+
+  const recentSessions = allSessions.slice(0, 6).map((s) => ({
+    id:       s.id,
+    exam_name: (s.metadata as { exam_name?: string }).exam_name ?? "Sessione",
+    date:     new Date(s.session_date + "T00:00:00").toLocaleDateString("it-IT", { day: "numeric", month: "short" }),
+    location: s.location ?? undefined,
+  }))
+
+  const upcomingEvents = allEvents
+    .filter((ev) => ev.event_date >= today && !ev.is_converted)
+    .slice(0, 5)
+    .map((ev) => ({
+      id:       ev.id,
+      title:    ev.title,
+      date:     new Date(ev.event_date + "T00:00:00").toLocaleDateString("it-IT", { day: "numeric", month: "short" }),
+      location: ev.location ?? undefined,
+    }))
+
   return (
     <div className="relative flex h-[100dvh] overflow-hidden">
 
       {/* ── Gradient mesh background ─────────────────────────────── */}
       <GradientMesh />
 
-      <DashboardSearchLayer />
+      <DashboardSearchLayer recentSessions={recentSessions} upcomingEvents={upcomingEvents} />
 
       {/* ── Sidebar — solo desktop ─────────────────────────────────── */}
       <div className="hidden md:flex">

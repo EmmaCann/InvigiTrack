@@ -11,7 +11,12 @@ export function openDashboardSearch() {
   }
 }
 
-export function DashboardSearchLayer() {
+interface SearchData {
+  recentSessions: { id: string; exam_name: string; date: string; location?: string }[]
+  upcomingEvents: { id: string; title: string; date: string; location?: string }[]
+}
+
+export function DashboardSearchLayer({ recentSessions = [], upcomingEvents = [] }: Partial<SearchData> = {}) {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -30,5 +35,12 @@ export function DashboardSearchLayer() {
     }
   }, [])
 
-  return <SearchSpotlight open={open} onOpenChange={setOpen} />
+  return (
+    <SearchSpotlight
+      open={open}
+      onOpenChange={setOpen}
+      recentSessions={recentSessions}
+      upcomingEvents={upcomingEvents}
+    />
+  )
 }

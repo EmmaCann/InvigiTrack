@@ -61,7 +61,7 @@ export function Header({ profile }: { profile: Profile }) {
             Cerca sessioni, esami, pagine…
           </span>
           <kbd className="hidden shrink-0 rounded-md border border-white/70 bg-white/55 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm sm:inline-block">
-            ⌘K
+            Ctrl+K
           </kbd>
         </button>
       </div>

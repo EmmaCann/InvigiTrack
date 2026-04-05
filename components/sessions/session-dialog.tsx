@@ -19,15 +19,12 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Separator } from "@/components/ui/separator"
 import {
   Select,
   SelectContent,
@@ -180,204 +177,188 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
 
       <DialogContent
         showCloseButton
-        className="flex max-h-[min(90vh,760px)] w-full max-w-[520px] flex-col gap-0 overflow-hidden rounded-2xl border border-white/60 bg-white/92 p-0 shadow-2xl shadow-primary/10 backdrop-blur-2xl sm:max-w-[820px]"
+        className="flex max-h-[min(92vh,780px)] w-full max-w-[540px] flex-col gap-0 overflow-hidden rounded-2xl border border-white/60 bg-white/95 p-0 shadow-2xl shadow-black/[0.12] backdrop-blur-2xl sm:max-w-[860px]"
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
-          {/* Header */}
-          <div className="relative shrink-0 bg-gradient-to-br from-primary/[0.14] via-primary/[0.06] to-background px-6 pb-5 pt-7 pr-14">
-            <div className="flex gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary shadow-inner ring-1 ring-primary/20">
-                <CalendarCheck className="h-6 w-6" strokeWidth={2} />
-              </div>
-              <DialogHeader className="flex-1 space-y-1 text-left">
-                <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
-                  {isEdit ? "Modifica sessione" : "Nuova sessione"}
-                </DialogTitle>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {isEdit
-                    ? "Aggiorna i dettagli di questa sessione."
-                    : "Registra data, orari e tariffe: il guadagno stimato si aggiorna in tempo reale."}
-                </p>
-              </DialogHeader>
-            </div>
 
+          {/* ── Header compatto ───────────────────────────────────────────── */}
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-black/[0.06] px-6 py-4 pr-14">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <CalendarCheck className="h-[1.1rem] w-[1.1rem]" strokeWidth={2.2} />
+              </div>
+              <div>
+                <h2 className="text-[15px] font-bold tracking-tight text-foreground">
+                  {isEdit ? "Modifica sessione" : "Registra sessione"}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  {isEdit ? "Aggiorna i dati di questa sessione" : "Archivia gli orari dell'esame"}
+                </p>
+              </div>
+            </div>
+            {/* Chip "Copia" — compatto, solo se non in edit e c'è lastSession */}
             {!isEdit && lastSession && (
               <button
                 type="button"
                 onClick={loadLastSession}
-                className="mt-5 flex w-full items-start gap-3 rounded-2xl border border-primary/25 bg-white/60 p-4 text-left shadow-sm backdrop-blur-sm transition-all hover:border-primary/40 hover:bg-primary/[0.07]"
+                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/[0.06] px-3 py-1.5 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/10"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                  <Copy className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold uppercase tracking-wide text-primary">Copia dall&apos;ultima sessione</p>
-                  <p className="mt-1 truncate text-sm font-medium text-foreground">
-                    {(lastSession.metadata as { exam_name?: string }).exam_name ?? "Sessione precedente"}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Applica sede, ruolo e tariffa — imposti tu data e orari.
-                  </p>
-                </div>
+                <Copy className="h-3 w-3" />
+                {(lastSession.metadata as { exam_name?: string }).exam_name
+                  ? `Copia: ${(lastSession.metadata as { exam_name?: string }).exam_name}`
+                  : "Copia ultima sessione"}
               </button>
             )}
           </div>
 
-          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-6">
-            <div
-              className={`rounded-2xl border px-4 py-4 transition-all ${
+          {/* ── Corpo — due colonne su sm+ ────────────────────────────────── */}
+          <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
+
+            {/* ── Colonna sinistra: data/ora/tariffa/preview ────────────────── */}
+            <div className="flex shrink-0 flex-col gap-4 border-b border-black/[0.06] p-5 sm:w-[248px] sm:border-b-0 sm:border-r">
+
+              {/* Preview live */}
+              <div className={`rounded-xl border p-3 transition-all ${
                 preview
-                  ? "border-emerald-200/80 bg-emerald-50/50 shadow-sm dark:border-emerald-800/40 dark:bg-emerald-950/20"
-                  : "border-primary/15 bg-primary/[0.04]"
-              }`}
-            >
-              {preview ? (
-                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/80 bg-white/90 shadow-sm">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
+                  ? "border-emerald-200/70 bg-emerald-50/60"
+                  : "border-border/40 bg-muted/30"
+              }`}>
+                {preview ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Durata</span>
+                      </div>
+                      <span className="text-sm font-bold tabular-nums text-foreground">{preview.duration}</span>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Durata</p>
-                      <p className="text-base font-bold tabular-nums text-foreground">{preview.duration}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Euro className="h-3.5 w-3.5 text-emerald-600" />
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Stimato</span>
+                      </div>
+                      <span className="text-sm font-bold tabular-nums text-emerald-700">€{preview.earned.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center gap-1 pt-0.5">
+                      <Sparkles className="h-2.5 w-2.5 text-emerald-500" />
+                      <span className="text-[10px] text-emerald-600 font-medium">Anteprima live</span>
                     </div>
                   </div>
-                  <Separator orientation="vertical" className="hidden h-10 sm:block" />
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200/60 bg-emerald-100/80">
-                      <Euro className="h-4 w-4 text-emerald-700" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stimato</p>
-                      <p className="text-base font-bold tabular-nums text-emerald-700">€{preview.earned.toFixed(2)}</p>
-                    </div>
+                ) : (
+                  <div className="flex items-start gap-2 py-0.5">
+                    <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                      Imposta <span className="font-medium text-foreground">inizio</span> e{" "}
+                      <span className="font-medium text-foreground">fine</span> per vedere durata e guadagno.
+                    </p>
                   </div>
-                  <div className="ml-auto flex items-center gap-1 rounded-full bg-emerald-100/80 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">
-                    <Sparkles className="h-3 w-3" />
-                    Anteprima live
-                  </div>
+                )}
+              </div>
+
+              {/* Data */}
+              <Field label="Data" error={form.formState.errors.session_date?.message}>
+                <Input type="date" max={todayISO()} className="h-10 rounded-xl text-sm" {...form.register("session_date")} />
+              </Field>
+
+              {/* Orari */}
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Inizio" error={form.formState.errors.start_time?.message}>
+                  <Input type="time" className="h-10 rounded-xl text-sm" {...form.register("start_time")} />
+                </Field>
+                <Field label="Fine" error={form.formState.errors.end_time?.message}>
+                  <Input type="time" className="h-10 rounded-xl text-sm" {...form.register("end_time")} />
+                </Field>
+              </div>
+
+              {/* Tariffa */}
+              <Field label="Tariffa oraria (€)" error={form.formState.errors.hourly_rate?.message}>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">€</span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="h-10 rounded-xl pl-7 text-sm"
+                    {...form.register("hourly_rate", { valueAsNumber: true })}
+                  />
                 </div>
-              ) : (
-                <div className="flex items-center gap-3 py-1">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Clock className="h-4 w-4" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Imposta <span className="font-medium text-foreground">inizio</span> e{" "}
-                    <span className="font-medium text-foreground">fine</span> per vedere durata e guadagno stimato.
-                  </p>
+              </Field>
+            </div>
+
+            {/* ── Colonna destra: dettagli esame ───────────────────────────── */}
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+
+              <Field label="Nome esame" error={form.formState.errors.exam_name?.message}>
+                <Input
+                  className="h-10 rounded-xl text-sm"
+                  placeholder="es. A-Level Mathematics Paper 1"
+                  {...form.register("exam_name")}
+                />
+              </Field>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field label="Sede / scuola" error={form.formState.errors.location?.message}>
+                  <Input
+                    className="h-10 rounded-xl text-sm"
+                    placeholder="es. Westfield Academy"
+                    {...form.register("location")}
+                  />
+                </Field>
+                <Field label="Ruolo" error={form.formState.errors.role_type?.message}>
+                  <Select
+                    defaultValue={form.getValues("role_type")}
+                    onValueChange={(v) => form.setValue("role_type", v as InvigilationRole, { shouldValidate: true })}
+                  >
+                    <SelectTrigger className="h-10 w-full rounded-xl text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="invigilator">Invigilator</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+
+              <Field label="Note" error={form.formState.errors.notes?.message}>
+                <Textarea
+                  placeholder="Dettagli aggiuntivi su questa sessione…"
+                  className="min-h-[80px] resize-none rounded-xl text-sm"
+                  rows={3}
+                  {...form.register("notes")}
+                />
+              </Field>
+
+              {serverError && (
+                <div className="rounded-xl border border-destructive/25 bg-destructive/5 px-4 py-3">
+                  <p className="text-sm text-destructive">{serverError}</p>
                 </div>
               )}
             </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-3 sm:col-span-1">
-                <Field label="Data" error={form.formState.errors.session_date?.message}>
-                  <Input type="date" max={todayISO()} className="h-11 rounded-xl" {...form.register("session_date")} />
-                </Field>
-              </div>
-              <div>
-                <Field label="Inizio" error={form.formState.errors.start_time?.message}>
-                  <Input type="time" className="h-11 rounded-xl" {...form.register("start_time")} />
-                </Field>
-              </div>
-              <div>
-                <Field label="Fine" error={form.formState.errors.end_time?.message}>
-                  <Input type="time" className="h-11 rounded-xl" {...form.register("end_time")} />
-                </Field>
-              </div>
-            </div>
-
-            <Separator className="bg-border/60" />
-
-            <Field label="Nome esame" error={form.formState.errors.exam_name?.message}>
-              <Input
-                className="h-11 rounded-xl"
-                placeholder="es. A-Level Mathematics Paper 1"
-                {...form.register("exam_name")}
-              />
-            </Field>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Sede / scuola" error={form.formState.errors.location?.message}>
-                <Input
-                  className="h-11 rounded-xl"
-                  placeholder="es. Westfield Academy"
-                  {...form.register("location")}
-                />
-              </Field>
-              <Field label="Ruolo" error={form.formState.errors.role_type?.message}>
-                <Select
-                  defaultValue={form.getValues("role_type")}
-                  onValueChange={(v) =>
-                    form.setValue("role_type", v as InvigilationRole, { shouldValidate: true })
-                  }
-                >
-                  <SelectTrigger className="h-11 w-full rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="invigilator">Invigilator</SelectItem>
-                    <SelectItem value="supervisor">Supervisor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-            </div>
-
-            <Field label="Tariffa oraria (€)" error={form.formState.errors.hourly_rate?.message}>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
-                  €
-                </span>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="h-11 rounded-xl pl-8"
-                  {...form.register("hourly_rate", { valueAsNumber: true })}
-                />
-              </div>
-            </Field>
-
-            <Field label="Note" error={form.formState.errors.notes?.message}>
-              <Textarea
-                placeholder="Dettagli aggiuntivi su questa sessione…"
-                className="min-h-[88px] resize-none rounded-xl text-sm"
-                rows={3}
-                {...form.register("notes")}
-              />
-            </Field>
-
-            {serverError && (
-              <div className="rounded-xl border border-destructive/25 bg-destructive/5 px-4 py-3">
-                <p className="text-sm text-destructive">{serverError}</p>
-              </div>
-            )}
           </div>
 
-          <div className="flex shrink-0 gap-3 border-t border-white/50 bg-white/30 px-6 py-4 backdrop-blur-sm">
+          {/* ── Footer ───────────────────────────────────────────────────── */}
+          <div className="flex shrink-0 gap-3 border-t border-black/[0.06] bg-muted/20 px-5 py-3.5">
             <Button
               type="button"
               variant="outline"
-              className="h-11 flex-1 rounded-xl font-semibold"
+              className="h-10 flex-1 rounded-xl font-semibold"
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
               Annulla
             </Button>
-            <Button type="submit" className="h-11 flex-1 rounded-xl font-semibold shadow-md shadow-primary/20" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="h-10 flex-1 rounded-xl font-semibold shadow-md shadow-primary/20"
+              disabled={isLoading}
+            >
               {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvataggio…
-                </>
-              ) : isEdit ? (
-                "Salva modifiche"
-              ) : (
-                "Registra sessione"
-              )}
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvataggio…</>
+              ) : isEdit ? "Salva modifiche" : "Registra sessione"}
             </Button>
           </div>
+
         </form>
       </DialogContent>
     </Dialog>
