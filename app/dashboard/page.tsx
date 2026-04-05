@@ -4,7 +4,7 @@ import { getPaymentSummary, getSessionsByUser } from "@/lib/data/sessions"
 import { getPendingEvents } from "@/lib/data/calendar-events"
 import { OnboardingDialog } from "@/components/auth/onboarding-dialog"
 import { Badge } from "@/components/ui/badge"
-import { Clock, PoundSterling, AlertCircle, CalendarCheck, ArrowRight, MapPin, ShieldCheck, BarChart3, CalendarDays } from "lucide-react"
+import { Clock, Euro, AlertCircle, CalendarCheck, ArrowRight, MapPin, ShieldCheck, BarChart3, CalendarDays } from "lucide-react"
 import Link from "next/link"
 import type { Session } from "@/types/database"
 
@@ -74,15 +74,15 @@ export default async function DashboardPage() {
     },
     {
       label: "Guadagno totale",
-      value: summary.total_earned > 0 ? `£${summary.total_earned.toFixed(2)}` : "—",
+      value: summary.total_earned > 0 ? `€${summary.total_earned.toFixed(2)}` : "—",
       sub:   "storico",
-      icon:  PoundSterling,
+      icon:  Euro,
       color: "text-emerald-600",
       bg:    "bg-emerald-500/10",
     },
     {
       label: "Non pagato",
-      value: summary.total_unpaid > 0 ? `£${summary.total_unpaid.toFixed(2)}` : "—",
+      value: summary.total_unpaid > 0 ? `€${summary.total_unpaid.toFixed(2)}` : "—",
       sub:   summary.total_unpaid > 0 ? "in attesa" : "tutto in ordine",
       icon:  AlertCircle,
       color: summary.total_unpaid > 0 ? "text-amber-600" : "text-muted-foreground",
@@ -222,7 +222,7 @@ export default async function DashboardPage() {
                       {/* Earned + Status */}
                       <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-end">
                         <span className="text-base font-bold tabular-nums text-foreground">
-                          £{session.earned.toFixed(2)}
+                          €{session.earned.toFixed(2)}
                         </span>
                         <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_STYLE[session.payment_status]}`}>
                           {STATUS_LABEL[session.payment_status] ?? session.payment_status}
@@ -291,7 +291,7 @@ export default async function DashboardPage() {
                         </p>
                         <p className="text-[11px] text-muted-foreground">
                           {new Date(s.session_date + "T00:00:00").toLocaleDateString("it-IT", { day: "numeric", month: "short" })}
-                          {" · "}£{s.earned.toFixed(2)}
+                          {" · "}€{s.earned.toFixed(2)}
                         </p>
                       </div>
                       <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />

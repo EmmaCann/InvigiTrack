@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { CheckCircle2, Clock, PoundSterling, X, Sparkles } from "lucide-react"
+import { CheckCircle2, Clock, Euro, X, Sparkles } from "lucide-react"
 import { convertEventToSession } from "@/app/actions/calendar-events"
 import type { CalendarEvent, Profile, InvigilationRole } from "@/types/database"
 
@@ -115,10 +115,10 @@ export function ConvertEventDialog({ event, profile, onClose }: Props) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <PoundSterling className="h-4 w-4 text-emerald-600" />
+                    <Euro className="h-4 w-4 text-emerald-600" />
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stimato</p>
-                      <p className="text-base font-bold text-emerald-700">£{preview.earned.toFixed(2)}</p>
+                      <p className="text-base font-bold text-emerald-700">€{preview.earned.toFixed(2)}</p>
                     </div>
                   </div>
                   <div className="ml-auto flex items-center gap-1 rounded-full bg-emerald-100/80 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">
@@ -149,9 +149,9 @@ export function ConvertEventDialog({ event, profile, onClose }: Props) {
             {/* Tariffa + Ruolo */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tariffa (£/h)</label>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tariffa (€/h)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">£</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">€</span>
                   <input
                     type="number" step="0.01" min="0"
                     value={rate}

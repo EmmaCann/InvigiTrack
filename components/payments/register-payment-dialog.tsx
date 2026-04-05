@@ -89,7 +89,7 @@ export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
             <div>
               <h2 className="text-base font-bold text-foreground">Registra Pagamento</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {sessions.length} session{sessions.length > 1 ? "i" : "e"} · atteso £{expectedTotal.toFixed(2)}
+                {sessions.length} session{sessions.length > 1 ? "i" : "e"} · atteso €{expectedTotal.toFixed(2)}
               </p>
             </div>
             <button
@@ -118,7 +118,7 @@ export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
               </div>
               <div>
                 <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Importo ricevuto (£)
+                  Importo ricevuto (€)
                 </label>
                 <input
                   type="number"
@@ -132,7 +132,7 @@ export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
                 {hasDiff && (
                   <p className={`mt-1 flex items-center gap-1 text-[11px] font-medium ${difference > 0 ? "text-emerald-600" : "text-amber-600"}`}>
                     <AlertTriangle className="h-3 w-3" />
-                    {difference > 0 ? "+" : ""}£{difference.toFixed(2)} rispetto al totale atteso
+                    {difference > 0 ? "+" : ""}€{difference.toFixed(2)} rispetto al totale atteso
                   </p>
                 )}
               </div>
@@ -204,7 +204,7 @@ export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
                       <span className="text-foreground">{meta.exam_name ?? "Sessione"}</span>
                       <span className="flex items-center gap-2 text-muted-foreground">
                         <span>{formatDate(s.session_date)}</span>
-                        <span className="font-semibold text-foreground">£{s.earned.toFixed(2)}</span>
+                        <span className="font-semibold text-foreground">€{s.earned.toFixed(2)}</span>
                       </span>
                     </div>
                   )
@@ -212,7 +212,7 @@ export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
               </div>
               <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-2 text-xs font-bold">
                 <span className="text-muted-foreground">Totale atteso</span>
-                <span className="text-foreground">£{expectedTotal.toFixed(2)}</span>
+                <span className="text-foreground">€{expectedTotal.toFixed(2)}</span>
               </div>
             </div>
 

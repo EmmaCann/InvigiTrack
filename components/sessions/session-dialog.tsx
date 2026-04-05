@@ -10,7 +10,7 @@ import {
   Pencil,
   Loader2,
   Clock,
-  PoundSterling,
+  Euro,
   Copy,
   Sparkles,
   CalendarCheck,
@@ -245,11 +245,11 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
                   <Separator orientation="vertical" className="hidden h-10 sm:block" />
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200/60 bg-emerald-100/80">
-                      <PoundSterling className="h-4 w-4 text-emerald-700" />
+                      <Euro className="h-4 w-4 text-emerald-700" />
                     </div>
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stimato</p>
-                      <p className="text-base font-bold tabular-nums text-emerald-700">£{preview.earned.toFixed(2)}</p>
+                      <p className="text-base font-bold tabular-nums text-emerald-700">€{preview.earned.toFixed(2)}</p>
                     </div>
                   </div>
                   <div className="ml-auto flex items-center gap-1 rounded-full bg-emerald-100/80 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">
@@ -324,10 +324,10 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
               </Field>
             </div>
 
-            <Field label="Tariffa oraria (£)" error={form.formState.errors.hourly_rate?.message}>
+            <Field label="Tariffa oraria (€)" error={form.formState.errors.hourly_rate?.message}>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
-                  £
+                  €
                 </span>
                 <Input
                   type="number"

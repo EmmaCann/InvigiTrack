@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, Loader2, Clock, PoundSterling, Copy } from "lucide-react"
+import { Plus, Pencil, Loader2, Clock, Euro, Copy } from "lucide-react"
 
 import {
   Sheet,
@@ -241,7 +241,7 @@ export function SessionSheet({ profile, session, lastSession, trigger }: Props) 
               </div>
               <Separator orientation="vertical" className="h-4" />
               <div className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
-                <PoundSterling className="h-3.5 w-3.5" />
+                <Euro className="h-3.5 w-3.5" />
                 {preview.earned.toFixed(2)}
               </div>
               <span className="ml-auto text-[11px] text-muted-foreground">estimated</span>
@@ -281,7 +281,7 @@ export function SessionSheet({ profile, session, lastSession, trigger }: Props) 
           </Field>
 
           {/* Tariffa */}
-          <Field label="Hourly rate (£)" error={form.formState.errors.hourly_rate?.message}>
+          <Field label="Tariffa oraria (€)" error={form.formState.errors.hourly_rate?.message}>
             <Input
               type="number"
               step="0.01"

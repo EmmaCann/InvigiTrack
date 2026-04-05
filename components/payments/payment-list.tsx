@@ -1,7 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { CheckSquare, Square, AlertCircle, CheckCircle2, History } from "lucide-react"
+import { useState, useMemo } from "react"
+import { CheckSquare, Square, AlertCircle, CheckCircle2, History, Download, Search, Calendar, ChevronDown, Check, X, Filter } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { RegisterPaymentDialog } from "./register-payment-dialog"
 import { PaymentHistoryCard } from "./payment-history-card"
@@ -16,6 +22,26 @@ function formatDate(dateStr: string) {
 }
 
 function formatTime(t: string) { return t.slice(0, 5) }
+
+function todayStr() { return new Date().toISOString().split("T")[0] }
+
+function exportPaymentsCSV(payments: PaymentWithSessions[]) {
+  const headers = ["Data", "Importo (€)", "Metodo", "Riferimento", "Sessioni", "Note"]
+  const rows = payments.map((p) => [
+    p.payment_date,
+    p.amount.toFixed(2),
+    p.method,
+    p.reference ?? "",
+    p.sessions.map((s) => (s.metadata as { exam_name?: string }).exam_name ?? "Sessione").join(" | "),
+    p.notes ?? "",
+  ])
+  const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")
+  const blob = new Blob([csv], { type: "text/csv" })
+  const url = URL.createObjectURL(blob)
+  const a = Object.assign(document.createElement("a"), { href: url, download: `pagamenti-${todayStr()}.csv` })
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -42,6 +68,11 @@ export function PaymentList({
   const [selected,    setSelected]    = useState<Set<string>>(new Set())
   const [showModal,   setShowModal]   = useState(false)
 
+  // ── Filtri storico ───────────────────────────────────────────────────────────
+  const [historySearch,   setHistorySearch]   = useState("")
+  const [historyMethod,   setHistoryMethod]   = useState<"all" | "bank_transfer" | "cash" | "other">("all")
+  const [historyDateRange, setHistoryDateRange] = useState<"all" | "30d" | "3m" | "1y">("all")
+
   // ── Selezione ───────────────────────────────────────────────────────────────
   function toggle(id: string) {
     setSelected((prev) => {
@@ -63,6 +94,35 @@ export function PaymentList({
   const selectedTotal    = selectedSessions.reduce((a, s) => a + s.earned, 0)
   const allSelected      = selected.size === unpaidSessions.length && unpaidSessions.length > 0
 
+  const filteredPayments = useMemo(() => {
+    let result = payments
+
+    if (historySearch.trim()) {
+      const q = historySearch.trim().toLowerCase()
+      result = result.filter((p) =>
+        p.sessions.some((s) => ((s.metadata as { exam_name?: string }).exam_name ?? "").toLowerCase().includes(q)) ||
+        (p.reference ?? "").toLowerCase().includes(q) ||
+        (p.notes ?? "").toLowerCase().includes(q)
+      )
+    }
+
+    if (historyMethod !== "all") {
+      result = result.filter((p) => p.method === historyMethod)
+    }
+
+    if (historyDateRange !== "all") {
+      const cutoff = new Date()
+      if (historyDateRange === "30d") cutoff.setDate(cutoff.getDate() - 30)
+      if (historyDateRange === "3m")  cutoff.setMonth(cutoff.getMonth() - 3)
+      if (historyDateRange === "1y")  cutoff.setFullYear(cutoff.getFullYear() - 1)
+      result = result.filter((p) => new Date(p.payment_date + "T00:00:00") >= cutoff)
+    }
+
+    return result
+  }, [payments, historySearch, historyMethod, historyDateRange])
+
+  const hasHistoryFilters = !!(historySearch || historyMethod !== "all" || historyDateRange !== "all")
+
   function handleSuccess() {
     setShowModal(false)
     setSelected(new Set())
@@ -74,9 +134,9 @@ export function PaymentList({
       {/* ── Summary bar ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
-          { label: "In attesa",       value: `£${summaryUnpaid.toFixed(2)}`,     color: "text-amber-600",   bg: "bg-amber-500/8" },
-          { label: "Ricevuto (mese)", value: `£${summaryPaidMonth.toFixed(2)}`,  color: "text-emerald-600", bg: "bg-emerald-500/8" },
-          { label: "Ricevuto totale", value: `£${summaryPaidTotal.toFixed(2)}`,  color: "text-primary",     bg: "bg-primary/8" },
+          { label: "In attesa",       value: `€${summaryUnpaid.toFixed(2)}`,     color: "text-amber-600",   bg: "bg-amber-500/8" },
+          { label: "Ricevuto (mese)", value: `€${summaryPaidMonth.toFixed(2)}`,  color: "text-emerald-600", bg: "bg-emerald-500/8" },
+          { label: "Ricevuto totale", value: `€${summaryPaidTotal.toFixed(2)}`,  color: "text-primary",     bg: "bg-primary/8" },
         ].map((s) => (
           <div key={s.label} className="glass-dashboard rounded-2xl px-5 py-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{s.label}</p>
@@ -137,7 +197,7 @@ export function PaymentList({
                   {allSelected ? "Deseleziona tutte" : "Seleziona tutte"}
                 </button>
                 <span className="text-xs text-muted-foreground">
-                  {unpaidSessions.length} session{unpaidSessions.length !== 1 ? "i" : "e"} · £{unpaidSessions.reduce((a, s) => a + s.earned, 0).toFixed(2)} totale
+                  {unpaidSessions.length} session{unpaidSessions.length !== 1 ? "i" : "e"} · €{unpaidSessions.reduce((a, s) => a + s.earned, 0).toFixed(2)} totale
                 </span>
               </div>
 
@@ -196,7 +256,7 @@ export function PaymentList({
 
                       {/* Importo */}
                       <p className="shrink-0 text-base font-bold tabular-nums text-foreground">
-                        £{session.earned.toFixed(2)}
+                        €{session.earned.toFixed(2)}
                       </p>
                     </div>
                   )
@@ -210,14 +270,108 @@ export function PaymentList({
       {/* ── Tab: Storico ─────────────────────────────────────────────── */}
       {tab === "history" && (
         <div className="space-y-3">
-          {payments.length === 0 ? (
+
+          {/* Riga azioni: contatore + CSV */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{filteredPayments.length} pagamenti</span>
+            <button
+              onClick={() => exportPaymentsCSV(filteredPayments)}
+              className="flex cursor-pointer items-center gap-2 rounded-xl border border-border/50 bg-white/70 px-4 py-2 text-xs font-semibold text-muted-foreground shadow-sm transition-all hover:bg-white hover:text-foreground hover:shadow-md"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Esporta CSV
+            </button>
+          </div>
+
+          {/* Filter bar */}
+          <div className="glass-dashboard flex flex-wrap items-center gap-2 rounded-2xl px-3 py-2">
+            {/* Search */}
+            <div className="flex min-w-[180px] flex-1 items-center gap-2 rounded-xl border border-border/30 bg-white/50 px-3 py-2">
+              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+              <input
+                type="text"
+                placeholder="Cerca pagamenti…"
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground/50"
+              />
+              {historySearch && (
+                <button onClick={() => setHistorySearch("")} className="cursor-pointer">
+                  <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              )}
+            </div>
+
+            {/* Method filter */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                  <Filter className="h-3.5 w-3.5 shrink-0" />
+                  {historyMethod === "all" ? "Tutti i metodi" : historyMethod === "bank_transfer" ? "Bonifico" : historyMethod === "cash" ? "Contanti" : "Altro"}
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+                {[
+                  { v: "all" as const,           l: "Tutti i metodi" },
+                  { v: "bank_transfer" as const, l: "Bonifico" },
+                  { v: "cash" as const,          l: "Contanti" },
+                  { v: "other" as const,         l: "Altro" },
+                ].map(({ v, l }) => (
+                  <DropdownMenuItem key={v} onClick={() => setHistoryMethod(v)} className="flex cursor-pointer items-center justify-between text-xs">
+                    {l} {historyMethod === v && <Check className="h-3 w-3 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Date range */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                  <Calendar className="h-3.5 w-3.5 shrink-0" />
+                  {historyDateRange === "all" ? "Tutto il periodo" : historyDateRange === "30d" ? "Ultimi 30gg" : historyDateRange === "3m" ? "Ultimi 3 mesi" : "Quest'anno"}
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+                {[
+                  { v: "all" as const,  l: "Tutto il periodo" },
+                  { v: "30d" as const,  l: "Ultimi 30 giorni" },
+                  { v: "3m" as const,   l: "Ultimi 3 mesi" },
+                  { v: "1y" as const,   l: "Quest'anno" },
+                ].map(({ v, l }) => (
+                  <DropdownMenuItem key={v} onClick={() => setHistoryDateRange(v)} className="flex cursor-pointer items-center justify-between text-xs">
+                    {l} {historyDateRange === v && <Check className="h-3 w-3 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Clear */}
+            {hasHistoryFilters && (
+              <button
+                onClick={() => { setHistorySearch(""); setHistoryMethod("all"); setHistoryDateRange("all") }}
+                className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/30 bg-white/50 px-2.5 py-2 text-xs text-muted-foreground transition-colors hover:text-destructive"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+
+          </div>
+
+          {filteredPayments.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/50 py-16 text-center">
               <History className="mb-3 h-10 w-10 text-muted-foreground/40" />
-              <p className="text-sm font-semibold text-foreground">Nessun pagamento registrato</p>
-              <p className="mt-1 text-xs text-muted-foreground">I pagamenti confermati appariranno qui.</p>
+              <p className="text-sm font-semibold text-foreground">
+                {payments.length === 0 ? "Nessun pagamento registrato" : "Nessun risultato"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {payments.length === 0 ? "I pagamenti confermati appariranno qui." : "Prova a modificare i filtri."}
+              </p>
             </div>
           ) : (
-            payments.map((p) => <PaymentHistoryCard key={p.id} payment={p} />)
+            filteredPayments.map((p) => <PaymentHistoryCard key={p.id} payment={p} />)
           )}
         </div>
       )}
@@ -227,7 +381,7 @@ export function PaymentList({
         <div className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/50 bg-foreground/95 px-5 py-3.5 shadow-2xl shadow-black/30 backdrop-blur-xl">
           <div className="text-sm text-white/80">
             <span className="font-bold text-white">{selected.size}</span> selezionate ·{" "}
-            <span className="font-bold text-white">£{selectedTotal.toFixed(2)}</span>
+            <span className="font-bold text-white">€{selectedTotal.toFixed(2)}</span>
           </div>
           <button
             onClick={() => setSelected(new Set())}

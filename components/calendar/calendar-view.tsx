@@ -291,7 +291,7 @@ export function CalendarView({ sessions, events, profile }: Props) {
                             <div key={ev.id} className="flex items-center gap-1 rounded px-1 py-0.5 bg-violet-50">
                               <span className={cn(
                                 "h-1.5 w-1.5 shrink-0 rounded-sm",
-                                ev.is_converted ? "bg-emerald-400" : "bg-violet-400",
+                                ev.is_converted ? "bg-teal-400" : "bg-violet-400",
                               )} />
                               <span className="truncate text-[10px] font-medium text-violet-700">
                                 {ev.title}
@@ -327,7 +327,7 @@ export function CalendarView({ sessions, events, profile }: Props) {
                 <span className="text-[10px] text-muted-foreground">Evento</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-sm bg-emerald-400" />
+                <span className="h-1.5 w-1.5 rounded-sm bg-teal-400" />
                 <span className="text-[10px] text-muted-foreground">Registrato</span>
               </div>
             </div>

@@ -286,7 +286,7 @@ function HourlyRateField({
 }) {
   return (
     <Field
-      label="Tariffa oraria (£)"
+      label="Tariffa oraria (€)"
       error={error}
     >
       <Input

@@ -131,7 +131,11 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  input, textarea, select {
+    outline: none !important;
+    box-shadow: none !important;
   }
 
   html {

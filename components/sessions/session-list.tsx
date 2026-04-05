@@ -92,7 +92,7 @@ function totalStats(sessions: Session[]) {
 }
 
 function exportCSV(sessions: Session[]) {
-  const headers = ["Data","Inizio","Fine","Durata (min)","Sede","Esame","Ruolo","Tariffa (£)","Guadagno (£)","Stato"]
+  const headers = ["Data","Inizio","Fine","Durata (min)","Sede","Esame","Ruolo","Tariffa (€)","Guadagno (€)","Stato"]
   const rows = sessions.map((s) => {
     const meta = s.metadata as { exam_name?: string; role_type?: string }
     return [
@@ -247,8 +247,8 @@ export function SessionList({ sessions, profile }: Props) {
         {[
           { label: "Totale sessioni", value: `${stats.count}`,              sub: "filtrate",  color: "text-foreground"  },
           { label: "Ore totali",      value: `${stats.hours.toFixed(1)}h`,  sub: "lavorate",  color: "text-blue-600"    },
-          { label: "Guadagno",        value: `£${stats.earned.toFixed(2)}`, sub: "totale",    color: "text-emerald-600" },
-          { label: "Non pagato",      value: `£${stats.unpaid.toFixed(2)}`, sub: "in attesa", color: "text-amber-600"   },
+          { label: "Guadagno",        value: `€${stats.earned.toFixed(2)}`, sub: "totale",    color: "text-emerald-600" },
+          { label: "Non pagato",      value: `€${stats.unpaid.toFixed(2)}`, sub: "in attesa", color: "text-amber-600"   },
         ].map((s) => (
           <div key={s.label} className="glass-dashboard rounded-2xl px-5 py-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{s.label}</p>
@@ -258,6 +258,19 @@ export function SessionList({ sessions, profile }: Props) {
         ))}
       </div>
       <div className="pt-12 space-y-5">
+      {/* ── Azioni rapide ──────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{filtered.length} sessioni filtrate</span>
+        </div>
+        <button
+          onClick={() => exportCSV(filtered)}
+          className="flex cursor-pointer items-center gap-2 rounded-xl border border-border/50 bg-white/70 px-4 py-2 text-xs font-semibold text-muted-foreground shadow-sm transition-all hover:bg-white hover:text-foreground hover:shadow-md"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Esporta CSV
+        </button>
+      </div>
       {/* ── Filter bar — glass unificata ───────────────────────────── */}
       <div className="glass-dashboard flex items-center divide-x divide-border/30 overflow-hidden rounded-2xl">
         {/* Search */}
@@ -354,15 +367,6 @@ export function SessionList({ sessions, profile }: Props) {
           </button>
         )}
 
-        {/* Export CSV */}
-        <button
-          onClick={() => exportCSV(filtered)}
-          className="flex cursor-pointer items-center gap-1.5 px-4 py-3 text-xs text-muted-foreground transition-colors hover:bg-white/40 hover:text-foreground"
-          title="Esporta CSV"
-        >
-          <Download className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">CSV</span>
-        </button>
       </div>
 
       {/* ── Lista raggruppata ──────────────────────────────────────── */}
@@ -392,7 +396,7 @@ export function SessionList({ sessions, profile }: Props) {
                       {monthHours.toFixed(1)}h
                     </span>
                     <ChevronRight className="h-3 w-3" />
-                    <span className="font-semibold text-foreground">£{monthTotal.toFixed(2)}</span>
+                    <span className="font-semibold text-foreground">€{monthTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -454,7 +458,7 @@ export function SessionList({ sessions, profile }: Props) {
                         {/* Right: earned + status + actions */}
                         <div className="flex items-center gap-3">
                           <span className="text-base font-bold text-foreground tabular-nums">
-                            £{session.earned.toFixed(2)}
+                            €{session.earned.toFixed(2)}
                           </span>
 
                           {/* Payment status dropdown */}

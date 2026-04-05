@@ -96,7 +96,7 @@ export function PaymentHistoryCard({ payment }: Props) {
 
         {/* Importo */}
         <p className="shrink-0 text-xl font-bold tabular-nums text-foreground">
-          £{payment.amount.toFixed(2)}
+          €{payment.amount.toFixed(2)}
         </p>
 
         {/* Espandi */}
@@ -143,7 +143,7 @@ export function PaymentHistoryCard({ payment }: Props) {
                       </div>
                     </div>
                     <span className="text-sm font-semibold tabular-nums text-foreground">
-                      £{s.earned.toFixed(2)}
+                      €{s.earned.toFixed(2)}
                     </span>
                   </div>
                 )

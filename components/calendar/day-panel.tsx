@@ -156,7 +156,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                             {s.location}
                           </p>
                         )}
-                        <p className="text-[11px]">{STATUS_LABEL[s.payment_status]} · £{s.earned.toFixed(2)}</p>
+                        <p className="text-[11px]">{STATUS_LABEL[s.payment_status]} · €{s.earned.toFixed(2)}</p>
                       </div>
                       {isConf && (
                         <div className="mt-2 flex items-center justify-end gap-2 border-t border-border/30 pt-2">
@@ -180,13 +180,13 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                     <div key={ev.id} className={cn(
                       "group rounded-xl border p-3",
                       ev.is_converted
-                        ? "border-emerald-200/60 bg-emerald-50/40"
+                        ? "border-teal-200/60 bg-teal-50/40"
                         : "border-primary/20 bg-primary/[0.04]",
                     )}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           {ev.is_converted
-                            ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                            ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-teal-500" />
                             : <span className="h-2 w-2 shrink-0 rounded-full bg-primary/50 mt-0.5" />
                           }
                           <p className="text-sm font-semibold text-foreground leading-tight truncate">
@@ -225,7 +225,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                       )}
 
                       {ev.is_converted && (
-                        <p className="mt-1.5 text-[11px] font-medium text-emerald-600">✓ Sessione registrata</p>
+                        <p className="mt-1.5 text-[11px] font-medium text-teal-600">✓ Sessione registrata</p>
                       )}
 
                       {isConf && (
