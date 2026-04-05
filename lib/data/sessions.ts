@@ -34,13 +34,19 @@ function calcEarned(durationMinutes: number, hourlyRate: number): number {
 
 /**
  * Tutte le sessioni di un utente, dalla più recente.
+ * Se categoryId è specificato, filtra per categoria (workspace attivo).
  */
-export async function getSessionsByUser(userId: string): Promise<Session[]> {
+export async function getSessionsByUser(
+  userId: string,
+  categoryId?: string,
+): Promise<Session[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from("sessions")
     .select("*")
     .eq("user_id", userId)
+  if (categoryId) query = query.eq("category_id", categoryId)
+  const { data, error } = await query
     .order("session_date", { ascending: false })
     .order("start_time", { ascending: false })
   if (error || !data) return []
@@ -50,22 +56,25 @@ export async function getSessionsByUser(userId: string): Promise<Session[]> {
 /**
  * Sessioni di un utente in un mese specifico.
  * Usato per la dashboard e il calendario.
+ * Se categoryId è specificato, filtra per categoria (workspace attivo).
  */
 export async function getSessionsByMonth(
   userId: string,
   year: number,
   month: number,  // 1-12
+  categoryId?: string,
 ): Promise<Session[]> {
   const supabase = await createClient()
   const from = `${year}-${String(month).padStart(2, "0")}-01`
   const to   = `${year}-${String(month).padStart(2, "0")}-31`
-  const { data, error } = await supabase
+  let query = supabase
     .from("sessions")
     .select("*")
     .eq("user_id", userId)
     .gte("session_date", from)
     .lte("session_date", to)
-    .order("session_date", { ascending: false })
+  if (categoryId) query = query.eq("category_id", categoryId)
+  const { data, error } = await query.order("session_date", { ascending: false })
   if (error || !data) return []
   return data as Session[]
 }
@@ -74,18 +83,24 @@ export async function getSessionsByMonth(
  * Riepilogo pagamenti di un utente.
  * Restituisce: totale guadagnato, totale non pagato, totale pagato.
  * Usato per le stat card della dashboard.
+ * Se categoryId è specificato, filtra per categoria (workspace attivo).
  */
-export async function getPaymentSummary(userId: string): Promise<{
+export async function getPaymentSummary(
+  userId: string,
+  categoryId?: string,
+): Promise<{
   total_earned: number
   total_unpaid: number
   total_paid: number
   total_hours: number
 }> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from("sessions")
     .select("earned, payment_status, duration_minutes")
     .eq("user_id", userId)
+  if (categoryId) query = query.eq("category_id", categoryId)
+  const { data, error } = await query
 
   if (error || !data) {
     return { total_earned: 0, total_unpaid: 0, total_paid: 0, total_hours: 0 }

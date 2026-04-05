@@ -1,7 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { usePathname } from "next/navigation"
-import { LogOut, Settings, ChevronDown, ShieldCheck, Bell, Search } from "lucide-react"
+import { LogOut, Settings, ChevronDown, ShieldCheck, Bell, Search, Check, Plus, ArrowLeft } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { logout } from "@/app/actions/auth"
+import { switchWorkspace, addWorkspace } from "@/app/actions/workspace"
 import { openDashboardSearch } from "@/components/layout/dashboard-search-layer"
-import type { Profile } from "@/types/database"
+import type { Profile, WorkCategory } from "@/types/database"
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard":            { title: "Dashboard",    subtitle: "Riepilogo della tua attività"          },
@@ -32,9 +35,29 @@ function getInitials(profile: Profile): string {
   return profile.email[0].toUpperCase()
 }
 
-export function Header({ profile }: { profile: Profile }) {
+export function Header({
+  profile,
+  activeWorkspace,
+  userCategories,
+  availableCategories,
+}: {
+  profile:              Profile
+  activeWorkspace:      WorkCategory
+  userCategories:       WorkCategory[]
+  availableCategories:  WorkCategory[]
+}) {
   const pathname = usePathname()
   const page = pageTitles[pathname] ?? { title: "InvigiTrack", subtitle: "" }
+  const [addingWorkspace, setAddingWorkspace] = useState(false)
+  const [newName, setNewName]       = useState("")
+  const [selectedCat, setSelectedCat] = useState<string>("")
+  const [loadingId, setLoadingId]   = useState<string | null>(null)
+
+  function resetAddForm() {
+    setAddingWorkspace(false)
+    setNewName("")
+    setSelectedCat("")
+  }
 
   return (
     <header className="glass flex h-[3.75rem] shrink-0 items-center justify-between border-b border-white/55 px-5">
@@ -101,11 +124,141 @@ export function Header({ profile }: { profile: Profile }) {
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-52 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+          <DropdownMenuContent align="end" className="w-56 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
             <DropdownMenuLabel className="font-normal">
               <p className="text-sm font-semibold">{profile.full_name ?? "Utente"}</p>
               <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{profile.email}</p>
             </DropdownMenuLabel>
+
+            <DropdownMenuSeparator />
+
+            {/* ── Workspace section ─────────────────────────── */}
+            {!addingWorkspace ? (
+              <>
+                {/* Lista workspace correnti */}
+                {userCategories.map((cat) => (
+                  <DropdownMenuItem key={cat.id} asChild>
+                    <form action={switchWorkspace.bind(null, cat.slug)} className="w-full">
+                      <button type="submit" className="flex w-full cursor-pointer items-center gap-2.5 px-2 py-2 text-sm">
+                        {/* Iniziale del workspace */}
+                        <span className={cn(
+                          "flex h-6 w-6 shrink-0 items-center justify-center rounded text-[11px] font-bold",
+                          cat.id === activeWorkspace.id
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          {cat.label[0].toUpperCase()}
+                        </span>
+                        <span className={cn(
+                          "flex-1 text-left text-sm",
+                          cat.id === activeWorkspace.id ? "font-semibold text-foreground" : "text-foreground/80"
+                        )}>
+                          {cat.label}
+                        </span>
+                        {cat.id === activeWorkspace.id && (
+                          <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        )}
+                      </button>
+                    </form>
+                  </DropdownMenuItem>
+                ))}
+
+                {/* Pulsante Nuovo workspace */}
+                {availableCategories.length > 0 && (
+                  <DropdownMenuItem asChild>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setAddingWorkspace(true) }}
+                      className="flex w-full cursor-pointer items-center gap-2.5 px-2 py-2 text-sm text-primary"
+                    >
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-dashed border-primary/40 bg-primary/5">
+                        <Plus className="h-3.5 w-3.5 text-primary/70" />
+                      </span>
+                      <span className="font-medium">Nuovo workspace</span>
+                    </button>
+                  </DropdownMenuItem>
+                )}
+              </>
+            ) : (
+              /* Vista "crea workspace" */
+              <div className="px-3 py-2 space-y-3">
+                {/* Header */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={resetAddForm}
+                    className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                  </button>
+                  <p className="text-[11px] font-semibold text-foreground">Nuovo workspace</p>
+                </div>
+
+                {/* Nome */}
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-muted-foreground">Nome</p>
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="es. Cambridge Invigilation"
+                    className="w-full rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/40"
+                    autoFocus
+                  />
+                </div>
+
+                {/* Tipo di lavoro */}
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-muted-foreground">Tipo di lavoro</p>
+                  <div className="space-y-1">
+                    {availableCategories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCat(cat.id === selectedCat ? "" : cat.id)}
+                        className={cn(
+                          "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
+                          selectedCat === cat.id
+                            ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                            : "hover:bg-muted text-foreground/80"
+                        )}
+                      >
+                        <span className={cn(
+                          "flex h-6 w-6 shrink-0 items-center justify-center rounded text-[11px] font-bold",
+                          selectedCat === cat.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        )}>
+                          {cat.label[0].toUpperCase()}
+                        </span>
+                        <span className="flex-1 text-left">{cat.label}</span>
+                        {selectedCat === cat.id && <Check className="h-3.5 w-3.5 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Crea button */}
+                <button
+                  type="button"
+                  disabled={!newName.trim() || !selectedCat || !!loadingId}
+                  onClick={async () => {
+                    const cat = availableCategories.find((c) => c.id === selectedCat)
+                    if (!cat) return
+                    setLoadingId(cat.id)
+                    await addWorkspace(cat.id, cat.slug, newName.trim())
+                    setLoadingId(null)
+                    resetAddForm()
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  {loadingId ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  Crea workspace
+                </button>
+              </div>
+            )}
 
             <DropdownMenuSeparator />
 

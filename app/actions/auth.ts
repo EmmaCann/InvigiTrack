@@ -11,7 +11,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/data/auth"
 import { insertProfile } from "@/lib/data/profiles"
-import { getCategoryBySlug, getAllCategories, grantCategoryAccess } from "@/lib/data/categories"
+import { getCategoryBySlug, grantCategoryAccess } from "@/lib/data/categories"
 import type { OnboardingData } from "@/types/database"
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
@@ -78,18 +78,13 @@ export async function createProfile(data: OnboardingData) {
       return { error: profileResult.error }
     }
 
-    // 2. Grant categorie (best-effort — un fallimento non blocca l'onboarding)
-    if (platformRole === "admin") {
-      const all = await getAllCategories()
-      for (const cat of all) {
-        await grantCategoryAccess(user.id, cat.id)
-      }
-    } else {
-      const slug = data.primary_category_slug ?? "invigilation"
-      const category = await getCategoryBySlug(slug)
-      if (category) {
-        await grantCategoryAccess(user.id, category.id)
-      }
+    // 2. Grant categoria primaria (best-effort — un fallimento non blocca l'onboarding)
+    // Sia admin che user ricevono solo la categoria selezionata —
+    // le altre si aggiungono manualmente tramite "Nuovo workspace" nell'header.
+    const slug = data.primary_category_slug ?? "invigilation"
+    const category = await getCategoryBySlug(slug)
+    if (category) {
+      await grantCategoryAccess(user.id, category.id)
     }
 
     return { success: true }

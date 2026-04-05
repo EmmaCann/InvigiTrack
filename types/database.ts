@@ -117,16 +117,18 @@ export interface CalendarEvent {
   notes:                string | null
   is_converted:         boolean       // true quando è stata creata una sessione da questo evento
   converted_session_id: string | null // id della sessione creata
+  category_id:          string | null // workspace/categoria di appartenenza
   created_at:           string
   updated_at:           string
 }
 
 /** Dati per creare un nuovo evento calendario */
 export interface CreateEventData {
-  event_date: string
-  title:      string
-  location?:  string
-  notes?:     string
+  event_date:   string
+  title:        string
+  location?:    string
+  notes?:       string
+  category_id?: string  // workspace attivo al momento della creazione
 }
 
 // ─── Pagamenti ────────────────────────────────────────────────────────────────

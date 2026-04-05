@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { getCurrentUser }     from "@/lib/data/auth"
 import { getProfileById }     from "@/lib/data/profiles"
-import { getCategoryBySlug }  from "@/lib/data/categories"
+import { getActiveWorkspace } from "@/lib/workspace"
 import {
   insertEvent,
   updateEvent,
@@ -26,7 +26,9 @@ export async function createEvent(
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
 
-  const result = await insertEvent(user.id, data)
+  // Associa l'evento al workspace attivo
+  const { category } = await getActiveWorkspace(user.id)
+  const result = await insertEvent(user.id, { ...data, category_id: category.id })
   if (result.error) return { error: result.error }
 
   revalidate()
@@ -90,8 +92,7 @@ export async function convertEventToSession(
   const profile = await getProfileById(user.id)
   if (!profile) return { error: "Profilo non trovato" }
 
-  const category = await getCategoryBySlug("invigilation")
-  if (!category) return { error: "Categoria non trovata" }
+  const { category } = await getActiveWorkspace(user.id)
 
   // Inserisci la sessione
   const sessionResult = await insertSession(user.id, category.id, {

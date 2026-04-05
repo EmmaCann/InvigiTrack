@@ -2,6 +2,7 @@ import { getCurrentUser }    from "@/lib/data/auth"
 import { getProfileById }    from "@/lib/data/profiles"
 import { getSessionsByUser } from "@/lib/data/sessions"
 import { getEventsByUser }   from "@/lib/data/calendar-events"
+import { getActiveWorkspace } from "@/lib/workspace"
 import { CalendarView }      from "@/components/calendar/calendar-view"
 
 export default async function CalendarPage() {
@@ -10,9 +11,11 @@ export default async function CalendarPage() {
 
   if (!user || !profile) return null
 
+  const { category } = await getActiveWorkspace(user.id)
+
   const [sessions, events] = await Promise.all([
-    getSessionsByUser(user.id),
-    getEventsByUser(user.id),
+    getSessionsByUser(user.id, category.id),
+    getEventsByUser(user.id, category.id),
   ])
 
   return (

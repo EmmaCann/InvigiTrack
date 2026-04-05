@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
 import { getNextEvent, getEventsByUser } from "@/lib/data/calendar-events"
 import { getSessionsByUser } from "@/lib/data/sessions"
+import { getActiveWorkspace } from "@/lib/workspace"
+import { getAvailableCategories } from "@/lib/data/categories"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
@@ -28,12 +30,13 @@ export default async function DashboardLayout({
     )
   }
 
-  const nextEvent = await getNextEvent(user.id)
+  const { category: activeWorkspace, userCategories } = await getActiveWorkspace(user.id)
 
-  // Dati per spotlight search
-  const [allSessions, allEvents] = await Promise.all([
-    getSessionsByUser(user.id),
-    getEventsByUser(user.id),
+  const [nextEvent, availableCategories, allSessions, allEvents] = await Promise.all([
+    getNextEvent(user.id, activeWorkspace.id),
+    getAvailableCategories(user.id),
+    getSessionsByUser(user.id, activeWorkspace.id),
+    getEventsByUser(user.id, activeWorkspace.id),
   ])
   const today = new Date().toISOString().split("T")[0]
 
@@ -71,7 +74,7 @@ export default async function DashboardLayout({
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
 
         <div className="hidden md:block">
-          <Header profile={profile} />
+          <Header profile={profile} activeWorkspace={activeWorkspace} userCategories={userCategories} availableCategories={availableCategories} />
         </div>
 
         <div className="md:hidden">

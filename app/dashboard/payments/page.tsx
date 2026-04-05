@@ -7,6 +7,7 @@ import { getCurrentUser }   from "@/lib/data/auth"
 import { getProfileById }   from "@/lib/data/profiles"
 import { getSessionsByUser } from "@/lib/data/sessions"
 import { getPaymentsByUser } from "@/lib/data/payments"
+import { getActiveWorkspace } from "@/lib/workspace"
 import { PaymentList }      from "@/components/payments/payment-list"
 
 export default async function PaymentsPage() {
@@ -15,8 +16,10 @@ export default async function PaymentsPage() {
 
   if (!user || !profile) return null
 
+  const { category } = await getActiveWorkspace(user.id)
+
   const [allSessions, payments] = await Promise.all([
-    getSessionsByUser(user.id),
+    getSessionsByUser(user.id, category.id),
     getPaymentsByUser(user.id),
   ])
 

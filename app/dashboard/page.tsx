@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
 import { getPaymentSummary, getSessionsByUser } from "@/lib/data/sessions"
 import { getPendingEvents } from "@/lib/data/calendar-events"
+import { getActiveWorkspace } from "@/lib/workspace"
 import { OnboardingDialog } from "@/components/auth/onboarding-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Clock, Euro, AlertCircle, CalendarCheck, ArrowRight, MapPin, ShieldCheck, BarChart3, CalendarDays } from "lucide-react"
@@ -36,10 +37,12 @@ export default async function DashboardPage() {
     return <OnboardingDialog isAdmin={isAdmin} />
   }
 
+  const { category } = await getActiveWorkspace(user!.id)
+
   const [summary, allSessions, pendingEvents] = await Promise.all([
-    getPaymentSummary(user!.id),
-    getSessionsByUser(user!.id),
-    getPendingEvents(user!.id),
+    getPaymentSummary(user!.id, category.id),
+    getSessionsByUser(user!.id, category.id),
+    getPendingEvents(user!.id, category.id),
   ])
 
   const recentSessions = allSessions.slice(0, 5)

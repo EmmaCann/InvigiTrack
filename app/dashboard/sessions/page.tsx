@@ -6,15 +6,18 @@
 import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
 import { getSessionsByUser } from "@/lib/data/sessions"
+import { getActiveWorkspace } from "@/lib/workspace"
 import { SessionDialog } from "@/components/sessions/session-dialog"
 import { SessionList } from "@/components/sessions/session-list"
 
 export default async function SessionsPage() {
-  const user     = await getCurrentUser()
-  const profile  = user ? await getProfileById(user.id) : null
-  const sessions = user ? await getSessionsByUser(user.id) : []
+  const user    = await getCurrentUser()
+  const profile = user ? await getProfileById(user.id) : null
 
   if (!user || !profile) return null
+
+  const { category } = await getActiveWorkspace(user.id)
+  const sessions = await getSessionsByUser(user.id, category.id)
 
   return (
     <div className="space-y-6 ">

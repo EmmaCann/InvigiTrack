@@ -24,7 +24,8 @@
       "Bash(powershell -Command \"Copy-Item ''C:\\\\invigitrack\\\\public\\\\logo.png'' ''C:\\\\invigitrack\\\\app\\\\icon.png'' -Force\")",
       "Bash(del \"C:\\\\invigitrack\\\\app\\\\favicon.ico\")",
       "Bash(grep -rn \"£\\\\|PoundSterling\\\\|pound\\\\|GBP\" C:invigitrackapp C:invigitrackcomponents C:invigitracklib --include=*.tsx --include=*.ts -l)",
-      "Bash(grep -rn \"£\\\\|PoundSterling\" C:invigitrackapp C:invigitrackcomponents --include=*.tsx --include=*.ts)"
+      "Bash(grep -rn \"£\\\\|PoundSterling\" C:invigitrackapp C:invigitrackcomponents --include=*.tsx --include=*.ts)",
+      "Bash(dir \"C:\\\\invigitrack\\\\lib\")"
     ]
   }
 }
