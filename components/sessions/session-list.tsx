@@ -132,13 +132,14 @@ const PAGE_SIZE = 10
 // --- Props --------------------------------------------------------------------
 
 interface Props {
-  sessions: Session[]
-  profile:  Profile
+  sessions:     Session[]
+  profile:      Profile
+  categorySlug: string
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function SessionList({ sessions, profile }: Props) {
+export function SessionList({ sessions, profile, categorySlug }: Props) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -490,7 +491,7 @@ export function SessionList({ sessions, profile }: Props) {
 
                           {/* Azioni — visibili all'hover */}
                           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <SessionDialog profile={profile} session={session} />
+                            <SessionDialog profile={profile} categorySlug={categorySlug} session={session} />
 
                             {isConf ? (
                               <div className="flex items-center gap-1 ml-1">

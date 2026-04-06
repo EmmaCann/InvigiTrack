@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { CalendarClock, MapPin } from "lucide-react"
+import { CalendarClock, MapPin, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, SETTINGS_ITEM, isActiveRoute } from "./nav-items"
 import type { CalendarEvent } from "@/types/database"
@@ -109,7 +109,7 @@ export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
 
       {/* -- Next Shift --------------------------------------------- */}
       <div className="px-3 pb-8">
-        <div className="rounded-xl border border-border/50 bg-muted/50 px-4 py-4">
+        <Link href="/dashboard/calendar" className="block rounded-xl border border-border/50 bg-muted/50 px-4 py-4 transition-colors hover:border-primary/30 hover:bg-primary/5">
           <div className="mb-1.5 flex items-center gap-1.5">
             <CalendarClock className="h-3 w-3 text-muted-foreground" />
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
@@ -120,6 +120,16 @@ export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
             <>
               <p className="text-sm font-bold text-foreground">{formatShiftDate(nextEvent.event_date)}</p>
               <p className="truncate text-sm font-semibold text-foreground">{nextEvent.title}</p>
+              {(nextEvent.start_time || nextEvent.end_time) && (
+                <div className="mt-0.5 flex items-center gap-1">
+                  <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">
+                    {nextEvent.start_time ? nextEvent.start_time.slice(0, 5) : ""}
+                    {nextEvent.start_time && nextEvent.end_time ? " – " : ""}
+                    {nextEvent.end_time ? nextEvent.end_time.slice(0, 5) : ""}
+                  </p>
+                </div>
+              )}
               {nextEvent.location && (
                 <div className="mt-0.5 flex items-center gap-1">
                   <MapPin className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -130,7 +140,7 @@ export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
           ) : (
             <p className="text-xs text-muted-foreground">Nessun turno in programma</p>
           )}
-        </div>
+        </Link>
       </div>
 
     </aside>

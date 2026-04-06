@@ -56,6 +56,8 @@ export async function insertEvent(
     .insert({
       user_id:     userId,
       event_date:  data.event_date,
+      start_time:  data.start_time  ?? null,
+      end_time:    data.end_time    ?? null,
       title:       data.title,
       location:    data.location    ?? null,
       notes:       data.notes       ?? null,
@@ -75,10 +77,12 @@ export async function updateEvent(
   const { error } = await supabase
     .from("calendar_events")
     .update({
-      ...(data.event_date && { event_date: data.event_date }),
-      ...(data.title      && { title:      data.title      }),
-      ...(data.location   !== undefined && { location: data.location ?? null }),
-      ...(data.notes      !== undefined && { notes:    data.notes    ?? null }),
+      ...(data.event_date  && { event_date:  data.event_date  }),
+      ...(data.title       && { title:       data.title       }),
+      ...(data.location    !== undefined && { location:   data.location   ?? null }),
+      ...(data.notes       !== undefined && { notes:      data.notes      ?? null }),
+      ...(data.start_time  !== undefined && { start_time: data.start_time ?? null }),
+      ...(data.end_time    !== undefined && { end_time:   data.end_time   ?? null }),
     })
     .eq("id", eventId)
   if (error) return { error: error.message }

@@ -30,7 +30,7 @@ export default async function CalendarPage() {
         </p>
       </div>
 
-      <CalendarView sessions={sessions} events={events} profile={profile} />
+      <CalendarView sessions={sessions} events={events} profile={profile} categorySlug={category.slug} />
     </div>
   )
 }

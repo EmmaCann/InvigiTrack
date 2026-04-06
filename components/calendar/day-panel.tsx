@@ -43,9 +43,10 @@ interface Props {
   events:       CalendarEvent[]
   profile:      Profile
   lastSession?: Session
+  categorySlug: string
 }
 
-export function DayPanel({ selectedDay, year, month, sessions, events, profile, lastSession }: Props) {
+export function DayPanel({ selectedDay, year, month, sessions, events, profile, lastSession, categorySlug }: Props) {
   const router    = useRouter()
   const [, start] = useTransition()
 
@@ -136,7 +137,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                           </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <SessionDialog profile={profile} session={s} />
+                          <SessionDialog profile={profile} categorySlug={categorySlug} session={s} />
                           <button
                             onClick={() => setConfirmSessionId(s.id)}
                             className="cursor-pointer flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"

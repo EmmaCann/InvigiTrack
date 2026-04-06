@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, X, CalendarDays, MapPin, AlignLeft } from "lucide-react"
+import { Plus, Pencil, X, CalendarDays, MapPin, AlignLeft, Clock } from "lucide-react"
 import { createEvent, editEvent } from "@/app/actions/calendar-events"
 import type { CalendarEvent } from "@/types/database"
 
@@ -40,10 +40,12 @@ export function EventDialog({ defaultDate, event, trigger }: Props) {
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
 
-  const [date,     setDate]     = useState(defaultDate ?? "")
-  const [title,    setTitle]    = useState("")
-  const [location, setLocation] = useState("")
-  const [notes,    setNotes]    = useState("")
+  const [date,      setDate]      = useState(defaultDate ?? "")
+  const [title,     setTitle]     = useState("")
+  const [location,  setLocation]  = useState("")
+  const [notes,     setNotes]     = useState("")
+  const [startTime, setStartTime] = useState("")
+  const [endTime,   setEndTime]   = useState("")
 
   // Popola i campi quando apre (edit o nuovo con defaultDate)
   useEffect(() => {
@@ -53,11 +55,15 @@ export function EventDialog({ defaultDate, event, trigger }: Props) {
         setTitle(event.title)
         setLocation(event.location ?? "")
         setNotes(event.notes ?? "")
+        setStartTime(event.start_time?.slice(0, 5) ?? "")
+        setEndTime(event.end_time?.slice(0, 5) ?? "")
       } else {
         setDate(defaultDate ?? "")
         setTitle("")
         setLocation("")
         setNotes("")
+        setStartTime("")
+        setEndTime("")
       }
       setError(null)
     }
@@ -69,7 +75,14 @@ export function EventDialog({ defaultDate, event, trigger }: Props) {
     setLoading(true)
     setError(null)
 
-    const data = { event_date: date, title: title.trim(), location: location || undefined, notes: notes || undefined }
+    const data = {
+      event_date:  date,
+      title:       title.trim(),
+      location:    location   || undefined,
+      notes:       notes      || undefined,
+      start_time:  startTime  || undefined,
+      end_time:    endTime    || undefined,
+    }
     const result = isEdit ? await editEvent(event!.id, data) : await createEvent(data)
 
     setLoading(false)
@@ -132,6 +145,32 @@ export function EventDialog({ defaultDate, event, trigger }: Props) {
                     className={inputCls}
                   />
                 </Field>
+
+                {/* Ora inizio / fine (opzionali) */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Inizio (opzionale)">
+                    <div className="relative">
+                      <Clock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className={`${inputCls} pl-8`}
+                      />
+                    </div>
+                  </Field>
+                  <Field label="Fine (opzionale)">
+                    <div className="relative">
+                      <Clock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
+                      <input
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        className={`${inputCls} pl-8`}
+                      />
+                    </div>
+                  </Field>
+                </div>
 
                 <Field label="Titolo / Esame">
                   <input

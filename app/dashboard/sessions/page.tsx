@@ -33,11 +33,11 @@ export default async function SessionsPage() {
             Registra e gestisci tutte le tue sessioni di lavoro
           </p>
         </div>
-        <SessionDialog profile={profile} lastSession={sessions[0]} />
+        <SessionDialog profile={profile} categorySlug={category.slug} lastSession={sessions[0]} />
       </div>
 
       {/* -- Lista ---------------------------------------------------- */}
-      <SessionList sessions={sessions} profile={profile} />
+      <SessionList sessions={sessions} profile={profile} categorySlug={category.slug} />
 
     </div>
   )

@@ -124,6 +124,8 @@ export interface CalendarEvent {
   id:                   string
   user_id:              string
   event_date:           string        // "2026-04-28"
+  start_time:           string | null // "09:00:00" opzionale
+  end_time:             string | null // "12:30:00" opzionale
   title:                string
   location:             string | null
   notes:                string | null
@@ -137,6 +139,8 @@ export interface CalendarEvent {
 /** Dati per creare un nuovo evento calendario */
 export interface CreateEventData {
   event_date:   string
+  start_time?:  string  // "09:00" opzionale
+  end_time?:    string  // "12:30" opzionale
   title:        string
   location?:    string
   notes?:       string

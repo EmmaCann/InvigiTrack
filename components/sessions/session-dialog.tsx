@@ -42,7 +42,7 @@ const sessionSchema = z.object({
   end_time: z.string().regex(/^\d{2}:\d{2}$/, "HH:MM format required"),
   location: z.string().optional(),
   exam_name: z.string().min(1, "Enter the exam name"),
-  role_type: z.enum(["invigilator", "supervisor"]),
+  role_type: z.enum(["invigilator", "supervisor"]).optional(),
   hourly_rate: z.number({ error: "Invalid rate" }).min(0).max(999),
   notes: z.string().optional(),
 })
@@ -70,6 +70,7 @@ function todayISO() {
 
 interface Props {
   profile: Profile
+  categorySlug: string       // slug del workspace attivo — controlla quali campi mostrare
   session?: Session
   lastSession?: Session
   defaultDate?: string       // pre-compila session_date (dal calendario)
@@ -78,12 +79,13 @@ interface Props {
   onSuccess?: () => void     // callback dopo salvataggio (per il calendario)
 }
 
-export function SessionDialog({ profile, session, lastSession, defaultDate, defaultStartTime, trigger, onSuccess }: Props) {
+export function SessionDialog({ profile, categorySlug, session, lastSession, defaultDate, defaultStartTime, trigger, onSuccess }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isLoading, setLoading] = useState(false)
   const [serverError, setError] = useState<string | null>(null)
   const isEdit = !!session
+  const isInvigilation = categorySlug === "invigilation"
 
   function defaultValues(src?: Session): SessionValues {
     if (src) {
@@ -142,7 +144,9 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
       location: values.location,
       hourly_rate: values.hourly_rate,
       notes: values.notes,
-      metadata: { exam_name: values.exam_name, role_type: values.role_type },
+      metadata: isInvigilation
+        ? { exam_name: values.exam_name, role_type: values.role_type ?? "invigilator" }
+        : { exam_name: values.exam_name },
     }
     const result = isEdit ? await editSession(session!.id, data) : await createSession(data)
 
@@ -296,7 +300,7 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
                 />
               </Field>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className={`grid grid-cols-1 gap-3 ${isInvigilation ? "sm:grid-cols-2" : ""}`}>
                 <Field label="Sede / scuola" error={form.formState.errors.location?.message}>
                   <Input
                     className="h-10 rounded-xl text-sm"
@@ -304,20 +308,22 @@ export function SessionDialog({ profile, session, lastSession, defaultDate, defa
                     {...form.register("location")}
                   />
                 </Field>
-                <Field label="Ruolo" error={form.formState.errors.role_type?.message}>
-                  <Select
-                    defaultValue={form.getValues("role_type")}
-                    onValueChange={(v) => form.setValue("role_type", v as InvigilationRole, { shouldValidate: true })}
-                  >
-                    <SelectTrigger className="h-10 w-full rounded-xl text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="invigilator">Invigilator</SelectItem>
-                      <SelectItem value="supervisor">Supervisor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+                {isInvigilation && (
+                  <Field label="Ruolo" error={form.formState.errors.role_type?.message}>
+                    <Select
+                      defaultValue={form.getValues("role_type") ?? "invigilator"}
+                      onValueChange={(v) => form.setValue("role_type", v as InvigilationRole, { shouldValidate: true })}
+                    >
+                      <SelectTrigger className="h-10 w-full rounded-xl text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="invigilator">Invigilator</SelectItem>
+                        <SelectItem value="supervisor">Supervisor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
               </div>
 
               <Field label="Note" error={form.formState.errors.notes?.message}>
