@@ -3,7 +3,7 @@
 import { cookies } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/lib/data/auth"
-import { grantCategoryAccess } from "@/lib/data/categories"
+import { grantCategoryAccess, updateWorkspaceSettings, deleteWorkspaceData } from "@/lib/data/categories"
 
 /**
  * Cambia il workspace attivo dell'utente impostando il cookie.
@@ -47,6 +47,46 @@ export async function addWorkspace(
     secure:   process.env.NODE_ENV === "production",
     httpOnly: false,
   })
+
+  revalidatePath("/dashboard", "layout")
+  return {}
+}
+
+/** Aggiorna nome, emoji e colore di un workspace. */
+export async function updateWorkspace(
+  categoryId: string,
+  name: string,
+  emoji: string | null,
+  color: string | null,
+): Promise<{ error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) return { error: "Non autenticato" }
+  const result = await updateWorkspaceSettings(user.id, categoryId, { name, emoji, color })
+  if (result.error) return { error: result.error }
+  revalidatePath("/dashboard", "layout")
+  return {}
+}
+
+/**
+ * Elimina un workspace e tutti i dati correlati (sessioni, eventi, link pagamenti).
+ * Se era il workspace attivo, reimposta il cookie al primo disponibile.
+ */
+export async function deleteWorkspace(
+  categoryId: string,
+  categorySlug: string,
+): Promise<{ error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) return { error: "Non autenticato" }
+
+  const result = await deleteWorkspaceData(user.id, categoryId)
+  if (result.error) return { error: result.error }
+
+  // Se era il workspace attivo, resetta il cookie
+  const cookieStore = await cookies()
+  const current = cookieStore.get("invigitrack_workspace")?.value
+  if (current === categorySlug) {
+    cookieStore.delete("invigitrack_workspace")
+  }
 
   revalidatePath("/dashboard", "layout")
   return {}

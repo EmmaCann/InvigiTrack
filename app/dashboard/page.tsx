@@ -4,8 +4,7 @@ import { getPaymentSummary, getSessionsByUser } from "@/lib/data/sessions"
 import { getPendingEvents } from "@/lib/data/calendar-events"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { OnboardingDialog } from "@/components/auth/onboarding-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Clock, Euro, AlertCircle, CalendarCheck, ArrowRight, MapPin, ShieldCheck, BarChart3, CalendarDays } from "lucide-react"
+import { Clock, Euro, AlertCircle, CalendarCheck, ArrowRight, MapPin, BarChart3, CalendarDays } from "lucide-react"
 import Link from "next/link"
 import type { Session } from "@/types/database"
 
@@ -115,11 +114,6 @@ export default async function DashboardPage() {
             Ecco il riepilogo della tua attività
           </p>
         </div>
-        {profile.platform_role === "admin" && (
-          <Badge variant="secondary" className="gap-1 text-[11px] bg-primary/10 text-primary border-primary/20">
-            <ShieldCheck className="h-3 w-3" /> Admin
-          </Badge>
-        )}
       </div>
 
       {/* -- Stat cards — vetro dashboard ----------------------------- */}

@@ -1,32 +1,59 @@
-/**
- * PAGINA SETTINGS — Server Component.
- * Placeholder — la costruiamo nel prossimo sprint (è il Blocco 1 del piano).
- */
+import { redirect } from "next/navigation"
+import { getCurrentUser } from "@/lib/data/auth"
+import { getProfileById } from "@/lib/data/profiles"
+import { getUserCategories, getWorkspaceStats } from "@/lib/data/categories"
+import { WorkspaceSettings } from "@/components/settings/workspace-settings"
+import { Layers } from "lucide-react"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Settings } from "lucide-react"
+export default async function SettingsPage() {
+  const user    = await getCurrentUser()
+  const profile = user ? await getProfileById(user.id) : null
+  if (!user || !profile) redirect("/auth/login")
 
-export default function SettingsPage() {
+  const isAdmin = profile.platform_role === "admin"
+
+  // Workspace + stats (solo admin)
+  const workspaces = isAdmin ? await getUserCategories(user.id) : []
+  const statsArr   = isAdmin
+    ? await Promise.all(workspaces.map((ws) => getWorkspaceStats(user.id, ws.id)))
+    : []
+  const stats = Object.fromEntries(workspaces.map((ws, i) => [ws.id, statsArr[i]]))
+
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-2xl space-y-8">
+
+      {/* Header */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-primary">
           Account
         </p>
-        <h2 className="text-2xl font-bold text-foreground">Settings</h2>
+        <h2 className="text-2xl font-bold text-foreground">Impostazioni</h2>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Gestisci il tuo account e i workspace
+        </p>
       </div>
 
-      <Card className="shadow-none border-border">
-        <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted mb-4">
-            <Settings className="h-6 w-6 text-muted-foreground" />
+      {/* Profilo — placeholder */}
+      <section className="glass-dashboard rounded-2xl px-6 py-5 space-y-1">
+        <h3 className="text-sm font-semibold text-foreground">Profilo</h3>
+        <p className="text-sm text-muted-foreground">{profile.full_name ?? "—"}</p>
+        <p className="text-xs text-muted-foreground">{profile.email}</p>
+      </section>
+
+      {/* Gestione workspace — solo admin */}
+      {isAdmin && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-primary" />
+            <h3 className="text-base font-semibold text-foreground">Gestione workspace</h3>
           </div>
-          <p className="text-base font-semibold text-foreground">Coming soon</p>
-          <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-            You'll be able to update your name, role and hourly rate here.
+          <p className="text-sm text-muted-foreground -mt-2">
+            Personalizza nome, icona e colore dei tuoi workspace. L&apos;eliminazione rimuove tutti i dati correlati.
           </p>
-        </CardContent>
-      </Card>
+          <WorkspaceSettings workspaces={workspaces} stats={stats} />
+        </section>
+      )}
+
     </div>
   )
 }

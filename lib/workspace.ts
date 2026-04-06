@@ -7,11 +7,11 @@
 
 import { cookies } from "next/headers"
 import { getUserCategories } from "@/lib/data/categories"
-import type { WorkCategory } from "@/types/database"
+import type { UserWorkspace } from "@/types/database"
 
 export interface ActiveWorkspace {
-  category:       WorkCategory
-  userCategories: WorkCategory[]
+  category:       UserWorkspace
+  userCategories: UserWorkspace[]
 }
 
 /**
@@ -34,10 +34,7 @@ export async function getActiveWorkspace(userId: string): Promise<ActiveWorkspac
     throw new Error("Nessuna categoria assegnata all'utente")
   }
 
-  const found = slug
-    ? userCategories.find((c) => c.slug === slug)
-    : undefined
-
+  const found = slug ? userCategories.find((c) => c.slug === slug) : undefined
   const category = found ?? userCategories[0]
   return { category, userCategories }
 }

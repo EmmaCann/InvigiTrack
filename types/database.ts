@@ -85,6 +85,15 @@ export interface UserCategoryAccess {
   granted_by: string | null
 }
 
+/**
+ * Workspace personalizzato dell'utente: combina WorkCategory con le
+ * impostazioni custom salvate in user_category_access (nome, emoji, colore).
+ */
+export interface UserWorkspace extends WorkCategory {
+  emoji: string | null  // emoji personalizzata, es. "📚"
+  color: string | null  // colore hex personalizzato, es. "#3B82F6"
+}
+
 /** Riga della tabella `sessions` */
 export interface Session {
   id: string

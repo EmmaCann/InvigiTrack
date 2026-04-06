@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 import { logout } from "@/app/actions/auth"
 import { switchWorkspace, addWorkspace } from "@/app/actions/workspace"
 import { openDashboardSearch } from "@/components/layout/dashboard-search-layer"
-import type { Profile, WorkCategory } from "@/types/database"
+import type { Profile, UserWorkspace, WorkCategory } from "@/types/database"
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard":            { title: "Dashboard",    subtitle: "Riepilogo della tua attività"          },
@@ -26,6 +26,37 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/calendar":   { title: "Calendario",   subtitle: "Visualizza le sessioni nel calendario" },
   "/dashboard/analytics":  { title: "Statistiche",  subtitle: "Analisi e andamento guadagni"          },
   "/dashboard/settings":   { title: "Impostazioni", subtitle: "Account e preferenze"                  },
+}
+
+/** Icona workspace: mostra emoji (se impostata) o iniziale, con colore personalizzato. */
+function WorkspaceIcon({
+  ws,
+  active = false,
+  size = "sm",
+}: {
+  ws: UserWorkspace
+  active?: boolean
+  size?: "sm" | "md"
+}) {
+  const dim = size === "md" ? "h-9 w-9 rounded-xl text-base" : "h-6 w-6 rounded text-[11px]"
+  const bg  = ws.color
+    ? { backgroundColor: ws.color, color: "#fff" }
+    : active
+      ? undefined
+      : undefined
+
+  return (
+    <span
+      className={cn(
+        "flex shrink-0 items-center justify-center font-bold",
+        dim,
+        ws.color ? "" : active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+      )}
+      style={ws.color ? bg : undefined}
+    >
+      {ws.emoji ?? ws.label[0].toUpperCase()}
+    </span>
+  )
 }
 
 function getInitials(profile: Profile): string {
@@ -42,8 +73,8 @@ export function Header({
   availableCategories,
 }: {
   profile:              Profile
-  activeWorkspace:      WorkCategory
-  userCategories:       WorkCategory[]
+  activeWorkspace:      UserWorkspace
+  userCategories:       UserWorkspace[]
   availableCategories:  WorkCategory[]
 }) {
   const pathname = usePathname()
@@ -140,15 +171,7 @@ export function Header({
                   <DropdownMenuItem key={cat.id} asChild>
                     <form action={switchWorkspace.bind(null, cat.slug)} className="w-full">
                       <button type="submit" className="flex w-full cursor-pointer items-center gap-2.5 px-2 py-2 text-sm">
-                        {/* Iniziale del workspace */}
-                        <span className={cn(
-                          "flex h-6 w-6 shrink-0 items-center justify-center rounded text-[11px] font-bold",
-                          cat.id === activeWorkspace.id
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                        )}>
-                          {cat.label[0].toUpperCase()}
-                        </span>
+                        <WorkspaceIcon ws={cat} active={cat.id === activeWorkspace.id} size="sm" />
                         <span className={cn(
                           "flex-1 text-left text-sm",
                           cat.id === activeWorkspace.id ? "font-semibold text-foreground" : "text-foreground/80"
@@ -223,10 +246,7 @@ export function Header({
                             : "hover:bg-muted text-foreground/80"
                         )}
                       >
-                        <span className={cn(
-                          "flex h-6 w-6 shrink-0 items-center justify-center rounded text-[11px] font-bold",
-                          selectedCat === cat.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                        )}>
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted text-[11px] font-bold text-muted-foreground">
                           {cat.label[0].toUpperCase()}
                         </span>
                         <span className="flex-1 text-left">{cat.label}</span>
