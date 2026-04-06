@@ -4,7 +4,7 @@ import { getProfileById } from "@/lib/data/profiles"
 import { getNextEvent, getEventsByUser } from "@/lib/data/calendar-events"
 import { getSessionsByUser } from "@/lib/data/sessions"
 import { getActiveWorkspace } from "@/lib/workspace"
-import { getAvailableCategories } from "@/lib/data/categories"
+import { getActiveCategories } from "@/lib/data/categories"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
@@ -34,7 +34,7 @@ export default async function DashboardLayout({
 
   const [nextEvent, availableCategories, allSessions, allEvents] = await Promise.all([
     getNextEvent(user.id, activeWorkspace.id),
-    getAvailableCategories(user.id),
+    getActiveCategories(),
     getSessionsByUser(user.id, activeWorkspace.id),
     getEventsByUser(user.id, activeWorkspace.id),
   ])

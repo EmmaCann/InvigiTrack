@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
-import { getUserCategories, getWorkspaceStats } from "@/lib/data/categories"
+import { getUserCategories, getWorkspaceStats, getActiveCategories } from "@/lib/data/categories"
 import { WorkspaceSettings } from "@/components/settings/workspace-settings"
 import { Layers } from "lucide-react"
 
@@ -12,9 +12,11 @@ export default async function SettingsPage() {
 
   const isAdmin = profile.platform_role === "admin"
 
-  // Workspace + stats (solo admin)
-  const workspaces = isAdmin ? await getUserCategories(user.id) : []
-  const statsArr   = isAdmin
+  // Workspace + stats + categorie disponibili (solo admin)
+  const [workspaces, allCategories] = isAdmin
+    ? await Promise.all([getUserCategories(user.id), getActiveCategories()])
+    : [[], []]
+  const statsArr = isAdmin
     ? await Promise.all(workspaces.map((ws) => getWorkspaceStats(user.id, ws.id)))
     : []
   const stats = Object.fromEntries(workspaces.map((ws, i) => [ws.id, statsArr[i]]))
@@ -50,7 +52,7 @@ export default async function SettingsPage() {
           <p className="text-sm text-muted-foreground -mt-2">
             Personalizza nome, icona e colore dei tuoi workspace. L&apos;eliminazione rimuove tutti i dati correlati.
           </p>
-          <WorkspaceSettings workspaces={workspaces} stats={stats} />
+          <WorkspaceSettings workspaces={workspaces} stats={stats} allCategories={allCategories} />
         </section>
       )}
 

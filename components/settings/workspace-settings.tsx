@@ -1,17 +1,26 @@
 "use client"
 
 import { useState } from "react"
-import { Pencil, Trash2, AlertTriangle, Check } from "lucide-react"
+import { Pencil, Trash2, AlertTriangle, Check, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { updateWorkspace, deleteWorkspace } from "@/app/actions/workspace"
-import type { UserWorkspace } from "@/types/database"
+import { updateWorkspace, deleteWorkspace, addWorkspace } from "@/app/actions/workspace"
+import type { UserWorkspace, WorkCategory } from "@/types/database"
 
 // --- Preset emoji ---------------------------------------------------------------
 
 const EMOJIS = [
-  "📚", "📖", "🎓", "👨‍🏫", "👩‍🏫", "🏋️", "💪", "🧘",
+  // Istruzione & tutoring
+  "📚", "📖", "🎓", "👨‍🏫", "👩‍🏫", "🧑‍🎓", "🏫", "🧮",
+  // Sport & fitness
+  "🏋️", "💪", "🧘", "🏃", "⚽", "🏊", "🚴", "🤸",
+  // Lavoro & business
   "📊", "💼", "🏢", "🔬", "💻", "🎯", "📝", "✏️",
+  // Varie
   "🔑", "💡", "🎨", "📅", "🧑‍💻", "🎤", "🏅", "⚡",
+  // Bandiere
+  "🇬🇧", "🇮🇹", "🇺🇸", "🇫🇷", "🇩🇪", "🇪🇸", "🇯🇵", "🌍",
+  // Extra
+  "⏰", "🗓️", "🖊️", "🏆", "🌟", "🔖", "📌", "🎵",
 ]
 
 // --- Preset colori --------------------------------------------------------------
@@ -67,7 +76,7 @@ function WorkspaceCard({
   async function handleSave() {
     setLoading(true)
     setError(null)
-    const res = await updateWorkspace(ws.id, name.trim(), emoji, color)
+    const res = await updateWorkspace(ws.workspaceId, name.trim(), emoji, color)
     setLoading(false)
     if (res.error) { setError(res.error); return }
     setMode("view")
@@ -76,7 +85,7 @@ function WorkspaceCard({
   async function handleDelete() {
     setLoading(true)
     setError(null)
-    const res = await deleteWorkspace(ws.id, ws.slug)
+    const res = await deleteWorkspace(ws.workspaceId, ws.id)
     setLoading(false)
     if (res.error) { setError(res.error); return }
     // revalidatePath si occupa del refresh — il componente sparirà
@@ -246,25 +255,145 @@ function WorkspaceCard({
   )
 }
 
+// --- Form creazione nuovo workspace ---------------------------------------------
+
+function AddWorkspaceForm({
+  allCategories,
+  onDone,
+}: {
+  allCategories: WorkCategory[]
+  onDone: () => void
+}) {
+  const [name, setName]             = useState("")
+  const [selectedCat, setSelectedCat] = useState<string>("")
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState<string | null>(null)
+
+  async function handleCreate() {
+    if (!name.trim() || !selectedCat) return
+    const cat = allCategories.find((c) => c.id === selectedCat)
+    if (!cat) return
+    setLoading(true)
+    setError(null)
+    const res = await addWorkspace(cat.id, name.trim())
+    setLoading(false)
+    if (res.error) { setError(res.error); return }
+    onDone()
+  }
+
+  return (
+    <div className="glass-dashboard rounded-2xl px-5 py-4 space-y-4">
+      {/* Header form */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-foreground">Nuovo workspace</p>
+        <button
+          type="button"
+          onClick={onDone}
+          className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Nome */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Nome</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="es. Tutoring Marco"
+          className="w-full rounded-lg border border-border bg-white/60 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+          autoFocus
+        />
+      </div>
+
+      {/* Tipo di lavoro */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tipo di lavoro</label>
+        <div className="space-y-1">
+          {allCategories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setSelectedCat(cat.id === selectedCat ? "" : cat.id)}
+              className={cn(
+                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors border",
+                selectedCat === cat.id
+                  ? "border-primary/30 bg-primary/8 text-primary ring-1 ring-primary/20"
+                  : "border-border/60 bg-white/40 hover:bg-muted text-foreground/80"
+              )}
+            >
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted text-[11px] font-bold text-muted-foreground">
+                {cat.label[0].toUpperCase()}
+              </span>
+              <span className="flex-1 text-left">{cat.label}</span>
+              {selectedCat === cat.id && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {error && <p className="text-xs text-destructive">{error}</p>}
+
+      {/* Crea button */}
+      <button
+        type="button"
+        disabled={!name.trim() || !selectedCat || loading}
+        onClick={handleCreate}
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+      >
+        {loading ? (
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        ) : (
+          <Plus className="h-4 w-4" />
+        )}
+        Crea workspace
+      </button>
+    </div>
+  )
+}
+
 // --- Componente principale ------------------------------------------------------
 
 export function WorkspaceSettings({
   workspaces,
   stats,
+  allCategories,
 }: {
   workspaces: UserWorkspace[]
   stats: Record<string, { sessions: number; events: number }>
+  allCategories: WorkCategory[]
 }) {
+  const [showAddForm, setShowAddForm] = useState(false)
+
   return (
     <div className="space-y-3">
       {workspaces.map((ws) => (
         <WorkspaceCard
-          key={ws.id}
+          key={ws.workspaceId}
           ws={ws}
           stats={stats[ws.id] ?? { sessions: 0, events: 0 }}
           isOnly={workspaces.length === 1}
         />
       ))}
+
+      {/* Form creazione / Pulsante aggiungi */}
+      {showAddForm ? (
+        <AddWorkspaceForm
+          allCategories={allCategories}
+          onDone={() => setShowAddForm(false)}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowAddForm(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/60 py-3.5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/4 hover:text-primary"
+        >
+          <Plus className="h-4 w-4" />
+          Aggiungi workspace
+        </button>
+      )}
     </div>
   )
 }

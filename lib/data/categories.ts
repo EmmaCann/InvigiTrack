@@ -75,50 +75,63 @@ export async function getAvailableCategories(userId: string): Promise<WorkCatego
   return data as WorkCategory[]
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapWorkspaceRows(rows: any[], hasId: boolean, hasEmojiColor: boolean): UserWorkspace[] {
+  return rows.map((row) => ({
+    ...row.work_categories,
+    workspaceId: hasId ? (row.id ?? row.work_categories.id) : row.work_categories.id,
+    label:  row.name ?? row.work_categories.label,
+    emoji:  hasEmojiColor ? (row.emoji ?? null) : null,
+    color:  hasEmojiColor ? (row.color ?? null) : null,
+  })) as UserWorkspace[]
+}
+
 /**
  * Recupera i workspace dell'utente con nome, emoji e colore personalizzati.
- * Se le colonne emoji/color non esistono ancora nel DB (migrazione non eseguita),
- * esegue automaticamente un fallback alla query senza di esse.
+ * Tenta query a cascata per compatibilità con diversi stati della migrazione DB:
+ *   1. id + emoji + color  (schema completo)
+ *   2. id senza emoji/color (emoji/color migration non eseguita)
+ *   3. senza id             (id migration non eseguita — usa category_id come workspaceId)
  */
 export async function getUserCategories(userId: string): Promise<UserWorkspace[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("user_category_access")
-    .select("name, emoji, color, work_categories(*)")
-    .eq("user_id", userId)
-    .order("granted_at")
 
-  if (error) {
-    // Fallback: colonne emoji/color non ancora presenti nel DB
-    const { data: fb, error: fbErr } = await supabase
+  // 1. Schema completo
+  {
+    const { data, error } = await supabase
+      .from("user_category_access")
+      .select("id, name, emoji, color, work_categories(*)")
+      .eq("user_id", userId)
+      .order("granted_at")
+    if (!error && data) return mapWorkspaceRows(data, true, true)
+  }
+
+  // 2. Senza emoji/color
+  {
+    const { data, error } = await supabase
+      .from("user_category_access")
+      .select("id, name, work_categories(*)")
+      .eq("user_id", userId)
+      .order("granted_at")
+    if (!error && data) return mapWorkspaceRows(data, true, false)
+  }
+
+  // 3. Senza id (schema vecchio) — workspaceId = category_id
+  {
+    const { data, error } = await supabase
       .from("user_category_access")
       .select("name, work_categories(*)")
       .eq("user_id", userId)
       .order("granted_at")
-    if (fbErr || !fb) return []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (fb as any[]).map((row) => ({
-      ...row.work_categories,
-      label: row.name ?? row.work_categories.label,
-      emoji: null,
-      color: null,
-    })) as UserWorkspace[]
+    if (error || !data) return []
+    return mapWorkspaceRows(data, false, false)
   }
-
-  if (!data) return []
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any[]).map((row) => ({
-    ...row.work_categories,
-    label: row.name  ?? row.work_categories.label,
-    emoji: row.emoji ?? null,
-    color: row.color ?? null,
-  })) as UserWorkspace[]
 }
 
 /** Aggiorna nome, emoji e colore di un workspace (in user_category_access). */
 export async function updateWorkspaceSettings(
   userId: string,
-  categoryId: string,
+  workspaceId: string,
   settings: { name?: string; emoji?: string | null; color?: string | null },
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -130,7 +143,7 @@ export async function updateWorkspaceSettings(
     .from("user_category_access")
     .update(patch)
     .eq("user_id", userId)
-    .eq("category_id", categoryId)
+    .eq("id", workspaceId)
   if (error) return { error: error.message }
   return {}
 }
@@ -149,39 +162,60 @@ export async function getWorkspaceStats(
 }
 
 /**
- * Elimina tutti i dati del workspace in cascata:
+ * Elimina un workspace e (se è l'unico di quella categoria) tutti i dati correlati:
  * payment_sessions → sessions → calendar_events → user_category_access.
+ *
+ * Se esistono altri workspace con la stessa categoria, elimina solo la riga
+ * di user_category_access senza toccare sessioni ed eventi (condivisi).
  */
 export async function deleteWorkspaceData(
   userId: string,
+  workspaceId: string,
   categoryId: string,
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
 
-  // 1. Session IDs da eliminare
-  const { data: sessRows } = await supabase
-    .from("sessions")
-    .select("id")
+  // Controlla se esistono altri workspace con la stessa categoria
+  const { count } = await supabase
+    .from("user_category_access")
+    .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("category_id", categoryId)
-  const sessionIds = (sessRows ?? []).map((r: { id: string }) => r.id)
+    .neq("id", workspaceId)
+  const hasOthers = (count ?? 0) > 0
 
-  // 2. Elimina i link payment_sessions
-  if (sessionIds.length > 0) {
-    const { error } = await supabase.from("payment_sessions").delete().in("session_id", sessionIds)
-    if (error) return { error: error.message }
+  if (!hasOthers) {
+    // Unico workspace di questa categoria — cascade completo
+
+    // 1. Session IDs da eliminare
+    const { data: sessRows } = await supabase
+      .from("sessions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("category_id", categoryId)
+    const sessionIds = (sessRows ?? []).map((r: { id: string }) => r.id)
+
+    // 2. Elimina i link payment_sessions
+    if (sessionIds.length > 0) {
+      const { error } = await supabase.from("payment_sessions").delete().in("session_id", sessionIds)
+      if (error) return { error: error.message }
+    }
+
+    // 3. Elimina sessioni
+    const { error: eS } = await supabase.from("sessions").delete().eq("user_id", userId).eq("category_id", categoryId)
+    if (eS) return { error: eS.message }
+
+    // 4. Elimina eventi calendario
+    const { error: eE } = await supabase.from("calendar_events").delete().eq("user_id", userId).eq("category_id", categoryId)
+    if (eE) return { error: eE.message }
   }
 
-  // 3. Elimina sessioni
-  const { error: eS } = await supabase.from("sessions").delete().eq("user_id", userId).eq("category_id", categoryId)
-  if (eS) return { error: eS.message }
-
-  // 4. Elimina eventi calendario
-  const { error: eE } = await supabase.from("calendar_events").delete().eq("user_id", userId).eq("category_id", categoryId)
-  if (eE) return { error: eE.message }
-
-  // 5. Rimuovi accesso workspace
-  const { error: eA } = await supabase.from("user_category_access").delete().eq("user_id", userId).eq("category_id", categoryId)
+  // 5. Rimuovi questa riga workspace specifica
+  const { error: eA } = await supabase
+    .from("user_category_access")
+    .delete()
+    .eq("user_id", userId)
+    .eq("id", workspaceId)
   if (eA) return { error: eA.message }
 
   return {}
@@ -198,16 +232,19 @@ export async function grantCategoryAccess(
   userId: string,
   categoryId: string,
   options?: { name?: string; grantedBy?: string },
-): Promise<{ error?: string }> {
+): Promise<{ id?: string; error?: string }> {
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("user_category_access")
     .insert({
-      user_id:    userId,
+      user_id:     userId,
       category_id: categoryId,
-      name:        options?.name       ?? null,
-      granted_by:  options?.grantedBy  ?? null,
+      name:        options?.name      ?? null,
+      granted_by:  options?.grantedBy ?? null,
     })
+    .select("id")
+    .single()
   if (error) return { error: error.message }
-  return {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return { id: (data as any)?.id as string | undefined }
 }

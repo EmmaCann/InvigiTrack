@@ -88,8 +88,11 @@ export interface UserCategoryAccess {
 /**
  * Workspace personalizzato dell'utente: combina WorkCategory con le
  * impostazioni custom salvate in user_category_access (nome, emoji, colore).
+ * `workspaceId` è il PK UUID di user_category_access — usato per identificare
+ * univocamente questo workspace anche se due workspace condividono la stessa categoria.
  */
 export interface UserWorkspace extends WorkCategory {
+  workspaceId: string   // PK di user_category_access (uuid)
   emoji: string | null  // emoji personalizzata, es. "📚"
   color: string | null  // colore hex personalizzato, es. "#3B82F6"
 }

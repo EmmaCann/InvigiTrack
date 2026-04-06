@@ -168,17 +168,17 @@ export function Header({
               <>
                 {/* Lista workspace correnti */}
                 {userCategories.map((cat) => (
-                  <DropdownMenuItem key={cat.id} asChild>
-                    <form action={switchWorkspace.bind(null, cat.slug)} className="w-full">
+                  <DropdownMenuItem key={cat.workspaceId} asChild>
+                    <form action={switchWorkspace.bind(null, cat.workspaceId)} className="w-full">
                       <button type="submit" className="flex w-full cursor-pointer items-center gap-2.5 px-2 py-2 text-sm">
-                        <WorkspaceIcon ws={cat} active={cat.id === activeWorkspace.id} size="sm" />
+                        <WorkspaceIcon ws={cat} active={cat.workspaceId === activeWorkspace.workspaceId} size="sm" />
                         <span className={cn(
                           "flex-1 text-left text-sm",
-                          cat.id === activeWorkspace.id ? "font-semibold text-foreground" : "text-foreground/80"
+                          cat.workspaceId === activeWorkspace.workspaceId ? "font-semibold text-foreground" : "text-foreground/80"
                         )}>
                           {cat.label}
                         </span>
-                        {cat.id === activeWorkspace.id && (
+                        {cat.workspaceId === activeWorkspace.workspaceId && (
                           <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
                         )}
                       </button>
@@ -186,7 +186,7 @@ export function Header({
                   </DropdownMenuItem>
                 ))}
 
-                {/* Pulsante Nuovo workspace */}
+                {/* Pulsante Nuovo workspace — sempre visibile */}
                 {availableCategories.length > 0 && (
                   <DropdownMenuItem asChild>
                     <button
@@ -264,7 +264,7 @@ export function Header({
                     const cat = availableCategories.find((c) => c.id === selectedCat)
                     if (!cat) return
                     setLoadingId(cat.id)
-                    await addWorkspace(cat.id, cat.slug, newName.trim())
+                    await addWorkspace(cat.id, newName.trim())
                     setLoadingId(null)
                     resetAddForm()
                   }}
