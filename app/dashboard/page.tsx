@@ -5,9 +5,9 @@ import { getPendingEvents } from "@/lib/data/calendar-events"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { OnboardingDialog } from "@/components/auth/onboarding-dialog"
 import { PageHelpButton } from "@/components/help/page-help-button"
-import { Clock, Euro, AlertCircle, CalendarCheck, ArrowRight, MapPin, BarChart3, CalendarDays } from "lucide-react"
+import { Clock, Euro, AlertCircle, CalendarCheck, TrendingUp, CheckCircle2, BarChart2, ArrowRight, MapPin, BarChart3, CalendarDays } from "lucide-react"
 import Link from "next/link"
-import type { Session } from "@/types/database"
+import type { Session, DashboardCardId } from "@/types/database"
 
 // --- Helpers ------------------------------------------------------------------
 
@@ -56,6 +56,88 @@ export default async function DashboardPage() {
   const recentSessions = allSessions.slice(0, 5)
   const displayName    = profile.full_name ?? profile.email
 
+  // --- Card values -------------------------------------------------------
+  const now       = new Date()
+  const monthKey  = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
+
+  const hoursMonth   = allSessions
+    .filter((s) => s.session_date.startsWith(monthKey))
+    .reduce((a, s) => a + s.duration_minutes / 60, 0)
+
+  const earnedMonth  = allSessions
+    .filter((s) => s.session_date.startsWith(monthKey))
+    .reduce((a, s) => a + s.earned, 0)
+
+  const avgHourly    = summary.total_hours > 0
+    ? summary.total_earned / summary.total_hours
+    : 0
+
+  // Map of all 7 available cards
+  type StatDef = { label: string; value: string; sub: string; icon: React.ElementType; color: string; bg: string }
+  const ALL_CARDS: Record<DashboardCardId, StatDef> = {
+    hours_month: {
+      label: "Ore questo mese",
+      value: hoursMonth > 0 ? formatHours(hoursMonth) : "—",
+      sub:   hoursMonth > 0 ? "registrate" : "nessuna sessione",
+      icon:  Clock,
+      color: "text-blue-600",
+      bg:    "bg-blue-500/10",
+    },
+    total_earned: {
+      label: "Guadagno totale",
+      value: summary.total_earned > 0 ? `€${summary.total_earned.toFixed(2)}` : "—",
+      sub:   "storico",
+      icon:  Euro,
+      color: "text-emerald-600",
+      bg:    "bg-emerald-500/10",
+    },
+    unpaid: {
+      label: "Non pagato",
+      value: summary.total_unpaid > 0 ? `€${summary.total_unpaid.toFixed(2)}` : "—",
+      sub:   summary.total_unpaid > 0 ? "in attesa" : "tutto in ordine",
+      icon:  AlertCircle,
+      color: summary.total_unpaid > 0 ? "text-amber-600" : "text-muted-foreground",
+      bg:    summary.total_unpaid > 0 ? "bg-amber-500/10" : "bg-muted/50",
+    },
+    sessions_count: {
+      label: "Sessioni",
+      value: allSessions.length > 0 ? `${allSessions.length}` : "—",
+      sub:   "totali",
+      icon:  CalendarCheck,
+      color: "text-primary",
+      bg:    "bg-primary/10",
+    },
+    earned_month: {
+      label: "Questo mese",
+      value: earnedMonth > 0 ? `€${earnedMonth.toFixed(2)}` : "—",
+      sub:   "guadagnato",
+      icon:  TrendingUp,
+      color: "text-violet-600",
+      bg:    "bg-violet-500/10",
+    },
+    paid: {
+      label: "Già ricevuto",
+      value: summary.total_paid > 0 ? `€${summary.total_paid.toFixed(2)}` : "—",
+      sub:   "pagato",
+      icon:  CheckCircle2,
+      color: "text-teal-600",
+      bg:    "bg-teal-500/10",
+    },
+    avg_hourly: {
+      label: "Tariffa media",
+      value: avgHourly > 0 ? `€${avgHourly.toFixed(2)}` : "—",
+      sub:   "per ora",
+      icon:  BarChart2,
+      color: "text-rose-600",
+      bg:    "bg-rose-500/10",
+    },
+  }
+
+  // Which cards to show (from user prefs, fallback to default 4)
+  const DEFAULT_CARDS: DashboardCardId[] = ["hours_month", "total_earned", "unpaid", "sessions_count"]
+  const selectedCards = (profile.dashboard_prefs?.cards ?? DEFAULT_CARDS) as DashboardCardId[]
+  const stats = selectedCards.map((id) => ALL_CARDS[id]).filter(Boolean)
+
   // Hours trend — last 6 months
   const monthsData = Array.from({ length: 6 }, (_, i) => {
     const d = new Date()
@@ -73,41 +155,6 @@ export default async function DashboardPage() {
   // Unpaid alerts
   const unpaidAlerts = allSessions.filter((s) => s.payment_status !== "paid").slice(0, 3)
   const unpaidTotal  = allSessions.filter((s) => s.payment_status !== "paid").length
-
-  const stats = [
-    {
-      label: "Ore questo mese",
-      value: summary.total_hours > 0 ? formatHours(summary.total_hours) : "—",
-      sub:   summary.total_hours > 0 ? "registrate" : "nessuna sessione",
-      icon:  Clock,
-      color: "text-blue-600",
-      bg:    "bg-blue-500/10",
-    },
-    {
-      label: "Guadagno totale",
-      value: summary.total_earned > 0 ? `€${summary.total_earned.toFixed(2)}` : "—",
-      sub:   "storico",
-      icon:  Euro,
-      color: "text-emerald-600",
-      bg:    "bg-emerald-500/10",
-    },
-    {
-      label: "Non pagato",
-      value: summary.total_unpaid > 0 ? `€${summary.total_unpaid.toFixed(2)}` : "—",
-      sub:   summary.total_unpaid > 0 ? "in attesa" : "tutto in ordine",
-      icon:  AlertCircle,
-      color: summary.total_unpaid > 0 ? "text-amber-600" : "text-muted-foreground",
-      bg:    summary.total_unpaid > 0 ? "bg-amber-500/10" : "bg-muted/50",
-    },
-    {
-      label: "Sessioni",
-      value: allSessions.length > 0 ? `${allSessions.length}` : "—",
-      sub:   "totali",
-      icon:  CalendarCheck,
-      color: "text-primary",
-      bg:    "bg-primary/10",
-    },
-  ]
 
   return (
     <div className="space-y-7">
