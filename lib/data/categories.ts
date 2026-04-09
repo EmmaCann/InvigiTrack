@@ -76,13 +76,14 @@ export async function getAvailableCategories(userId: string): Promise<WorkCatego
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapWorkspaceRows(rows: any[], hasId: boolean, hasEmojiColor: boolean): UserWorkspace[] {
+function mapWorkspaceRows(rows: any[], hasId: boolean, hasEmojiColor: boolean, hasRate = false): UserWorkspace[] {
   return rows.map((row) => ({
     ...row.work_categories,
-    workspaceId: hasId ? (row.id ?? row.work_categories.id) : row.work_categories.id,
-    label:  row.name ?? row.work_categories.label,
-    emoji:  hasEmojiColor ? (row.emoji ?? null) : null,
-    color:  hasEmojiColor ? (row.color ?? null) : null,
+    workspaceId:        hasId       ? (row.id    ?? row.work_categories.id) : row.work_categories.id,
+    label:              row.name    ?? row.work_categories.label,
+    emoji:              hasEmojiColor ? (row.emoji ?? null) : null,
+    color:              hasEmojiColor ? (row.color ?? null) : null,
+    default_hourly_rate: hasRate    ? (row.default_hourly_rate ?? null) : null,
   })) as UserWorkspace[]
 }
 
@@ -96,27 +97,37 @@ function mapWorkspaceRows(rows: any[], hasId: boolean, hasEmojiColor: boolean): 
 export async function getUserCategories(userId: string): Promise<UserWorkspace[]> {
   const supabase = await createClient()
 
-  // 1. Schema completo
+  // 1. Schema completo (con rate)
+  {
+    const { data, error } = await supabase
+      .from("user_category_access")
+      .select("id, name, emoji, color, default_hourly_rate, work_categories(*)")
+      .eq("user_id", userId)
+      .order("granted_at")
+    if (!error && data) return mapWorkspaceRows(data, true, true, true)
+  }
+
+  // 2. Senza rate (migration rate non eseguita)
   {
     const { data, error } = await supabase
       .from("user_category_access")
       .select("id, name, emoji, color, work_categories(*)")
       .eq("user_id", userId)
       .order("granted_at")
-    if (!error && data) return mapWorkspaceRows(data, true, true)
+    if (!error && data) return mapWorkspaceRows(data, true, true, false)
   }
 
-  // 2. Senza emoji/color
+  // 3. Senza emoji/color
   {
     const { data, error } = await supabase
       .from("user_category_access")
       .select("id, name, work_categories(*)")
       .eq("user_id", userId)
       .order("granted_at")
-    if (!error && data) return mapWorkspaceRows(data, true, false)
+    if (!error && data) return mapWorkspaceRows(data, true, false, false)
   }
 
-  // 3. Senza id (schema vecchio) — workspaceId = category_id
+  // 4. Senza id (schema vecchio) — workspaceId = category_id
   {
     const { data, error } = await supabase
       .from("user_category_access")
@@ -124,7 +135,7 @@ export async function getUserCategories(userId: string): Promise<UserWorkspace[]
       .eq("user_id", userId)
       .order("granted_at")
     if (error || !data) return []
-    return mapWorkspaceRows(data, false, false)
+    return mapWorkspaceRows(data, false, false, false)
   }
 }
 
