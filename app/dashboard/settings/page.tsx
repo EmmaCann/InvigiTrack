@@ -17,7 +17,7 @@ export default async function SettingsPage() {
     ? await Promise.all([getUserCategories(user.id), getActiveCategories()])
     : [[], []]
   const statsArr = isAdmin
-    ? await Promise.all(workspaces.map((ws) => getWorkspaceStats(user.id, ws.id)))
+    ? await Promise.all(workspaces.map((ws) => getWorkspaceStats(user.id, ws.workspaceId)))
     : []
   const stats = Object.fromEntries(workspaces.map((ws, i) => [ws.id, statsArr[i]]))
 

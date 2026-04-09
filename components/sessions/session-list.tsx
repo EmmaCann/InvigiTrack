@@ -31,6 +31,14 @@ import type { Session, Profile, PaymentStatus } from "@/types/database"
 
 // --- Helpers ------------------------------------------------------------------
 
+function formatHours(hours: number): string {
+  const h = Math.floor(hours)
+  const m = Math.round((hours - h) * 60)
+  if (h === 0) return `${m}min`
+  if (m === 0) return `${h}h`
+  return `${h}h ${m}min`
+}
+
 const STATUS_CONFIG: Record<
   PaymentStatus,
   { label: string; className: string; dot: string; leftAccent: string }
@@ -247,7 +255,7 @@ export function SessionList({ sessions, profile, categorySlug }: Props) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Totale sessioni", value: `${stats.count}`,              sub: "filtrate",  color: "text-foreground"  },
-          { label: "Ore totali",      value: `${stats.hours.toFixed(1)}h`,  sub: "lavorate",  color: "text-blue-600"    },
+          { label: "Ore totali",      value: formatHours(stats.hours),       sub: "lavorate",  color: "text-blue-600"    },
           { label: "Guadagno",        value: `€${stats.earned.toFixed(2)}`, sub: "totale",    color: "text-emerald-600" },
           { label: "Non pagato",      value: `€${stats.unpaid.toFixed(2)}`, sub: "in attesa", color: "text-amber-600"   },
         ].map((s) => (
@@ -394,7 +402,7 @@ export function SessionList({ sessions, profile, categorySlug }: Props) {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {monthHours.toFixed(1)}h
+                      {formatHours(monthHours)}
                     </span>
                     <ChevronRight className="h-3 w-3" />
                     <span className="font-semibold text-foreground">€{monthTotal.toFixed(2)}</span>

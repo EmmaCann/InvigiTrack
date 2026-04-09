@@ -85,7 +85,7 @@ function WorkspaceCard({
   async function handleDelete() {
     setLoading(true)
     setError(null)
-    const res = await deleteWorkspace(ws.workspaceId, ws.id)
+    const res = await deleteWorkspace(ws.workspaceId)
     setLoading(false)
     if (res.error) { setError(res.error); return }
     // revalidatePath si occupa del refresh — il componente sparirà

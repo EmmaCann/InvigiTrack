@@ -26,9 +26,8 @@ export async function createEvent(
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
 
-  // Associa l'evento al workspace attivo
   const { category } = await getActiveWorkspace(user.id)
-  const result = await insertEvent(user.id, { ...data, category_id: category.id })
+  const result = await insertEvent(user.id, { ...data, category_id: category.id, workspace_id: category.workspaceId })
   if (result.error) return { error: result.error }
 
   revalidate()
@@ -95,7 +94,7 @@ export async function convertEventToSession(
   const { category } = await getActiveWorkspace(user.id)
 
   // Inserisci la sessione
-  const sessionResult = await insertSession(user.id, category.id, {
+  const sessionResult = await insertSession(user.id, category.id, category.workspaceId, {
     session_date: sessionData.event_date,
     start_time:   sessionData.start_time,
     end_time:     sessionData.end_time,

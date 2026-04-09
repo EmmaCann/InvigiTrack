@@ -19,7 +19,7 @@ export default async function PaymentsPage() {
   const { category } = await getActiveWorkspace(user.id)
 
   const [allSessions, payments] = await Promise.all([
-    getSessionsByUser(user.id, category.id),
+    getSessionsByUser(user.id, category.workspaceId),
     getPaymentsByUser(user.id),
   ])
 

@@ -72,12 +72,11 @@ export async function updateWorkspace(
  */
 export async function deleteWorkspace(
   workspaceId: string,
-  categoryId: string,
 ): Promise<{ error?: string }> {
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
 
-  const result = await deleteWorkspaceData(user.id, workspaceId, categoryId)
+  const result = await deleteWorkspaceData(user.id, workspaceId)
   if (result.error) return { error: result.error }
 
   // Se era il workspace attivo, resetta il cookie

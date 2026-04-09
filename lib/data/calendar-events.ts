@@ -10,23 +10,23 @@ import type { CalendarEvent, CreateEventData } from "@/types/database"
 
 export async function getEventsByUser(
   userId: string,
-  categoryId?: string,
+  workspaceId?: string,
 ): Promise<CalendarEvent[]> {
   const supabase = await createClient()
   let query = supabase
     .from("calendar_events")
     .select("*")
     .eq("user_id", userId)
-  if (categoryId) query = query.eq("category_id", categoryId)
+  if (workspaceId) query = query.eq("workspace_id", workspaceId)
   const { data, error } = await query.order("event_date", { ascending: false })
   if (error || !data) return []
   return data as CalendarEvent[]
 }
 
-/** Solo eventi futuri non ancora convertiti — per il widget dashboard */
+/** Solo eventi passati/oggi non ancora convertiti — per il widget dashboard */
 export async function getPendingEvents(
   userId: string,
-  categoryId?: string,
+  workspaceId?: string,
 ): Promise<CalendarEvent[]> {
   const supabase = await createClient()
   const today = new Date().toISOString().split("T")[0]
@@ -35,8 +35,8 @@ export async function getPendingEvents(
     .select("*")
     .eq("user_id", userId)
     .eq("is_converted", false)
-    .lte("event_date", today)          // solo passati/oggi non ancora confermati
-  if (categoryId) query = query.eq("category_id", categoryId)
+    .lte("event_date", today)
+  if (workspaceId) query = query.eq("workspace_id", workspaceId)
   const { data, error } = await query
     .order("event_date", { ascending: false })
     .limit(5)
@@ -54,14 +54,15 @@ export async function insertEvent(
   const { data: event, error } = await supabase
     .from("calendar_events")
     .insert({
-      user_id:     userId,
-      event_date:  data.event_date,
-      start_time:  data.start_time  ?? null,
-      end_time:    data.end_time    ?? null,
-      title:       data.title,
-      location:    data.location    ?? null,
-      notes:       data.notes       ?? null,
-      category_id: data.category_id ?? null,
+      user_id:      userId,
+      event_date:   data.event_date,
+      start_time:   data.start_time  ?? null,
+      end_time:     data.end_time    ?? null,
+      title:        data.title,
+      location:     data.location    ?? null,
+      notes:        data.notes       ?? null,
+      category_id:  data.category_id ?? null,
+      workspace_id: data.workspace_id ?? null,
     })
     .select()
     .single<CalendarEvent>()
@@ -116,7 +117,7 @@ export async function markEventConverted(
 /** Il prossimo evento futuro non convertito (per il Next Shift in sidebar) */
 export async function getNextEvent(
   userId: string,
-  categoryId?: string,
+  workspaceId?: string,
 ): Promise<CalendarEvent | null> {
   const supabase = await createClient()
   const today = new Date().toISOString().split("T")[0]
@@ -126,7 +127,7 @@ export async function getNextEvent(
     .eq("user_id", userId)
     .eq("is_converted", false)
     .gte("event_date", today)
-  if (categoryId) query = query.eq("category_id", categoryId)
+  if (workspaceId) query = query.eq("workspace_id", workspaceId)
   const { data, error } = await query
     .order("event_date", { ascending: true })
     .limit(1)

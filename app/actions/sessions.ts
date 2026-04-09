@@ -20,10 +20,9 @@ export async function createSession(data: CreateSessionData) {
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
 
-  // Usa il workspace attivo per determinare la categoria della sessione
   const { category } = await getActiveWorkspace(user.id)
 
-  const result = await insertSession(user.id, category.id, data)
+  const result = await insertSession(user.id, category.id, category.workspaceId, data)
   if (result.error) return { error: result.error }
 
   revalidateSessions()

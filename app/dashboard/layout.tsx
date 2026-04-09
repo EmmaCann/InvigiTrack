@@ -33,10 +33,10 @@ export default async function DashboardLayout({
   const { category: activeWorkspace, userCategories } = await getActiveWorkspace(user.id)
 
   const [nextEvent, availableCategories, allSessions, allEvents] = await Promise.all([
-    getNextEvent(user.id, activeWorkspace.id),
+    getNextEvent(user.id, activeWorkspace.workspaceId),
     getActiveCategories(),
-    getSessionsByUser(user.id, activeWorkspace.id),
-    getEventsByUser(user.id, activeWorkspace.id),
+    getSessionsByUser(user.id, activeWorkspace.workspaceId),
+    getEventsByUser(user.id, activeWorkspace.workspaceId),
   ])
   const today = new Date().toISOString().split("T")[0]
 

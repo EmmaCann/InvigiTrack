@@ -102,6 +102,7 @@ export interface Session {
   id: string
   user_id: string
   category_id: string
+  workspace_id: string | null  // FK → user_category_access.id
   session_date: string      // "2026-03-29"
   start_time: string        // "09:00:00"
   end_time: string          // "12:30:00"
@@ -131,20 +132,22 @@ export interface CalendarEvent {
   notes:                string | null
   is_converted:         boolean       // true quando è stata creata una sessione da questo evento
   converted_session_id: string | null // id della sessione creata
-  category_id:          string | null // workspace/categoria di appartenenza
+  category_id:          string | null // tipo di lavoro (indicativo)
+  workspace_id:         string | null // FK → user_category_access.id
   created_at:           string
   updated_at:           string
 }
 
 /** Dati per creare un nuovo evento calendario */
 export interface CreateEventData {
-  event_date:   string
-  start_time?:  string  // "09:00" opzionale
-  end_time?:    string  // "12:30" opzionale
-  title:        string
-  location?:    string
-  notes?:       string
-  category_id?: string  // workspace attivo al momento della creazione
+  event_date:    string
+  start_time?:   string  // "09:00" opzionale
+  end_time?:     string  // "12:30" opzionale
+  title:         string
+  location?:     string
+  notes?:        string
+  category_id?:  string  // tipo di lavoro (indicativo)
+  workspace_id?: string  // workspace specifico a cui appartiene l'evento
 }
 
 // --- Pagamenti ----------------------------------------------------------------

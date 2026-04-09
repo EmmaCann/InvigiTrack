@@ -12,6 +12,14 @@ import type { Session } from "@/types/database"
 
 function formatTime(t: string) { return t.slice(0, 5) }
 
+function formatHours(hours: number): string {
+  const h = Math.floor(hours)
+  const m = Math.round((hours - h) * 60)
+  if (h === 0) return `${m}min`
+  if (m === 0) return `${h}h`
+  return `${h}h ${m}min`
+}
+
 const STATUS_STYLE: Record<string, string> = {
   unpaid:  "bg-amber-100/80 text-amber-700 border-amber-200/60",
   pending: "bg-blue-100/80 text-blue-700 border-blue-200/60",
@@ -39,9 +47,9 @@ export default async function DashboardPage() {
   const { category } = await getActiveWorkspace(user!.id)
 
   const [summary, allSessions, pendingEvents] = await Promise.all([
-    getPaymentSummary(user!.id, category.id),
-    getSessionsByUser(user!.id, category.id),
-    getPendingEvents(user!.id, category.id),
+    getPaymentSummary(user!.id, category.workspaceId),
+    getSessionsByUser(user!.id, category.workspaceId),
+    getPendingEvents(user!.id, category.workspaceId),
   ])
 
   const recentSessions = allSessions.slice(0, 5)
@@ -68,7 +76,7 @@ export default async function DashboardPage() {
   const stats = [
     {
       label: "Ore questo mese",
-      value: summary.total_hours > 0 ? `${summary.total_hours.toFixed(1)}h` : "—",
+      value: summary.total_hours > 0 ? formatHours(summary.total_hours) : "—",
       sub:   summary.total_hours > 0 ? "registrate" : "nessuna sessione",
       icon:  Clock,
       color: "text-blue-600",

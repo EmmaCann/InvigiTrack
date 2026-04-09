@@ -151,12 +151,12 @@ export async function updateWorkspaceSettings(
 /** Conta sessioni ed eventi del workspace — usato nel dialog di conferma eliminazione. */
 export async function getWorkspaceStats(
   userId: string,
-  categoryId: string,
+  workspaceId: string,
 ): Promise<{ sessions: number; events: number }> {
   const supabase = await createClient()
   const [{ count: s }, { count: e }] = await Promise.all([
-    supabase.from("sessions").select("*", { count: "exact", head: true }).eq("user_id", userId).eq("category_id", categoryId),
-    supabase.from("calendar_events").select("*", { count: "exact", head: true }).eq("user_id", userId).eq("category_id", categoryId),
+    supabase.from("sessions").select("*", { count: "exact", head: true }).eq("user_id", userId).eq("workspace_id", workspaceId),
+    supabase.from("calendar_events").select("*", { count: "exact", head: true }).eq("user_id", userId).eq("workspace_id", workspaceId),
   ])
   return { sessions: s ?? 0, events: e ?? 0 }
 }
@@ -171,44 +171,30 @@ export async function getWorkspaceStats(
 export async function deleteWorkspaceData(
   userId: string,
   workspaceId: string,
-  categoryId: string,
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
 
-  // Controlla se esistono altri workspace con la stessa categoria
-  const { count } = await supabase
-    .from("user_category_access")
-    .select("*", { count: "exact", head: true })
+  // 1. Session IDs di questo workspace specifico
+  const { data: sessRows } = await supabase
+    .from("sessions")
+    .select("id")
     .eq("user_id", userId)
-    .eq("category_id", categoryId)
-    .neq("id", workspaceId)
-  const hasOthers = (count ?? 0) > 0
+    .eq("workspace_id", workspaceId)
+  const sessionIds = (sessRows ?? []).map((r: { id: string }) => r.id)
 
-  if (!hasOthers) {
-    // Unico workspace di questa categoria — cascade completo
-
-    // 1. Session IDs da eliminare
-    const { data: sessRows } = await supabase
-      .from("sessions")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("category_id", categoryId)
-    const sessionIds = (sessRows ?? []).map((r: { id: string }) => r.id)
-
-    // 2. Elimina i link payment_sessions
-    if (sessionIds.length > 0) {
-      const { error } = await supabase.from("payment_sessions").delete().in("session_id", sessionIds)
-      if (error) return { error: error.message }
-    }
-
-    // 3. Elimina sessioni
-    const { error: eS } = await supabase.from("sessions").delete().eq("user_id", userId).eq("category_id", categoryId)
-    if (eS) return { error: eS.message }
-
-    // 4. Elimina eventi calendario
-    const { error: eE } = await supabase.from("calendar_events").delete().eq("user_id", userId).eq("category_id", categoryId)
-    if (eE) return { error: eE.message }
+  // 2. Elimina i link payment_sessions
+  if (sessionIds.length > 0) {
+    const { error } = await supabase.from("payment_sessions").delete().in("session_id", sessionIds)
+    if (error) return { error: error.message }
   }
+
+  // 3. Elimina sessioni di questo workspace
+  const { error: eS } = await supabase.from("sessions").delete().eq("user_id", userId).eq("workspace_id", workspaceId)
+  if (eS) return { error: eS.message }
+
+  // 4. Elimina eventi calendario di questo workspace
+  const { error: eE } = await supabase.from("calendar_events").delete().eq("user_id", userId).eq("workspace_id", workspaceId)
+  if (eE) return { error: eE.message }
 
   // 5. Rimuovi questa riga workspace specifica
   const { error: eA } = await supabase

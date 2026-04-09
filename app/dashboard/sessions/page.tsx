@@ -17,7 +17,7 @@ export default async function SessionsPage() {
   if (!user || !profile) return null
 
   const { category } = await getActiveWorkspace(user.id)
-  const sessions = await getSessionsByUser(user.id, category.id)
+  const sessions = await getSessionsByUser(user.id, category.workspaceId)
 
   return (
     <div className="space-y-6 ">

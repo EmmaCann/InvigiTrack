@@ -14,8 +14,8 @@ export default async function CalendarPage() {
   const { category } = await getActiveWorkspace(user.id)
 
   const [sessions, events] = await Promise.all([
-    getSessionsByUser(user.id, category.id),
-    getEventsByUser(user.id, category.id),
+    getSessionsByUser(user.id, category.workspaceId),
+    getEventsByUser(user.id, category.workspaceId),
   ])
 
   return (
