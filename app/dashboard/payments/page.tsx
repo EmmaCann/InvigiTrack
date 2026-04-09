@@ -9,6 +9,7 @@ import { getSessionsByUser } from "@/lib/data/sessions"
 import { getPaymentsByUser } from "@/lib/data/payments"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { PaymentList }      from "@/components/payments/payment-list"
+import { PageHelpButton }   from "@/components/help/page-help-button"
 
 export default async function PaymentsPage() {
   const user    = await getCurrentUser()
@@ -63,6 +64,14 @@ export default async function PaymentsPage() {
         summaryPaidMonth={Math.round(summaryPaidMonth * 100) / 100}
         summaryPaidTotal={Math.round(summaryPaidTotal * 100) / 100}
       />
+
+      <PageHelpButton help={{
+        lines: [
+          "Tieni traccia di cosa è stato pagato.",
+          "Seleziona le sessioni e registra i pagamenti ricevuti.",
+        ],
+        tutorialId: "payments",
+      }} />
 
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { usePathname } from "next/navigation"
-import { LogOut, Settings, ChevronDown, ShieldCheck, Bell, Search, Check, Plus, ArrowLeft } from "lucide-react"
+import { LogOut, Settings, ChevronDown, ShieldCheck, Bell, Search, Check, Plus, ArrowLeft, BookOpen } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils"
 import { logout } from "@/app/actions/auth"
 import { switchWorkspace, addWorkspace } from "@/app/actions/workspace"
 import { openDashboardSearch } from "@/components/layout/dashboard-search-layer"
+import { openHelpDialog } from "@/lib/help-events"
 import type { Profile, UserWorkspace, WorkCategory } from "@/types/database"
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -287,6 +288,14 @@ export function Header({
                 <Settings className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-sm">Impostazioni</span>
               </a>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onSelect={(e) => { e.preventDefault(); openHelpDialog() }}
+              className="flex cursor-pointer items-center gap-2"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-sm">Tutorial</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />

@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
 import { getUserCategories, getWorkspaceStats, getActiveCategories } from "@/lib/data/categories"
 import { WorkspaceSettings } from "@/components/settings/workspace-settings"
+import { PageHelpButton } from "@/components/help/page-help-button"
 import { Layers } from "lucide-react"
 
 export default async function SettingsPage() {
@@ -55,6 +56,14 @@ export default async function SettingsPage() {
           <WorkspaceSettings workspaces={workspaces} stats={stats} allCategories={allCategories} />
         </section>
       )}
+
+      <PageHelpButton help={{
+        lines: [
+          "Personalizza il tuo account e i workspace.",
+          "Modifica profilo, tariffa oraria e aspetto dei workspace.",
+        ],
+        tutorialId: "settings-profile",
+      }} />
 
     </div>
   )

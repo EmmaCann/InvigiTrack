@@ -4,14 +4,15 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   Search, ArrowUpRight, LayoutDashboard, CalendarCheck,
-  CreditCard, Calendar, Settings, Plus, FileDown, BarChart2,
+  CreditCard, Calendar, Settings, Plus, FileDown, BarChart2, BookOpen,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, SETTINGS_ITEM } from "./nav-items"
+import { TUTORIAL_ITEMS } from "@/lib/help-content"
 
 // --- Tipi --------------------------------------------------------------------
 
-type EntryType = "page" | "action" | "session" | "event"
+type EntryType = "page" | "action" | "session" | "event" | "tutorial"
 
 interface Entry {
   id:       string
@@ -47,11 +48,12 @@ interface Props {
   onOpenChange: (open: boolean) => void
   recentSessions?: { id: string; exam_name: string; date: string; location?: string }[]
   upcomingEvents?: { id: string; title: string; date: string; location?: string }[]
+  onOpenHelp?: (tutorialId: string) => void
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcomingEvents = [] }: Props) {
+export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcomingEvents = [], onOpenHelp }: Props) {
   const router    = useRouter()
   const inputRef  = useRef<HTMLInputElement>(null)
   const listRef   = useRef<HTMLDivElement>(null)
@@ -120,11 +122,22 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
       },
     ]
 
+    const tutorials: Entry[] = TUTORIAL_ITEMS.map((t) => ({
+      id:       `tutorial-${t.id}`,
+      type:     "tutorial" as EntryType,
+      label:    t.title,
+      hint:     t.description,
+      icon:     BookOpen,
+      keywords: `${t.title} ${t.description} ${t.category} tutorial aiuto guida`.toLowerCase(),
+      action:   () => onOpenHelp?.(t.id),
+    }))
+
     return [
-      { title: "Azioni rapide", entries: actions },
-      { title: "Sezioni",       entries: pages   },
+      { title: "Azioni rapide", entries: actions   },
+      { title: "Sezioni",       entries: pages     },
+      { title: "Tutorial",      entries: tutorials },
     ]
-  }, [])
+  }, [onOpenHelp])
 
   // -- Entry dinamici da dati ------------------------------------------------
   const dynamicGroups = useMemo<Group[]>(() => {
@@ -237,10 +250,11 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
 
   // Colori per tipo
   const TYPE_STYLE: Record<EntryType, string> = {
-    page:    "bg-primary/8 text-primary",
-    action:  "bg-violet-50 text-violet-600",
-    session: "bg-blue-50 text-blue-600",
-    event:   "bg-teal-50 text-teal-600",
+    page:     "bg-primary/8 text-primary",
+    action:   "bg-violet-50 text-violet-600",
+    session:  "bg-blue-50 text-blue-600",
+    event:    "bg-teal-50 text-teal-600",
+    tutorial: "bg-amber-50 text-amber-600",
   }
 
   let globalIdx = 0

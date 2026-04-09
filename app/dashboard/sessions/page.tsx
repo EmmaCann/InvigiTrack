@@ -9,6 +9,7 @@ import { getSessionsByUser } from "@/lib/data/sessions"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { SessionDialog } from "@/components/sessions/session-dialog"
 import { SessionList } from "@/components/sessions/session-list"
+import { PageHelpButton } from "@/components/help/page-help-button"
 
 export default async function SessionsPage() {
   const user    = await getCurrentUser()
@@ -38,6 +39,14 @@ export default async function SessionsPage() {
 
       {/* -- Lista ---------------------------------------------------- */}
       <SessionList sessions={sessions} profile={profile} categorySlug={category.slug} />
+
+      <PageHelpButton help={{
+        lines: [
+          "Qui registri le sessioni di lavoro completate.",
+          "Il guadagno è calcolato automaticamente da durata × tariffa.",
+        ],
+        tutorialId: "sessions",
+      }} />
 
     </div>
   )

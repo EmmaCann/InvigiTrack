@@ -5,6 +5,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { BarChart3 } from "lucide-react"
+import { PageHelpButton } from "@/components/help/page-help-button"
 
 export default function AnalyticsPage() {
   return (
@@ -27,6 +28,14 @@ export default function AnalyticsPage() {
           </p>
         </CardContent>
       </Card>
+
+      <PageHelpButton help={{
+        lines: [
+          "Analizza le tue performance nel tempo.",
+          "Qui troverai trend di ore e guadagni per periodo.",
+        ],
+        tutorialId: "overview",
+      }} />
     </div>
   )
 }

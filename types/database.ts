@@ -16,6 +16,23 @@ export type InvigilationRole = "invigilator" | "supervisor"
 /** Ruolo sulla piattaforma — controlla l'accesso alle funzionalità admin */
 export type PlatformRole = "user" | "admin"
 
+// --- Dashboard prefs ----------------------------------------------------------
+
+/** ID delle card disponibili nella dashboard */
+export type DashboardCardId =
+  | "hours_month"     // ore lavorate questo mese
+  | "total_earned"    // totale guadagnato (storico)
+  | "unpaid"          // da ricevere
+  | "sessions_count"  // sessioni totali
+  | "earned_month"    // guadagnato questo mese
+  | "paid"            // già ricevuto
+  | "avg_hourly"      // tariffa media
+
+/** Preferenze dashboard salvate in profiles.dashboard_prefs (JSONB) */
+export interface DashboardPrefs {
+  cards?: DashboardCardId[]  // ordine e selezione (max 4); undefined = default
+}
+
 /** Stato del pagamento di una sessione */
 export type PaymentStatus = "unpaid" | "pending" | "paid"
 
@@ -63,6 +80,7 @@ export interface Profile {
   platform_role: PlatformRole
   default_hourly_rate: number
   rounding_mode: string
+  dashboard_prefs: DashboardPrefs     // preferenze card dashboard
   created_at: string
   updated_at: string
 }
@@ -79,10 +97,12 @@ export interface WorkCategory {
 
 /** Riga della tabella `user_category_access` */
 export interface UserCategoryAccess {
+  id: string                              // UUID PK (aggiunto con migration)
   user_id: string
   category_id: string
   granted_at: string
   granted_by: string | null
+  default_hourly_rate: number | null      // tariffa specifica per questo workspace
 }
 
 /**
@@ -92,9 +112,10 @@ export interface UserCategoryAccess {
  * univocamente questo workspace anche se due workspace condividono la stessa categoria.
  */
 export interface UserWorkspace extends WorkCategory {
-  workspaceId: string   // PK di user_category_access (uuid)
-  emoji: string | null  // emoji personalizzata, es. "📚"
-  color: string | null  // colore hex personalizzato, es. "#3B82F6"
+  workspaceId: string              // PK di user_category_access (uuid)
+  emoji: string | null             // emoji personalizzata, es. "📚"
+  color: string | null             // colore hex personalizzato, es. "#3B82F6"
+  default_hourly_rate: number | null  // tariffa oraria specifica per questo workspace
 }
 
 /** Riga della tabella `sessions` */

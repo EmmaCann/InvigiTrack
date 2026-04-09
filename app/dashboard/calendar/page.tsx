@@ -4,6 +4,7 @@ import { getSessionsByUser } from "@/lib/data/sessions"
 import { getEventsByUser }   from "@/lib/data/calendar-events"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { CalendarView }      from "@/components/calendar/calendar-view"
+import { PageHelpButton }    from "@/components/help/page-help-button"
 
 export default async function CalendarPage() {
   const user    = await getCurrentUser()
@@ -31,6 +32,14 @@ export default async function CalendarPage() {
       </div>
 
       <CalendarView sessions={sessions} events={events} profile={profile} categorySlug={category.slug} />
+
+      <PageHelpButton help={{
+        lines: [
+          "Pianifica i tuoi turni futuri come eventi.",
+          "Convertili in sessione con un click quando li hai completati.",
+        ],
+        tutorialId: "calendar",
+      }} />
     </div>
   )
 }

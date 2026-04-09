@@ -3,9 +3,10 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { CalendarClock, MapPin, Clock } from "lucide-react"
+import { CalendarClock, MapPin, Clock, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, SETTINGS_ITEM, isActiveRoute } from "./nav-items"
+import { openHelpDialog } from "@/lib/help-events"
 import type { CalendarEvent } from "@/types/database"
 
 function NavLink({
@@ -106,6 +107,18 @@ export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
           active={isActiveRoute(SETTINGS_ITEM.href, pathname)}
         />
       </nav>
+
+      {/* -- Tutorial link ------------------------------------------ */}
+      <div className="px-3 pb-2">
+        <button
+          type="button"
+          onClick={() => openHelpDialog()}
+          className="flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold uppercase tracking-[0.07em] text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+        >
+          <BookOpen className="h-[1.05rem] w-[1.05rem] shrink-0 text-muted-foreground/60" strokeWidth={1.85} />
+          <span>Tutorial</span>
+        </button>
+      </div>
 
       {/* -- Next Shift --------------------------------------------- */}
       <div className="px-3 pb-8">

@@ -4,6 +4,7 @@ import { getPaymentSummary, getSessionsByUser } from "@/lib/data/sessions"
 import { getPendingEvents } from "@/lib/data/calendar-events"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { OnboardingDialog } from "@/components/auth/onboarding-dialog"
+import { PageHelpButton } from "@/components/help/page-help-button"
 import { Clock, Euro, AlertCircle, CalendarCheck, ArrowRight, MapPin, BarChart3, CalendarDays } from "lucide-react"
 import Link from "next/link"
 import type { Session } from "@/types/database"
@@ -351,6 +352,14 @@ export default async function DashboardPage() {
 
         </div>
       </div>
+
+      <PageHelpButton help={{
+        lines: [
+          "Questa è la tua panoramica generale.",
+          "Vedi guadagni, ore e prossimi impegni a colpo d'occhio.",
+        ],
+        tutorialId: "overview",
+      }} />
 
     </div>
   )
