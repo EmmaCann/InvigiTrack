@@ -23,7 +23,7 @@ export async function getEventsByUser(
   return data as CalendarEvent[]
 }
 
-/** Solo eventi passati/oggi non ancora convertiti — per il widget dashboard */
+/** Prossimi eventi futuri non ancora convertiti — per il widget dashboard */
 export async function getPendingEvents(
   userId: string,
   workspaceId?: string,
@@ -35,10 +35,10 @@ export async function getPendingEvents(
     .select("*")
     .eq("user_id", userId)
     .eq("is_converted", false)
-    .lte("event_date", today)
+    .gte("event_date", today)
   if (workspaceId) query = query.eq("workspace_id", workspaceId)
   const { data, error } = await query
-    .order("event_date", { ascending: false })
+    .order("event_date", { ascending: true })
     .limit(5)
   if (error || !data) return []
   return data as CalendarEvent[]
