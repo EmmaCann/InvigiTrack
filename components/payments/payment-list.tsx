@@ -46,11 +46,12 @@ function exportPaymentsCSV(payments: PaymentWithSessions[]) {
 // --- Props --------------------------------------------------------------------
 
 interface Props {
-  unpaidSessions: Session[]
-  payments:       PaymentWithSessions[]
-  summaryUnpaid:  number
+  unpaidSessions:  Session[]
+  payments:        PaymentWithSessions[]
+  summaryUnpaid:   number
   summaryPaidMonth: number
   summaryPaidTotal: number
+  initialTab?:     "pending" | "history"
 }
 
 type Tab = "pending" | "history"
@@ -63,8 +64,9 @@ export function PaymentList({
   summaryUnpaid,
   summaryPaidMonth,
   summaryPaidTotal,
+  initialTab = "pending",
 }: Props) {
-  const [tab,         setTab]         = useState<Tab>("pending")
+  const [tab,         setTab]         = useState<Tab>(initialTab)
   const [selected,    setSelected]    = useState<Set<string>>(new Set())
   const [showModal,   setShowModal]   = useState(false)
 

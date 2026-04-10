@@ -63,6 +63,7 @@ export default async function PaymentsPage() {
         summaryUnpaid={Math.round(summaryUnpaid * 100) / 100}
         summaryPaidMonth={Math.round(summaryPaidMonth * 100) / 100}
         summaryPaidTotal={Math.round(summaryPaidTotal * 100) / 100}
+        initialTab={profile.payments_prefs?.default_tab ?? "pending"}
       />
 
       <PageHelpButton help={{

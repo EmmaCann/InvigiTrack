@@ -27,7 +27,7 @@ interface Props { currentPrefs: AnalyticsPrefs }
 
 export function AnalyticsPrefsForm({ currentPrefs }: Props) {
   const [widgets,      setWidgets]      = useState<AnalyticsWidgetId[]>(currentPrefs.widgets ?? ALL_IDS)
-  const [finYear,      setFinYear]      = useState<"jan" | "apr">(currentPrefs.financial_year ?? "jan")
+  const [fiscalUk,     setFiscalUk]     = useState<boolean>(currentPrefs.fiscal_year_uk ?? false)
   const [goalMonthly,  setGoalMonthly]  = useState<string>(currentPrefs.goal_monthly ? String(currentPrefs.goal_monthly) : "")
   const [goalAnnual,   setGoalAnnual]   = useState<string>(currentPrefs.goal_annual  ? String(currentPrefs.goal_annual)  : "")
   const [loading,      setLoading]      = useState(false)
@@ -49,7 +49,7 @@ export function AnalyticsPrefsForm({ currentPrefs }: Props) {
     setSaved(false)
     const res = await updateAnalyticsPrefs({
       widgets:        widgets,
-      financial_year: finYear,
+      fiscal_year_uk: fiscalUk,
       goal_monthly:   goalMonthly  ? parseFloat(goalMonthly)  : null,
       goal_annual:    goalAnnual   ? parseFloat(goalAnnual)   : null,
     })
@@ -96,26 +96,28 @@ export function AnalyticsPrefsForm({ currentPrefs }: Props) {
         </div>
       </div>
 
-      {/* Anno finanziario */}
+      {/* Anno fiscale UK */}
       <div>
-        <p className="mb-2 text-xs font-semibold text-foreground">Anno finanziario</p>
-        <div className="flex gap-3">
-          {(["jan", "apr"] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => { setFinYear(v); setSaved(false) }}
-              className={cn(
-                "rounded-xl border px-4 py-2 text-sm font-medium transition-all",
-                finYear === v
-                  ? "border-primary/40 bg-primary/5 text-primary ring-1 ring-primary/20"
-                  : "border-border/50 bg-white/50 text-muted-foreground hover:border-border",
-              )}
-            >
-              {v === "jan" ? "Gen – Dic" : "Apr – Mar (UK)"}
-            </button>
-          ))}
-        </div>
+        <p className="mb-1 text-xs font-semibold text-foreground">Anno fiscale UK</p>
+        <p className="mb-3 text-[11px] text-muted-foreground">
+          In UK l&apos;anno fiscale va da Aprile a Marzo (non Gennaio–Dicembre).
+          Attiva se vuoi che le statistiche seguano l&apos;anno fiscale britannico.
+        </p>
+        <button
+          type="button"
+          onClick={() => { setFiscalUk((v) => !v); setSaved(false) }}
+          className={cn(
+            "flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all",
+            fiscalUk
+              ? "border-primary/40 bg-primary/5 text-primary ring-1 ring-primary/20"
+              : "border-border/50 bg-white/50 text-muted-foreground hover:border-border",
+          )}
+        >
+          <span className={cn("flex h-4 w-4 items-center justify-center rounded border text-[10px]", fiscalUk ? "border-primary bg-primary text-white" : "border-border")}>
+            {fiscalUk ? "✓" : ""}
+          </span>
+          Usa anno fiscale Apr–Mar (UK)
+        </button>
       </div>
 
       {/* Obiettivi */}

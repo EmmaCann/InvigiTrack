@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { updateProfile as dbUpdateProfile, updateDashboardPrefs as dbUpdateDashboardPrefs } from "@/lib/data/profiles"
+import { updateProfile as dbUpdateProfile, updateDashboardPrefs as dbUpdateDashboardPrefs, updateSessionsPrefs as dbUpdateSessionsPrefs, updatePaymentsPrefs as dbUpdatePaymentsPrefs } from "@/lib/data/profiles"
 import { getCurrentUser } from "@/lib/data/auth"
-import type { DashboardPrefs } from "@/types/database"
+import type { DashboardPrefs, SessionsPrefs, PaymentsPrefs } from "@/types/database"
 
 // --- Profilo ------------------------------------------------------------------
 
@@ -104,5 +104,25 @@ export async function updateDashboardPrefs(
   if (result.error) return { error: result.error }
 
   revalidatePath("/dashboard")
+  return {}
+}
+
+// --- Sessions / Payments prefs ------------------------------------------------
+
+export async function updateSessionsPrefs(prefs: SessionsPrefs): Promise<{ error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) return { error: "Non autenticato" }
+  const result = await dbUpdateSessionsPrefs(user.id, prefs)
+  if (result.error) return { error: result.error }
+  revalidatePath("/dashboard/sessions")
+  return {}
+}
+
+export async function updatePaymentsPrefs(prefs: PaymentsPrefs): Promise<{ error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) return { error: "Non autenticato" }
+  const result = await dbUpdatePaymentsPrefs(user.id, prefs)
+  if (result.error) return { error: result.error }
+  revalidatePath("/dashboard/payments")
   return {}
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts"
 import type { Session, MonthlyArchiveEntry } from "@/types/database"
 
@@ -39,16 +39,22 @@ export function HoursChart({ sessions, monthly, year }: Props) {
       </p>
       <p className="mb-4 text-xs text-muted-foreground">Ore per mese</p>
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} barSize={14} barCategoryGap="35%">
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
+        <AreaChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="gradHours" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.03} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
           <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}h`} width={36} />
           <Tooltip
             formatter={(v: unknown) => [`${Number(v).toFixed(1)}h`, "Ore"]}
-            contentStyle={{ borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)", fontSize: 12 }}
+            contentStyle={{ borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)", fontSize: 12, background: "rgba(255,255,255,0.95)" }}
           />
-          <Bar dataKey="hours" fill="hsl(var(--primary))" fillOpacity={0.85} radius={[4,4,0,0]} />
-        </BarChart>
+          <Area type="monotone" dataKey="hours" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gradHours)" dot={false} activeDot={{ r: 4 }} />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   )

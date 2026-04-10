@@ -38,7 +38,13 @@ export default async function SessionsPage() {
       </div>
 
       {/* -- Lista ---------------------------------------------------- */}
-      <SessionList sessions={sessions} profile={profile} categorySlug={category.slug} />
+      <SessionList
+        sessions={sessions}
+        profile={profile}
+        categorySlug={category.slug}
+        initialFilter={profile.sessions_prefs?.default_filter ?? "all"}
+        initialGrouping={profile.sessions_prefs?.grouping ?? "date"}
+      />
 
       <PageHelpButton help={{
         lines: [

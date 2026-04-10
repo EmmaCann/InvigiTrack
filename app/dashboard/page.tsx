@@ -6,6 +6,7 @@ import { getActiveWorkspace } from "@/lib/workspace"
 import { OnboardingDialog } from "@/components/auth/onboarding-dialog"
 import { PageHelpButton } from "@/components/help/page-help-button"
 import { Clock, Euro, AlertCircle, CalendarCheck, TrendingUp, CheckCircle2, BarChart2, ArrowRight, MapPin, BarChart3, CalendarDays } from "lucide-react"
+import type { DashboardSecondaryWidget } from "@/types/database"
 import Link from "next/link"
 import type { Session, DashboardCardId } from "@/types/database"
 
@@ -138,19 +139,24 @@ export default async function DashboardPage() {
   const selectedCards = (profile.dashboard_prefs?.cards ?? DEFAULT_CARDS) as DashboardCardId[]
   const stats = selectedCards.map((id) => ALL_CARDS[id]).filter(Boolean)
 
-  // Hours trend — last 6 months
+  // Secondary widgets prefs
+  const DEFAULT_SECONDARY: DashboardSecondaryWidget[] = ["hours_trend", "unpaid_alerts", "calendar_events"]
+  const activeSecondary = profile.dashboard_prefs?.secondary ?? DEFAULT_SECONDARY
+  const showWidget = (id: DashboardSecondaryWidget) => activeSecondary.includes(id)
+
+  // Mini bar chart data (last 6 months) — usata da hours_trend e earnings_mini
   const monthsData = Array.from({ length: 6 }, (_, i) => {
     const d = new Date()
     d.setDate(1)
     d.setMonth(d.getMonth() - (5 - i))
-    const key   = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-    const label = d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "").toUpperCase()
-    const hours = allSessions
-      .filter((s) => s.session_date.startsWith(key))
-      .reduce((a, s) => a + s.duration_minutes / 60, 0)
-    return { label, hours, isCurrent: i === 5 }
+    const key     = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    const label   = d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "").toUpperCase()
+    const hours   = allSessions.filter((s) => s.session_date.startsWith(key)).reduce((a, s) => a + s.duration_minutes / 60, 0)
+    const earned  = allSessions.filter((s) => s.session_date.startsWith(key)).reduce((a, s) => a + s.earned, 0)
+    return { label, hours, earned, isCurrent: i === 5 }
   })
-  const maxMonthHours = Math.max(...monthsData.map((m) => m.hours), 1)
+  const maxMonthHours  = Math.max(...monthsData.map((m) => m.hours),  1)
+  const maxMonthEarned = Math.max(...monthsData.map((m) => m.earned), 1)
 
   // Unpaid alerts
   const unpaidAlerts = allSessions.filter((s) => s.payment_status !== "paid").slice(0, 3)
@@ -289,16 +295,15 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* -- Destra — Hours Trend + Unpaid Alerts ------------------- */}
+        {/* -- Destra — widget configurabili ------------------- */}
         <div className="flex flex-col gap-4">
 
           {/* Hours Trend */}
+          {showWidget("hours_trend") && (
           <div className="glass-dashboard rounded-2xl px-5 pt-5 pb-4">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                  Hours Trend
-                </p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Ore lavorate</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">Ultimi 6 mesi</p>
               </div>
               <BarChart3 className="h-4 w-4 text-primary/40" />
@@ -315,8 +320,34 @@ export default async function DashboardPage() {
               ))}
             </div>
           </div>
+          )}
+
+          {/* Earnings mini */}
+          {showWidget("earnings_mini") && (
+          <div className="glass-dashboard rounded-2xl px-5 pt-5 pb-4">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Guadagni</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Ultimi 6 mesi</p>
+              </div>
+              <Euro className="h-4 w-4 text-emerald-500/60" />
+            </div>
+            <div className="flex items-end gap-1.5" style={{ height: "80px" }}>
+              {monthsData.map((m) => (
+                <div key={m.label} className="flex flex-1 flex-col items-center gap-1.5">
+                  <div
+                    className={`w-full rounded-t-md transition-all ${m.isCurrent ? "bg-emerald-500" : "bg-emerald-500/25"}`}
+                    style={{ height: `${Math.max(m.earned > 0 ? (m.earned / maxMonthEarned) * 64 : 0, m.earned > 0 ? 4 : 0)}px` }}
+                  />
+                  <span className="text-[9px] font-semibold text-muted-foreground">{m.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          )}
 
           {/* Unpaid Alerts */}
+          {showWidget("unpaid_alerts") && (
           <div className="glass-dashboard rounded-2xl px-5 pt-5 pb-4">
             <div className="mb-4 flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-amber-500" />
@@ -360,9 +391,10 @@ export default async function DashboardPage() {
               </div>
             )}
           </div>
+          )}
 
           {/* Appuntamenti da confermare */}
-          {pendingEvents.length > 0 && (
+          {showWidget("calendar_events") && pendingEvents.length > 0 && (
             <div className="glass-dashboard rounded-2xl px-5 pt-5 pb-4">
               <div className="mb-4 flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-violet-500" />

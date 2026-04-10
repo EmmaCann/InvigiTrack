@@ -1,15 +1,16 @@
 "use client"
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend,
 } from "recharts"
 import type { Session, YearlyArchive } from "@/types/database"
 
 const MONTHS_IT = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"]
 
 interface Props {
-  sessions: Session[]      // sessioni live (include anni non archiviati)
-  archives: YearlyArchive[]
+  sessions:    Session[]
+  archives:    YearlyArchive[]
   currentYear: number
 }
 
@@ -28,7 +29,6 @@ export function YearComparisonChart({ sessions, archives, currentYear }: Props) 
 
   const currentData = monthlyEarnings(sessions, currentYear)
 
-  // Dati anno precedente: da archivio se esiste, altrimenti da sessioni live
   const prevArchive = archives.find((a) => a.year === prevYear)
   const prevData = prevArchive
     ? Array.from({ length: 12 }, (_, i) => {
@@ -50,18 +50,27 @@ export function YearComparisonChart({ sessions, archives, currentYear }: Props) 
       </p>
       <p className="mb-4 text-xs text-muted-foreground">{currentYear} vs {prevYear}</p>
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} barSize={10} barCategoryGap="30%">
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
+        <LineChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
           <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${v}`} width={48} />
           <Tooltip
             formatter={(v: unknown, name: unknown) => [`€${Number(v).toFixed(2)}`, String(name)]}
-            contentStyle={{ borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)", fontSize: 12 }}
+            contentStyle={{ borderRadius: 12, border: "1px solid rgba(0,0,0,0.08)", fontSize: 12, background: "rgba(255,255,255,0.95)" }}
           />
           <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-          <Bar dataKey={String(currentYear)} fill="hsl(var(--primary))"    fillOpacity={0.85} radius={[4,4,0,0]} />
-          <Bar dataKey={String(prevYear)}    fill="hsl(var(--primary))"    fillOpacity={0.3}  radius={[4,4,0,0]} />
-        </BarChart>
+          <Line
+            type="monotone" dataKey={String(currentYear)}
+            stroke="hsl(var(--primary))" strokeWidth={2.5}
+            dot={false} activeDot={{ r: 4, strokeWidth: 0 }}
+          />
+          <Line
+            type="monotone" dataKey={String(prevYear)}
+            stroke="hsl(var(--primary))" strokeWidth={1.5}
+            strokeDasharray="5 3" strokeOpacity={0.4}
+            dot={false} activeDot={{ r: 4, strokeWidth: 0 }}
+          />
+        </LineChart>
       </ResponsiveContainer>
     </div>
   )

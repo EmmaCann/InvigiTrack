@@ -15,6 +15,8 @@ import {
   ChevronDown,
   X,
   CreditCard,
+  LayoutList,
+  Layers2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -140,14 +142,16 @@ const PAGE_SIZE = 10
 // --- Props --------------------------------------------------------------------
 
 interface Props {
-  sessions:     Session[]
-  profile:      Profile
-  categorySlug: string
+  sessions:        Session[]
+  profile:         Profile
+  categorySlug:    string
+  initialFilter?:  "all" | PaymentStatus
+  initialGrouping?: "date" | "month"
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function SessionList({ sessions, profile, categorySlug }: Props) {
+export function SessionList({ sessions, profile, categorySlug, initialFilter = "all", initialGrouping = "date" }: Props) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -157,7 +161,8 @@ export function SessionList({ sessions, profile, categorySlug }: Props) {
   const [search,         setSearch]         = useState("")
   const [dateRange,      setDateRange]      = useState<DateRange>("all")
   const [locationFilter, setLocationFilter] = useState("all")
-  const [statusFilter,   setStatusFilter]   = useState<"all" | PaymentStatus>("all")
+  const [statusFilter,   setStatusFilter]   = useState<"all" | PaymentStatus>(initialFilter)
+  const [grouping,       setGrouping]       = useState<"date" | "month">(initialGrouping)
   const [page,           setPage]           = useState(0)
 
   function resetPage<T>(setter: React.Dispatch<React.SetStateAction<T>>) {
@@ -205,7 +210,7 @@ export function SessionList({ sessions, profile, categorySlug }: Props) {
 
   const totalPages  = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated   = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-  const grouped     = groupByMonth(paginated)
+  const grouped     = grouping === "month" ? groupByMonth(paginated) : null
   const stats       = totalStats(filtered)
   const hasFilters  = !!(search || dateRange !== "all" || locationFilter !== "all" || statusFilter !== "all")
 
@@ -365,6 +370,18 @@ export function SessionList({ sessions, profile, categorySlug }: Props) {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Grouping toggle */}
+        <button
+          onClick={() => setGrouping((g) => g === "month" ? "date" : "month")}
+          className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap px-4 py-3 text-xs text-muted-foreground transition-colors hover:bg-white/40 hover:text-foreground"
+          title={grouping === "month" ? "Vista lista" : "Raggruppa per mese"}
+        >
+          {grouping === "month"
+            ? <LayoutList className="h-3.5 w-3.5" />
+            : <Layers2 className="h-3.5 w-3.5" />
+          }
+        </button>
+
         {/* Clear filters */}
         {hasFilters && (
           <button
@@ -378,7 +395,7 @@ export function SessionList({ sessions, profile, categorySlug }: Props) {
 
       </div>
 
-      {/* -- Lista raggruppata ---------------------------------------- */}
+      {/* -- Lista --------------------------------------------------- */}
       {paginated.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-sm font-medium text-foreground">Nessuna sessione trovata</p>
@@ -387,7 +404,8 @@ export function SessionList({ sessions, profile, categorySlug }: Props) {
             Rimuovi filtri
           </button>
         </div>
-      ) : (
+      ) : grouped ? (
+        /* ---- Vista raggruppata per mese ---- */
         <div className="space-y-8">
           {Array.from(grouped.entries()).map(([month, items]) => {
             const monthTotal = items.reduce((a, s) => a + s.earned, 0)
@@ -532,6 +550,72 @@ export function SessionList({ sessions, profile, categorySlug }: Props) {
                       </div>
                     )
                   })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        /* ---- Vista lista cronologica (flat) ---- */
+        <div className="space-y-2">
+          {paginated.map((session) => {
+            const meta       = session.metadata as { exam_name?: string; role_type?: string }
+            const statusConf = STATUS_CONFIG[session.payment_status]
+            const isConf     = confirmId === session.id
+            const isDel      = deletingId === session.id
+            return (
+              <div
+                key={session.id}
+                className={cn(
+                  "group relative flex flex-col gap-3 overflow-hidden rounded-2xl glass-card ring-1 ring-white/60 px-4 py-3.5 pl-5 transition-all hover:shadow-md hover:shadow-primary/[0.06] sm:flex-row sm:items-center",
+                  statusConf.leftAccent,
+                )}
+              >
+                <div className="flex min-w-0 flex-1 flex-col gap-1 pl-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">
+                      {new Date(session.session_date + "T00:00:00").toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" })}
+                    </span>
+                    <span className="font-semibold text-sm text-foreground truncate">
+                      {meta.exam_name ?? "Sessione"}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                    <span>{session.start_time.slice(0,5)} – {session.end_time.slice(0,5)}</span>
+                    {session.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{session.location}</span>}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                  <span className="text-sm font-bold tabular-nums text-foreground">€{session.earned.toFixed(2)}</span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={cn("flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-colors", statusConf.className)}>
+                        <span className={cn("h-1.5 w-1.5 rounded-full", statusConf.dot)} />
+                        {statusConf.label}
+                        <ChevronDown className="h-2.5 w-2.5 opacity-60" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-36 border-border/60 bg-white">
+                      {(["unpaid","pending","paid"] as PaymentStatus[]).map((s) => (
+                        <DropdownMenuItem key={s} onClick={() => handleStatusChange(session, s)} className="flex cursor-pointer items-center justify-between text-xs">
+                          {STATUS_CONFIG[s].label} {session.payment_status === s && <Check className="h-3 w-3 text-primary" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <SessionDialog profile={profile} categorySlug={categorySlug} session={session} />
+                  {isConf ? (
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleDelete(session.id)} disabled={isDel} className="cursor-pointer rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-destructive text-destructive-foreground">
+                        {isDel ? "…" : "Elimina"}
+                      </button>
+                      <button onClick={() => setConfirmId(null)} className="cursor-pointer rounded-lg px-2 py-1 text-[11px] text-muted-foreground">Annulla</button>
+                    </div>
+                  ) : (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => setConfirmId(session.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
               </div>
             )

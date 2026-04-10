@@ -30,9 +30,27 @@ export type AnalyticsWidgetId =
 /** Preferenze analytics salvate in profiles.analytics_prefs (JSONB) */
 export interface AnalyticsPrefs {
   widgets?:        AnalyticsWidgetId[]  // undefined = tutte attive
-  financial_year?: "jan" | "apr"        // inizio anno finanziario (default "jan")
+  fiscal_year_uk?: boolean              // true = anno fiscale Aprile–Marzo (UK), false/undefined = Gen–Dic
   goal_monthly?:   number | null        // obiettivo mensile in €
   goal_annual?:    number | null        // obiettivo annuale in €
+}
+
+/** Widget secondari nella colonna destra della dashboard */
+export type DashboardSecondaryWidget =
+  | "hours_trend"      // andamento ore (CSS mini bar chart)
+  | "earnings_mini"    // andamento guadagni (CSS mini bar chart)
+  | "unpaid_alerts"    // sessioni non pagate
+  | "calendar_events"  // prossimi eventi calendario
+
+/** Preferenze pagina sessioni */
+export interface SessionsPrefs {
+  default_filter?: "all" | "unpaid" | "pending" | "paid"  // filtro applicato all'apertura
+  grouping?:       "date" | "month"                        // "date" = lista flat, "month" = raggruppata
+}
+
+/** Preferenze pagina pagamenti */
+export interface PaymentsPrefs {
+  default_tab?: "pending" | "history"  // tab aperta all'apertura
 }
 
 /** Riga mensile salvata nell'archivio annuale */
@@ -78,7 +96,8 @@ export type DashboardCardId =
 
 /** Preferenze dashboard salvate in profiles.dashboard_prefs (JSONB) */
 export interface DashboardPrefs {
-  cards?: DashboardCardId[]  // ordine e selezione (max 4); undefined = default
+  cards?:     DashboardCardId[]           // KPI card (max 4); undefined = default
+  secondary?: DashboardSecondaryWidget[]  // widget colonna destra; undefined = default tutti
 }
 
 /** Stato del pagamento di una sessione */
@@ -128,8 +147,10 @@ export interface Profile {
   platform_role: PlatformRole
   default_hourly_rate: number
   rounding_mode: string
-  dashboard_prefs:  DashboardPrefs    // preferenze card dashboard
+  dashboard_prefs:  DashboardPrefs    // preferenze card + widget dashboard
   analytics_prefs:  AnalyticsPrefs   // preferenze pagina analytics
+  sessions_prefs:   SessionsPrefs    // preferenze pagina sessioni
+  payments_prefs:   PaymentsPrefs    // preferenze pagina pagamenti
   created_at: string
   updated_at: string
 }
