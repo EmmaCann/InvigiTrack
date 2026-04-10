@@ -7,15 +7,15 @@ const SECTION_GROUPS = [
   {
     label: "Di base",
     sections: [
-      { id: "profilo",  label: "Profilo"       },
-      { id: "password", label: "Password"      },
-      { id: "archivio", label: "Archivio dati" },
+      { id: "profilo",   label: "Profilo"       },
+      { id: "password",  label: "Password"      },
+      { id: "archivio",  label: "Archivio dati" },
+      { id: "workspace", label: "Workspace"     },
     ],
   },
   {
     label: "Avanzate",
     sections: [
-      { id: "workspace", label: "Workspace"  },
       { id: "dashboard", label: "Dashboard"  },
       { id: "sessioni",  label: "Sessioni"   },
       { id: "pagamenti", label: "Pagamenti"  },

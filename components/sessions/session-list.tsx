@@ -362,7 +362,7 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
             <DropdownMenuItem onClick={() => { setStatusFilter("all"); setPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
               Tutti gli stati {statusFilter === "all" && <Check className="h-3 w-3 text-primary" />}
             </DropdownMenuItem>
-            {(["unpaid", "pending", "paid"] as PaymentStatus[]).map((s) => (
+            {(["unpaid", "paid"] as PaymentStatus[]).map((s) => (
               <DropdownMenuItem key={s} onClick={() => { setStatusFilter(s); setPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
                 {STATUS_CONFIG[s].label} {statusFilter === s && <Check className="h-3 w-3 text-primary" />}
               </DropdownMenuItem>
@@ -596,7 +596,7 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-36 border-border/60 bg-white">
-                      {(["unpaid","pending","paid"] as PaymentStatus[]).map((s) => (
+                      {(["unpaid","paid"] as PaymentStatus[]).map((s) => (
                         <DropdownMenuItem key={s} onClick={() => handleStatusChange(session, s)} className="flex cursor-pointer items-center justify-between text-xs">
                           {STATUS_CONFIG[s].label} {session.payment_status === s && <Check className="h-3 w-3 text-primary" />}
                         </DropdownMenuItem>

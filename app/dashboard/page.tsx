@@ -393,39 +393,47 @@ export default async function DashboardPage() {
           </div>
           )}
 
-          {/* Appuntamenti da confermare */}
-          {showWidget("calendar_events") && pendingEvents.length > 0 && (
+          {/* Prossimi eventi */}
+          {showWidget("calendar_events") && (
             <div className="glass-dashboard rounded-2xl px-5 pt-5 pb-4">
               <div className="mb-4 flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-violet-500" />
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-600">
-                  Da confermare
+                  Prossimi eventi
                 </p>
-                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-violet-100 text-[10px] font-bold text-violet-700">
-                  {pendingEvents.length}
-                </span>
+                {pendingEvents.length > 0 && (
+                  <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-violet-100 text-[10px] font-bold text-violet-700">
+                    {pendingEvents.length}
+                  </span>
+                )}
               </div>
-              <div className="space-y-2">
-                {pendingEvents.map((ev) => (
-                  <Link
-                    key={ev.id}
-                    href="/dashboard/calendar"
-                    className="flex items-center justify-between rounded-xl border border-violet-100 bg-violet-50/60 px-3.5 py-2.5 transition-colors hover:bg-violet-50"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-foreground">{ev.title}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {new Date(ev.event_date + "T00:00:00").toLocaleDateString("it-IT", { day: "numeric", month: "short" })}
-                        {ev.location ? ` · ${ev.location}` : ""}
-                      </p>
-                    </div>
-                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-violet-400" />
-                  </Link>
-                ))}
-                <p className="pt-1 text-center text-[11px] text-muted-foreground">
-                  Apri il calendario per registrare le ore
+              {pendingEvents.length === 0 ? (
+                <p className="py-3 text-center text-xs text-muted-foreground">
+                  Nessun evento in programma
                 </p>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  {pendingEvents.map((ev) => (
+                    <Link
+                      key={ev.id}
+                      href="/dashboard/calendar"
+                      className="flex items-center justify-between rounded-xl border border-violet-100 bg-violet-50/60 px-3.5 py-2.5 transition-colors hover:bg-violet-50"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">{ev.title}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {new Date(ev.event_date + "T00:00:00").toLocaleDateString("it-IT", { day: "numeric", month: "short" })}
+                          {ev.location ? ` · ${ev.location}` : ""}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-violet-400" />
+                    </Link>
+                  ))}
+                  <p className="pt-1 text-center text-[11px] text-muted-foreground">
+                    Apri il calendario per registrare le ore
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

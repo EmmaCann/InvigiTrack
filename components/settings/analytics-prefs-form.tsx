@@ -27,7 +27,6 @@ interface Props { currentPrefs: AnalyticsPrefs }
 
 export function AnalyticsPrefsForm({ currentPrefs }: Props) {
   const [widgets,      setWidgets]      = useState<AnalyticsWidgetId[]>(currentPrefs.widgets ?? ALL_IDS)
-  const [fiscalUk,     setFiscalUk]     = useState<boolean>(currentPrefs.fiscal_year_uk ?? false)
   const [goalMonthly,  setGoalMonthly]  = useState<string>(currentPrefs.goal_monthly ? String(currentPrefs.goal_monthly) : "")
   const [goalAnnual,   setGoalAnnual]   = useState<string>(currentPrefs.goal_annual  ? String(currentPrefs.goal_annual)  : "")
   const [loading,      setLoading]      = useState(false)
@@ -48,10 +47,9 @@ export function AnalyticsPrefsForm({ currentPrefs }: Props) {
     setError(null)
     setSaved(false)
     const res = await updateAnalyticsPrefs({
-      widgets:        widgets,
-      fiscal_year_uk: fiscalUk,
-      goal_monthly:   goalMonthly  ? parseFloat(goalMonthly)  : null,
-      goal_annual:    goalAnnual   ? parseFloat(goalAnnual)   : null,
+      widgets:      widgets,
+      goal_monthly: goalMonthly ? parseFloat(goalMonthly) : null,
+      goal_annual:  goalAnnual  ? parseFloat(goalAnnual)  : null,
     })
     setLoading(false)
     if (res.error) { setError(res.error); return }
@@ -96,33 +94,12 @@ export function AnalyticsPrefsForm({ currentPrefs }: Props) {
         </div>
       </div>
 
-      {/* Anno fiscale UK */}
-      <div>
-        <p className="mb-1 text-xs font-semibold text-foreground">Anno fiscale UK</p>
-        <p className="mb-3 text-[11px] text-muted-foreground">
-          In UK l&apos;anno fiscale va da Aprile a Marzo (non Gennaio–Dicembre).
-          Attiva se vuoi che le statistiche seguano l&apos;anno fiscale britannico.
-        </p>
-        <button
-          type="button"
-          onClick={() => { setFiscalUk((v) => !v); setSaved(false) }}
-          className={cn(
-            "flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all",
-            fiscalUk
-              ? "border-primary/40 bg-primary/5 text-primary ring-1 ring-primary/20"
-              : "border-border/50 bg-white/50 text-muted-foreground hover:border-border",
-          )}
-        >
-          <span className={cn("flex h-4 w-4 items-center justify-center rounded border text-[10px]", fiscalUk ? "border-primary bg-primary text-white" : "border-border")}>
-            {fiscalUk ? "✓" : ""}
-          </span>
-          Usa anno fiscale Apr–Mar (UK)
-        </button>
-      </div>
-
       {/* Obiettivi */}
       <div>
-        <p className="mb-2 text-xs font-semibold text-foreground">Obiettivi (opzionale)</p>
+        <p className="mb-1 text-xs font-semibold text-foreground">Obiettivi (opzionale)</p>
+        <p className="mb-3 text-[11px] text-muted-foreground">
+          Se imposti un obiettivo, nella pagina statistiche apparirà un widget con la barra di avanzamento verso il traguardo mensile e/o annuale.
+        </p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex items-center rounded-xl border border-border bg-white/70 focus-within:ring-1 focus-within:ring-primary/30">
             <span className="pl-3 text-sm text-muted-foreground">€</span>

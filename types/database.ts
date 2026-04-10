@@ -29,10 +29,9 @@ export type AnalyticsWidgetId =
 
 /** Preferenze analytics salvate in profiles.analytics_prefs (JSONB) */
 export interface AnalyticsPrefs {
-  widgets?:        AnalyticsWidgetId[]  // undefined = tutte attive
-  fiscal_year_uk?: boolean              // true = anno fiscale Aprile–Marzo (UK), false/undefined = Gen–Dic
-  goal_monthly?:   number | null        // obiettivo mensile in €
-  goal_annual?:    number | null        // obiettivo annuale in €
+  widgets?:      AnalyticsWidgetId[]  // undefined = tutte attive
+  goal_monthly?: number | null        // obiettivo mensile in €
+  goal_annual?:  number | null        // obiettivo annuale in €
 }
 
 /** Widget secondari nella colonna destra della dashboard */
@@ -44,8 +43,8 @@ export type DashboardSecondaryWidget =
 
 /** Preferenze pagina sessioni */
 export interface SessionsPrefs {
-  default_filter?: "all" | "unpaid" | "pending" | "paid"  // filtro applicato all'apertura
-  grouping?:       "date" | "month"                        // "date" = lista flat, "month" = raggruppata
+  default_filter?: "all" | "unpaid" | "paid"  // filtro applicato all'apertura
+  grouping?:       "date" | "month"            // "date" = lista flat, "month" = raggruppata
 }
 
 /** Preferenze pagina pagamenti */

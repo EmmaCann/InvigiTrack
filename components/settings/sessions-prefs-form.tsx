@@ -3,13 +3,14 @@
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { updateSessionsPrefs } from "@/app/actions/settings"
-import type { SessionsPrefs, PaymentStatus } from "@/types/database"
+import type { SessionsPrefs } from "@/types/database"
 
-const FILTER_OPTIONS: { value: "all" | PaymentStatus; label: string }[] = [
-  { value: "all",     label: "Tutte"        },
-  { value: "unpaid",  label: "Non pagate"   },
-  { value: "pending", label: "In attesa"    },
-  { value: "paid",    label: "Pagate"       },
+type FilterOption = "all" | "unpaid" | "paid"
+
+const FILTER_OPTIONS: { value: FilterOption; label: string }[] = [
+  { value: "all",    label: "Tutte"      },
+  { value: "unpaid", label: "Non pagate" },
+  { value: "paid",   label: "Pagate"     },
 ]
 
 const GROUP_OPTIONS: { value: "date" | "month"; label: string; sub: string }[] = [
@@ -20,7 +21,7 @@ const GROUP_OPTIONS: { value: "date" | "month"; label: string; sub: string }[] =
 interface Props { currentPrefs: SessionsPrefs }
 
 export function SessionsPrefsForm({ currentPrefs }: Props) {
-  const [filter,  setFilter]  = useState<"all" | PaymentStatus>(currentPrefs.default_filter ?? "all")
+  const [filter,  setFilter]  = useState<FilterOption>(currentPrefs.default_filter ?? "all")
   const [group,   setGroup]   = useState<"date" | "month">(currentPrefs.grouping ?? "date")
   const [loading, setLoading] = useState(false)
   const [saved,   setSaved]   = useState(false)

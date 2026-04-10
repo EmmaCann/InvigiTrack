@@ -57,7 +57,7 @@ export function DataManagementForm() {
           <div>
             <p className="text-sm font-semibold text-foreground">Scarica tutti i dati</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Esporta tutte le sessioni di tutti i workspace in un unico file CSV.
+              Esporta tutte le tue sessioni in un unico file CSV.
             </p>
           </div>
           <button
@@ -81,9 +81,8 @@ export function DataManagementForm() {
           <div>
             <p className="text-sm font-semibold text-foreground">Compatta database</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Archivia tutti gli anni passati (tutti i workspace) in formato aggregato,
-              eliminando le sessioni originali per liberare spazio. I dati rimangono
-              visibili nelle statistiche.
+              Archivia tutti gli anni passati in formato aggregato, eliminando le sessioni
+              originali per liberare spazio. I dati rimangono visibili nelle statistiche.
             </p>
           </div>
           {!archiveConfirm ? (
