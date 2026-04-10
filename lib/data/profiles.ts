@@ -4,7 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server"
-import type { Profile, OnboardingData, PlatformRole, DashboardPrefs } from "@/types/database"
+import type { Profile, OnboardingData, PlatformRole, DashboardPrefs, AnalyticsPrefs } from "@/types/database"
 
 // --- READ ---------------------------------------------------------------------
 
@@ -80,6 +80,22 @@ export async function updateProfile(
   const { error } = await supabase
     .from("profiles")
     .update(data)
+    .eq("id", userId)
+  if (error) return { error: error.message }
+  return {}
+}
+
+/**
+ * Salva le preferenze della pagina analytics.
+ */
+export async function updateAnalyticsPrefs(
+  userId: string,
+  prefs: AnalyticsPrefs,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("profiles")
+    .update({ analytics_prefs: prefs })
     .eq("id", userId)
   if (error) return { error: error.message }
   return {}

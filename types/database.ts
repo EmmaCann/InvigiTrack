@@ -16,6 +16,54 @@ export type InvigilationRole = "invigilator" | "supervisor"
 /** Ruolo sulla piattaforma — controlla l'accesso alle funzionalità admin */
 export type PlatformRole = "user" | "admin"
 
+// --- Analytics prefs & archive -----------------------------------------------
+
+/** ID dei widget disponibili nella pagina analytics */
+export type AnalyticsWidgetId =
+  | "earnings_trend"     // andamento guadagni mensili
+  | "hours_trend"        // ore lavorate mensili
+  | "year_comparison"    // anno corrente vs precedente
+  | "payment_breakdown"  // donut paid/pending/unpaid
+  | "session_frequency"  // sessioni per giorno settimana
+  | "top_locations"      // top 5 sedi
+
+/** Preferenze analytics salvate in profiles.analytics_prefs (JSONB) */
+export interface AnalyticsPrefs {
+  widgets?:        AnalyticsWidgetId[]  // undefined = tutte attive
+  financial_year?: "jan" | "apr"        // inizio anno finanziario (default "jan")
+  goal_monthly?:   number | null        // obiettivo mensile in €
+  goal_annual?:    number | null        // obiettivo annuale in €
+}
+
+/** Riga mensile salvata nell'archivio annuale */
+export interface MonthlyArchiveEntry {
+  month:    number   // 1–12
+  sessions: number
+  hours:    number
+  earned:   number
+  paid:     number
+  unpaid:   number
+}
+
+/** Riga della tabella `yearly_archives` */
+export interface YearlyArchive {
+  id:             string
+  user_id:        string
+  workspace_id:   string
+  year:           number
+  total_sessions: number
+  total_hours:    number
+  total_earned:   number
+  total_paid:     number
+  total_unpaid:   number
+  archive_data: {
+    monthly:       MonthlyArchiveEntry[]
+    day_of_week:   { day: number; sessions: number }[]   // 0 = Lunedì
+    top_locations: { name: string; sessions: number }[]
+  }
+  archived_at: string
+}
+
 // --- Dashboard prefs ----------------------------------------------------------
 
 /** ID delle card disponibili nella dashboard */
@@ -80,7 +128,8 @@ export interface Profile {
   platform_role: PlatformRole
   default_hourly_rate: number
   rounding_mode: string
-  dashboard_prefs: DashboardPrefs     // preferenze card dashboard
+  dashboard_prefs:  DashboardPrefs    // preferenze card dashboard
+  analytics_prefs:  AnalyticsPrefs   // preferenze pagina analytics
   created_at: string
   updated_at: string
 }

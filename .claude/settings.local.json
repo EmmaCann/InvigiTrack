@@ -26,7 +26,8 @@
       "Bash(grep -rn \"£\\\\|PoundSterling\\\\|pound\\\\|GBP\" C:invigitrackapp C:invigitrackcomponents C:invigitracklib --include=*.tsx --include=*.ts -l)",
       "Bash(grep -rn \"£\\\\|PoundSterling\" C:invigitrackapp C:invigitrackcomponents --include=*.tsx --include=*.ts)",
       "Bash(dir \"C:\\\\invigitrack\\\\lib\")",
-      "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\emmac\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--invigitrack\\\\5470fd61-cf04-49f1-b4f3-6026dab92fa5\\\\tasks\\\\bi5cessbj.output''\")"
+      "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\emmac\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--invigitrack\\\\5470fd61-cf04-49f1-b4f3-6026dab92fa5\\\\tasks\\\\bi5cessbj.output''\")",
+      "Bash(npm run:*)"
     ]
   }
 }

@@ -7,9 +7,10 @@ import { WorkspaceRateForm }    from "@/components/settings/workspace-rate-form"
 import { ProfileForm }          from "@/components/settings/profile-form"
 import { PasswordForm }         from "@/components/settings/password-form"
 import { DashboardCardPicker }  from "@/components/settings/dashboard-card-picker"
+import { AnalyticsPrefsForm }   from "@/components/settings/analytics-prefs-form"
 import { SettingsSidebar }      from "@/components/settings/settings-sidebar"
 import { PageHelpButton }       from "@/components/help/page-help-button"
-import { User, KeyRound, Layers, LayoutDashboard } from "lucide-react"
+import { User, KeyRound, Layers, LayoutDashboard, BarChart3 } from "lucide-react"
 
 export default async function SettingsPage() {
   const user    = await getCurrentUser()
@@ -65,6 +66,7 @@ export default async function SettingsPage() {
             { id: "password",  label: "Password"  },
             { id: "workspace", label: "Workspace" },
             { id: "dashboard", label: "Dashboard" },
+            { id: "analytics", label: "Analytics" },
           ].map(({ id, label }) => (
             <a
               key={id}
@@ -156,6 +158,22 @@ export default async function SettingsPage() {
             </div>
             <div className="glass-dashboard rounded-2xl px-6 py-6">
               <DashboardCardPicker currentPrefs={profile.dashboard_prefs ?? {}} />
+            </div>
+          </section>
+
+          {/* ── Analytics ───────────────────────────────────────── */}
+          <section id="analytics" className="scroll-mt-6 space-y-5">
+            <div className="flex items-center gap-2.5 border-b border-border/40 pb-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <BarChart3 className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Analytics</h3>
+                <p className="text-xs text-muted-foreground">Widget, anno finanziario e obiettivi</p>
+              </div>
+            </div>
+            <div className="glass-dashboard rounded-2xl px-6 py-6">
+              <AnalyticsPrefsForm currentPrefs={profile.analytics_prefs ?? {}} />
             </div>
           </section>
 

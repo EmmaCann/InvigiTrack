@@ -1,41 +1,69 @@
-/**
- * PAGINA ANALYTICS — Server Component.
- * Placeholder — la costruiamo nel prossimo sprint.
- */
-
-import { Card, CardContent } from "@/components/ui/card"
-import { BarChart3 } from "lucide-react"
+import { redirect } from "next/navigation"
+import { getCurrentUser } from "@/lib/data/auth"
+import { getProfileById } from "@/lib/data/profiles"
+import { getSessionsByUser } from "@/lib/data/sessions"
+import { getYearlyArchives, getArchivableYears } from "@/lib/data/archives"
+import { getActiveWorkspace } from "@/lib/workspace"
 import { PageHelpButton } from "@/components/help/page-help-button"
+import { AnalyticsView } from "@/components/analytics/analytics-view"
+import { ArchiveSection } from "@/components/analytics/archive-section"
 
-export default function AnalyticsPage() {
+export default async function AnalyticsPage() {
+  const user = await getCurrentUser()
+  if (!user) redirect("/auth/login")
+
+  const [profile, { category }] = await Promise.all([
+    getProfileById(user.id),
+    getActiveWorkspace(user.id),
+  ])
+  if (!profile) redirect("/auth/login")
+
+  const workspaceId = category.workspaceId
+
+  const [allSessions, archives, archivableYears] = await Promise.all([
+    getSessionsByUser(user.id, workspaceId),
+    getYearlyArchives(user.id, workspaceId),
+    getArchivableYears(user.id, workspaceId),
+  ])
+
+  const currentYear = new Date().getFullYear()
+  const prefs = profile.analytics_prefs ?? {}
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
+
+      {/* Header */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
-          Insights
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+          Statistiche
         </p>
-        <h2 className="text-2xl font-bold text-foreground">Analytics</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Analisi dell&apos;attività per workspace: {category.label}
+        </p>
       </div>
 
-      <Card className="shadow-none border-border">
-        <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted mb-4">
-            <BarChart3 className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <p className="text-base font-semibold text-foreground">Coming soon</p>
-          <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-            Earnings trends, hours worked and payment history charts will be here.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Vista principale */}
+      <AnalyticsView
+        sessions={allSessions}
+        archives={archives}
+        prefs={prefs}
+        currentYear={currentYear}
+      />
+
+      {/* Archivio anni */}
+      <ArchiveSection
+        workspaceId={workspaceId}
+        archivableYears={archivableYears}
+      />
 
       <PageHelpButton help={{
         lines: [
           "Analizza le tue performance nel tempo.",
-          "Qui troverai trend di ore e guadagni per periodo.",
+          "Filtra per anno e personalizza i widget dalle impostazioni.",
         ],
-        tutorialId: "overview",
+        tutorialId: "statistics",
       }} />
+
     </div>
   )
 }

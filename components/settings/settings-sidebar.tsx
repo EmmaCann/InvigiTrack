@@ -8,6 +8,7 @@ const SECTIONS = [
   { id: "password",  label: "Password"   },
   { id: "workspace", label: "Workspace"  },
   { id: "dashboard", label: "Dashboard"  },
+  { id: "analytics", label: "Analytics"  },
 ]
 
 /**
