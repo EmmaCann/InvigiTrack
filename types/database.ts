@@ -14,7 +14,41 @@
 export type InvigilationRole = "invigilator" | "supervisor"
 
 /** Ruolo sulla piattaforma — controlla l'accesso alle funzionalità admin */
-export type PlatformRole = "user" | "admin"
+export type PlatformRole = "user" | "admin" | "super_admin"
+
+// --- Notifications & Feedback -------------------------------------------------
+
+export type NotificationType = "system" | "update" | "maintenance" | "feedback_received"
+export type NotificationTargetType = "all" | "role" | "user"
+export type FeedbackType = "feature_request" | "bug_report" | "suggestion"
+export type FeedbackStatus = "new" | "read"
+
+export interface Notification {
+  id:             string
+  target_type:    NotificationTargetType
+  target_role:    PlatformRole | null  // se target_type = "role"
+  target_user_id: string | null        // se target_type = "user"
+  title:          string
+  message:        string
+  type:           NotificationType
+  created_by:     string | null
+  created_at:     string
+}
+
+export interface NotificationWithRead extends Notification {
+  is_read: boolean
+}
+
+export interface Feedback {
+  id:         string
+  user_id:    string | null
+  user_email: string | null
+  type:       FeedbackType
+  subject:    string
+  message:    string
+  status:     FeedbackStatus
+  created_at: string
+}
 
 // --- Analytics prefs & archive -----------------------------------------------
 

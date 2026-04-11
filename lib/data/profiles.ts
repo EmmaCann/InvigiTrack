@@ -39,6 +39,19 @@ export async function getProfileById(userId: string): Promise<Profile | null> {
   return data
 }
 
+/** Trova il profilo super_admin (ce n'è solo uno) */
+export async function getSuperAdminProfile(): Promise<Profile | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("platform_role", "super_admin")
+    .limit(1)
+    .single<Profile>()
+  if (error || !data) return null
+  return data
+}
+
 // --- WRITE --------------------------------------------------------------------
 
 /**

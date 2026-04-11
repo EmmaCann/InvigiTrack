@@ -5,6 +5,7 @@ import { getNextEvent, getEventsByUser } from "@/lib/data/calendar-events"
 import { getSessionsByUser } from "@/lib/data/sessions"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { getActiveCategories } from "@/lib/data/categories"
+import { getUnreadCountForUser } from "@/lib/data/notifications"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
@@ -32,11 +33,12 @@ export default async function DashboardLayout({
 
   const { category: activeWorkspace, userCategories } = await getActiveWorkspace(user.id)
 
-  const [nextEvent, availableCategories, allSessions, allEvents] = await Promise.all([
+  const [nextEvent, availableCategories, allSessions, allEvents, unreadNotifications] = await Promise.all([
     getNextEvent(user.id, activeWorkspace.workspaceId),
     getActiveCategories(),
     getSessionsByUser(user.id, activeWorkspace.workspaceId),
     getEventsByUser(user.id, activeWorkspace.workspaceId),
+    getUnreadCountForUser(user.id, profile.platform_role),
   ])
   const today = new Date().toISOString().split("T")[0]
 
@@ -67,14 +69,14 @@ export default async function DashboardLayout({
 
       {/* -- Sidebar — solo desktop ----------------------------------- */}
       <div className="hidden md:flex">
-        <Sidebar nextEvent={nextEvent} />
+        <Sidebar nextEvent={nextEvent} platformRole={profile.platform_role} />
       </div>
 
       {/* -- Colonna destra ------------------------------------------ */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
 
         <div className="hidden md:block">
-          <Header profile={profile} activeWorkspace={activeWorkspace} userCategories={userCategories} availableCategories={availableCategories} />
+          <Header profile={profile} activeWorkspace={activeWorkspace} userCategories={userCategories} availableCategories={availableCategories} unreadNotifications={unreadNotifications} />
         </div>
 
         <div className="md:hidden">

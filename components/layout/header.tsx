@@ -18,6 +18,7 @@ import { logout } from "@/app/actions/auth"
 import { switchWorkspace, addWorkspace } from "@/app/actions/workspace"
 import { openDashboardSearch } from "@/components/layout/dashboard-search-layer"
 import { openHelpDialog } from "@/lib/help-events"
+import { NotificationBell } from "@/components/layout/notification-bell"
 import type { Profile, UserWorkspace, WorkCategory } from "@/types/database"
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -27,6 +28,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/calendar":   { title: "Calendario",   subtitle: "Visualizza le sessioni nel calendario" },
   "/dashboard/analytics":  { title: "Statistiche",  subtitle: "Analisi e andamento guadagni"          },
   "/dashboard/settings":   { title: "Impostazioni", subtitle: "Account e preferenze"                  },
+  "/dashboard/admin":      { title: "Pannello Admin", subtitle: "Gestione notifiche e feedback"         },
 }
 
 /** Icona workspace: mostra emoji (se impostata) o iniziale, con colore personalizzato. */
@@ -72,11 +74,13 @@ export function Header({
   activeWorkspace,
   userCategories,
   availableCategories,
+  unreadNotifications = 0,
 }: {
-  profile:              Profile
-  activeWorkspace:      UserWorkspace
-  userCategories:       UserWorkspace[]
-  availableCategories:  WorkCategory[]
+  profile:               Profile
+  activeWorkspace:       UserWorkspace
+  userCategories:        UserWorkspace[]
+  availableCategories:   WorkCategory[]
+  unreadNotifications?:  number
 }) {
   const pathname = usePathname()
   const page = pageTitles[pathname] ?? { title: "InvigiTrack", subtitle: "" }
@@ -133,14 +137,7 @@ export function Header({
         )}
 
         {/* Notifiche */}
-        <button
-          type="button"
-          className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-white/75 bg-white/45 text-muted-foreground shadow-sm backdrop-blur-md transition-all hover:bg-white/65 hover:text-foreground"
-        >
-          <Bell className="h-4 w-4" />
-          {/* Dot notifica — mostralo solo se ci sono notifiche */}
-          {/* <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500" /> */}
-        </button>
+        <NotificationBell initialUnreadCount={unreadNotifications} />
 
         {/* Avatar + menu */}
         <DropdownMenu>

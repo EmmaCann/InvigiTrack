@@ -3,11 +3,12 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { CalendarClock, MapPin, Clock, BookOpen } from "lucide-react"
+import { CalendarClock, MapPin, Clock, BookOpen, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, SETTINGS_ITEM, isActiveRoute } from "./nav-items"
 import { openHelpDialog } from "@/lib/help-events"
-import type { CalendarEvent } from "@/types/database"
+import { FeedbackDialog } from "@/components/feedback/feedback-dialog"
+import type { CalendarEvent, PlatformRole } from "@/types/database"
 
 function NavLink({
   href,
@@ -58,7 +59,13 @@ function formatShiftDate(dateStr: string): string {
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
-export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
+export function Sidebar({
+  nextEvent,
+  platformRole,
+}: {
+  nextEvent?:    CalendarEvent | null
+  platformRole?: PlatformRole
+}) {
   const pathname = usePathname()
 
   return (
@@ -106,10 +113,23 @@ export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
           icon={SETTINGS_ITEM.icon}
           active={isActiveRoute(SETTINGS_ITEM.href, pathname)}
         />
+
+        {/* Link pannello admin — solo super_admin */}
+        {platformRole === "super_admin" && (
+          <>
+            <div className="mx-5 my-3 h-px bg-border/40" />
+            <NavLink
+              href="/dashboard/admin"
+              label="Pannello Admin"
+              icon={ShieldCheck}
+              active={isActiveRoute("/dashboard/admin", pathname)}
+            />
+          </>
+        )}
       </nav>
 
-      {/* -- Tutorial link ------------------------------------------ */}
-      <div className="px-3 pb-2">
+      {/* -- Tutorial + Feedback ------------------------------------ */}
+      <div className="px-3 pb-2 space-y-0.5">
         <button
           type="button"
           onClick={() => openHelpDialog()}
@@ -118,6 +138,7 @@ export function Sidebar({ nextEvent }: { nextEvent?: CalendarEvent | null }) {
           <BookOpen className="h-[1.05rem] w-[1.05rem] shrink-0 text-muted-foreground/60" strokeWidth={1.85} />
           <span>Tutorial</span>
         </button>
+        <FeedbackDialog />
       </div>
 
       {/* -- Next Shift --------------------------------------------- */}
