@@ -3,6 +3,7 @@
 import { cookies } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/lib/data/auth"
+import { getProfileById } from "@/lib/data/profiles"
 import { grantCategoryAccess, updateWorkspaceSettings, deleteWorkspaceData } from "@/lib/data/categories"
 
 /** Imposta il cookie con il workspaceId (UUID di user_category_access.id). */
@@ -36,6 +37,9 @@ export async function addWorkspace(
 ): Promise<{ error?: string }> {
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
+
+  const profile = await getProfileById(user.id)
+  if (!profile || profile.platform_role === "user") return { error: "Non autorizzato" }
 
   const result = await grantCategoryAccess(user.id, categoryId, {
     name: workspaceName.trim() || undefined,

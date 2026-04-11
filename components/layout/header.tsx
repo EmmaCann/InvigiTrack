@@ -184,8 +184,8 @@ export function Header({
                   </DropdownMenuItem>
                 ))}
 
-                {/* Pulsante Nuovo workspace — sempre visibile */}
-                {availableCategories.length > 0 && (
+                {/* Pulsante Nuovo workspace — solo admin/super_admin */}
+                {availableCategories.length > 0 && profile.platform_role !== "user" && (
                   <DropdownMenuItem asChild>
                     <button
                       type="button"
