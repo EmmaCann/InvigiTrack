@@ -29,7 +29,15 @@
       "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\emmac\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--invigitrack\\\\5470fd61-cf04-49f1-b4f3-6026dab92fa5\\\\tasks\\\\bi5cessbj.output''\")",
       "Bash(npm run:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(curl -s http://localhost:3000 -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://localhost:3000/dashboard -o /dev/null -w \"%{http_code}\")",
+      "Bash(taskkill /PID 9116 /F)",
+      "Bash(cmd /c \"taskkill /PID 9116 /F\")",
+      "Bash(curl -s http://localhost:65473 -o /dev/null -w \"%{http_code}\")",
+      "Bash(cmd /c \"netstat -ano | findstr :3000\")",
+      "Bash(curl -s http://localhost:64031 -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://localhost:49949 -o /dev/null -w \"%{http_code}\")"
     ]
   }
 }

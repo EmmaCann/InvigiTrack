@@ -6,6 +6,7 @@ import { getSessionsByUser } from "@/lib/data/sessions"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { getActiveCategories } from "@/lib/data/categories"
 import { getUnreadCountForUser } from "@/lib/data/notifications"
+import { getNewFeedbackCount } from "@/lib/data/feedback"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
@@ -33,12 +34,15 @@ export default async function DashboardLayout({
 
   const { category: activeWorkspace, userCategories } = await getActiveWorkspace(user.id)
 
-  const [nextEvent, availableCategories, allSessions, allEvents, unreadNotifications] = await Promise.all([
+  const isSuperAdmin = profile.platform_role === "super_admin"
+
+  const [nextEvent, availableCategories, allSessions, allEvents, unreadNotifications, newFeedbackCount] = await Promise.all([
     getNextEvent(user.id, activeWorkspace.workspaceId),
     getActiveCategories(),
     getSessionsByUser(user.id, activeWorkspace.workspaceId),
     getEventsByUser(user.id, activeWorkspace.workspaceId),
     getUnreadCountForUser(user.id, profile.platform_role),
+    isSuperAdmin ? getNewFeedbackCount() : Promise.resolve(0),
   ])
   const today = new Date().toISOString().split("T")[0]
 
@@ -69,7 +73,7 @@ export default async function DashboardLayout({
 
       {/* -- Sidebar — solo desktop ----------------------------------- */}
       <div className="hidden md:flex">
-        <Sidebar nextEvent={nextEvent} platformRole={profile.platform_role} />
+        <Sidebar nextEvent={nextEvent} platformRole={profile.platform_role} newFeedbackCount={newFeedbackCount} />
       </div>
 
       {/* -- Colonna destra ------------------------------------------ */}

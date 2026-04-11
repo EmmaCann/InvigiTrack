@@ -102,7 +102,11 @@ export default async function SettingsPage() {
           {/* ── Workspace ────────────────────────────────────────── */}
           <section id="workspace" className="scroll-mt-6 space-y-5">
             <SectionHeader icon={Layers} title="Workspace" sub="Personalizza e gestisci i tuoi workspace" />
-            <WorkspaceSettings workspaces={workspaces} stats={stats} allCategories={allCategories} />
+            {/* Gestione completa workspace — solo admin/super_admin */}
+            {profile.platform_role !== "user" && (
+              <WorkspaceSettings workspaces={workspaces} stats={stats} allCategories={allCategories} />
+            )}
+            {/* Tariffe orarie — tutti gli utenti */}
             {workspaces.length > 0 && (
               <div className="glass-dashboard rounded-2xl px-6 py-6 space-y-4">
                 <div>

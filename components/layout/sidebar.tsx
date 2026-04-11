@@ -62,9 +62,11 @@ function formatShiftDate(dateStr: string): string {
 export function Sidebar({
   nextEvent,
   platformRole,
+  newFeedbackCount = 0,
 }: {
-  nextEvent?:    CalendarEvent | null
-  platformRole?: PlatformRole
+  nextEvent?:        CalendarEvent | null
+  platformRole?:     PlatformRole
+  newFeedbackCount?: number
 }) {
   const pathname = usePathname()
 
@@ -118,12 +120,19 @@ export function Sidebar({
         {platformRole === "super_admin" && (
           <>
             <div className="mx-5 my-3 h-px bg-border/40" />
-            <NavLink
-              href="/dashboard/admin"
-              label="Pannello Admin"
-              icon={ShieldCheck}
-              active={isActiveRoute("/dashboard/admin", pathname)}
-            />
+            <div className="relative">
+              <NavLink
+                href="/dashboard/admin"
+                label="Pannello Admin"
+                icon={ShieldCheck}
+                active={isActiveRoute("/dashboard/admin", pathname)}
+              />
+              {newFeedbackCount > 0 && (
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                  {newFeedbackCount > 9 ? "9+" : newFeedbackCount}
+                </span>
+              )}
+            </div>
           </>
         )}
       </nav>
