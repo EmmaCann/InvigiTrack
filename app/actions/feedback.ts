@@ -16,27 +16,38 @@ export async function sendFeedbackAction(
   if (!profile) return { error: "Profilo non trovato" }
 
   const res = await insertFeedback(user.id, profile.email, data)
-  if (res.error) return { error: res.error }
+  if (res.error) {
+    console.error("[sendFeedbackAction] insertFeedback error:", res.error)
+    return { error: res.error }
+  }
 
   // Notifica al super_admin
   const superAdmin = await getSuperAdminProfile()
-  if (superAdmin) {
-    const typeLabel: Record<string, string> = {
-      feature_request: "Richiesta funzionalità",
-      bug_report:      "Segnalazione problema",
-      suggestion:      "Suggerimento",
-    }
-    await createNotification({
-      target_type:    "user",
-      target_user_id: superAdmin.id,
-      title:          `📬 ${typeLabel[data.type] ?? "Feedback"}: ${data.subject}`,
-      message:        `Da ${profile.email} — ${data.message.slice(0, 120)}${data.message.length > 120 ? "…" : ""}`,
-      type:           "feedback_received",
-      created_by:     user.id,
-    })
-    revalidatePath("/dashboard", "layout")
+  if (!superAdmin) {
+    console.warn("[sendFeedbackAction] getSuperAdminProfile returned null — notifica non inviata")
+    return { success: true }
   }
 
+  const typeLabel: Record<string, string> = {
+    feature_request: "Richiesta funzionalità",
+    bug_report:      "Segnalazione problema",
+    suggestion:      "Suggerimento",
+  }
+
+  const notifRes = await createNotification({
+    target_type:    "user",
+    target_user_id: superAdmin.id,
+    title:          `📬 ${typeLabel[data.type] ?? "Feedback"}: ${data.subject}`,
+    message:        `Da ${profile.email} — ${data.message.slice(0, 120)}${data.message.length > 120 ? "…" : ""}`,
+    type:           "feedback_received",
+    created_by:     user.id,
+  })
+
+  if (notifRes.error) {
+    console.error("[sendFeedbackAction] createNotification error:", notifRes.error)
+  }
+
+  revalidatePath("/dashboard", "layout")
   return { success: true }
 }
 
