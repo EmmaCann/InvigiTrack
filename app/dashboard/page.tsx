@@ -208,9 +208,9 @@ export default async function DashboardPage() {
         <div className="glass-dashboard rounded-2xl">
           <div className="flex items-start justify-between gap-4 border-b border-white/50 px-5 pb-4 pt-5">
             <div>
-              <h3 className="text-base font-semibold text-foreground">Sessioni recenti</h3>
+              <h3 className="text-base font-semibold text-foreground">Ultime sessioni</h3>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Le tue ultime sessioni registrate
+                Le 5 sessioni più recenti per data
               </p>
             </div>
             <Link

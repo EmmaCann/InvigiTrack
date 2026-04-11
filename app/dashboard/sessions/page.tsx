@@ -20,6 +20,11 @@ export default async function SessionsPage() {
   const { category } = await getActiveWorkspace(user.id)
   const sessions = await getSessionsByUser(user.id, category.workspaceId)
 
+  // Ultima sessione CREATA (non per data di sessione) — per il pulsante "Copia"
+  const lastCreated = sessions.length > 0
+    ? [...sessions].sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
+    : undefined
+
   return (
     <div className="space-y-6 ">
 
@@ -34,7 +39,7 @@ export default async function SessionsPage() {
             Registra e gestisci tutte le tue sessioni di lavoro
           </p>
         </div>
-        <SessionDialog profile={profile} categorySlug={category.slug} lastSession={sessions[0]} />
+        <SessionDialog profile={profile} categorySlug={category.slug} lastSession={lastCreated} />
       </div>
 
       {/* -- Lista ---------------------------------------------------- */}
