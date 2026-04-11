@@ -122,6 +122,7 @@ export function SessionDialog({ profile, categorySlug, session, lastSession, def
     if (open) {
       form.reset(defaultValues(session))
       setError(null)
+      setLoading(false)
     }
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -155,6 +156,7 @@ export function SessionDialog({ profile, categorySlug, session, lastSession, def
       setLoading(false)
       return
     }
+    setLoading(false)
     setOpen(false)
     router.refresh()
     onSuccess?.()
