@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/lib/data/auth"
-import { getProfileById, getSuperAdminProfile } from "@/lib/data/profiles"
+import { getProfileById } from "@/lib/data/profiles"
 import { insertFeedback, markFeedbackRead, type CreateFeedbackData } from "@/lib/data/feedback"
-import { createNotification } from "@/lib/data/notifications"
+import { createAdminClient } from "@/lib/supabase/admin"
+import type { Profile } from "@/types/database"
 
 /** Invia un feedback — qualsiasi utente autenticato */
 export async function sendFeedbackAction(
@@ -21,10 +22,24 @@ export async function sendFeedbackAction(
     return { error: res.error }
   }
 
-  // Notifica al super_admin
-  const superAdmin = await getSuperAdminProfile()
+  // Usa il client admin (service role) per bypassare RLS —
+  // necessario sia per leggere il profilo super_admin che per inserire la notifica.
+  const adminSupabase = createAdminClient()
+  if (!adminSupabase) {
+    console.warn("[sendFeedbackAction] SUPABASE_SERVICE_ROLE_KEY mancante — notifica non inviata")
+    return { success: true }
+  }
+
+  // Cerca il super_admin con il client admin (bypassa RLS su profiles)
+  const { data: superAdmin } = await adminSupabase
+    .from("profiles")
+    .select("id")
+    .eq("platform_role", "super_admin")
+    .limit(1)
+    .single<Pick<Profile, "id">>()
+
   if (!superAdmin) {
-    console.warn("[sendFeedbackAction] getSuperAdminProfile returned null — notifica non inviata")
+    console.warn("[sendFeedbackAction] Nessun super_admin trovato — notifica non inviata")
     return { success: true }
   }
 
@@ -34,17 +49,19 @@ export async function sendFeedbackAction(
     suggestion:      "Suggerimento",
   }
 
-  const notifRes = await createNotification({
-    target_type:    "user",
-    target_user_id: superAdmin.id,
-    title:          `📬 ${typeLabel[data.type] ?? "Feedback"}: ${data.subject}`,
-    message:        `Da ${profile.email} — ${data.message.slice(0, 120)}${data.message.length > 120 ? "…" : ""}`,
-    type:           "feedback_received",
-    created_by:     user.id,
-  })
+  const { error: notifError } = await adminSupabase
+    .from("notifications")
+    .insert({
+      target_type:    "user",
+      target_user_id: superAdmin.id,
+      title:          `📬 ${typeLabel[data.type] ?? "Feedback"}: ${data.subject}`,
+      message:        `Da ${profile.email} — ${data.message.slice(0, 120)}${data.message.length > 120 ? "…" : ""}`,
+      type:           "feedback_received",
+      created_by:     user.id,
+    })
 
-  if (notifRes.error) {
-    console.error("[sendFeedbackAction] createNotification error:", notifRes.error)
+  if (notifError) {
+    console.error("[sendFeedbackAction] createNotification error:", notifError.message)
   }
 
   revalidatePath("/dashboard", "layout")

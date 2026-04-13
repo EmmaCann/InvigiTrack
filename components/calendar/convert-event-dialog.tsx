@@ -28,15 +28,18 @@ const inputCls =
 // --- Props --------------------------------------------------------------------
 
 interface Props {
-  event:   CalendarEvent
-  profile: Profile
-  onClose: () => void
+  event:        CalendarEvent
+  profile:      Profile
+  categorySlug: string
+  onClose:      () => void
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function ConvertEventDialog({ event, profile, onClose }: Props) {
+export function ConvertEventDialog({ event, profile, categorySlug, onClose }: Props) {
   const router = useRouter()
+
+  const isInvigilation = categorySlug === "invigilation"
 
   const [startTime,  setStartTime]  = useState("")
   const [endTime,    setEndTime]    = useState("")
@@ -146,8 +149,8 @@ export function ConvertEventDialog({ event, profile, onClose }: Props) {
               </div>
             </div>
 
-            {/* Tariffa + Ruolo */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Tariffa (+ Ruolo solo per invigilation) */}
+            <div className={`grid gap-3 ${isInvigilation ? "grid-cols-2" : "grid-cols-1"}`}>
               <div>
                 <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tariffa (€/h)</label>
                 <div className="relative">
@@ -160,17 +163,19 @@ export function ConvertEventDialog({ event, profile, onClose }: Props) {
                   />
                 </div>
               </div>
-              <div>
-                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Ruolo</label>
-                <select
-                  value={roleType}
-                  onChange={(e) => setRoleType(e.target.value as InvigilationRole)}
-                  className={`${inputCls} cursor-pointer appearance-none`}
-                >
-                  <option value="invigilator">Invigilator</option>
-                  <option value="supervisor">Supervisor</option>
-                </select>
-              </div>
+              {isInvigilation && (
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Ruolo</label>
+                  <select
+                    value={roleType}
+                    onChange={(e) => setRoleType(e.target.value as InvigilationRole)}
+                    className={`${inputCls} cursor-pointer appearance-none`}
+                  >
+                    <option value="invigilator">Invigilator</option>
+                    <option value="supervisor">Supervisor</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Note */}

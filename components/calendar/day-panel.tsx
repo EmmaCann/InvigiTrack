@@ -251,6 +251,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
         <ConvertEventDialog
           event={convertEvent}
           profile={profile}
+          categorySlug={categorySlug}
           onClose={() => setConvertEvent(null)}
         />
       )}

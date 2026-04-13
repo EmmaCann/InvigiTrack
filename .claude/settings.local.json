@@ -37,7 +37,9 @@
       "Bash(curl -s http://localhost:65473 -o /dev/null -w \"%{http_code}\")",
       "Bash(cmd /c \"netstat -ano | findstr :3000\")",
       "Bash(curl -s http://localhost:64031 -o /dev/null -w \"%{http_code}\")",
-      "Bash(curl -s http://localhost:49949 -o /dev/null -w \"%{http_code}\")"
+      "Bash(curl -s http://localhost:49949 -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://localhost:65371/auth/login -o /dev/null -w \"%{http_code}\")",
+      "Bash(node -e \"require\\('@supabase/supabase-js'\\)\")"
     ]
   }
 }
