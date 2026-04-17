@@ -5,7 +5,7 @@ import Image from "next/image"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Loader2, ArrowRight, KeyRound } from "lucide-react"
+import { Loader2, KeyRound } from "lucide-react"
 import { login, register } from "@/app/actions/auth"
 
 // ── Schemi ────────────────────────────────────────────────────────────────────
@@ -22,27 +22,25 @@ const registerSchema = z.object({
 type LV = z.infer<typeof loginSchema>
 type RV = z.infer<typeof registerSchema>
 
-// ── Stili input ────────────────────────────────────────────────────────────────
+// ── Stile input underline ─────────────────────────────────────────────────────
 
 const inp =
-  "w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-foreground placeholder:text-gray-400 outline-none transition-all focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-400/10"
+  "w-full border-0 border-b border-white/20 bg-transparent pb-2.5 pt-1 text-sm text-white placeholder:text-white/30 outline-none transition-all duration-300 focus:border-white/70"
 
 // ── Componente principale ─────────────────────────────────────────────────────
 
 export function AuthPage() {
-  const [reg,    setReg]    = useState(false)   // false = login, true = register
-  const [errL,   setErrL]   = useState<string | null>(null)
-  const [errR,   setErrR]   = useState<string | null>(null)
-  const [loadL,  setLoadL]  = useState(false)
-  const [loadR,  setLoadR]  = useState(false)
+  const [reg,   setReg]   = useState(false)
+  const [errL,  setErrL]  = useState<string | null>(null)
+  const [errR,  setErrR]  = useState<string | null>(null)
+  const [loadL, setLoadL] = useState(false)
+  const [loadR, setLoadR] = useState(false)
 
   const lf = useForm<LV>({ resolver: zodResolver(loginSchema),    defaultValues: { email: "", password: "" } })
   const rf = useForm<RV>({ resolver: zodResolver(registerSchema), defaultValues: { email: "", password: "", secret_key: "" } })
 
   function toggle() {
-    setReg(!reg)
-    setErrL(null); setErrR(null)
-    lf.reset(); rf.reset()
+    setReg(v => !v); setErrL(null); setErrR(null); lf.reset(); rf.reset()
   }
 
   async function handleLogin(v: LV) {
@@ -65,105 +63,129 @@ export function AuthPage() {
   return (
     <>
       <style>{`
-        @keyframes ring-cw  { to { transform:rotate(360deg);  } }
-        @keyframes ring-ccw { to { transform:rotate(-360deg); } }
-        @keyframes glow-p {
-          0%,100% { opacity:.3; transform:scale(1);    }
-          50%      { opacity:.6; transform:scale(1.1); }
+        @keyframes aurora-1 {
+          0%,100% { transform:translate(0,0) scale(1); }
+          40%      { transform:translate(60px,-80px) scale(1.15); }
+          70%      { transform:translate(-40px,50px) scale(0.9); }
         }
-        @keyframes fade-in {
-          from { opacity:0; transform:translateY(12px); }
+        @keyframes aurora-2 {
+          0%,100% { transform:translate(0,0) scale(1); }
+          40%      { transform:translate(-70px,60px) scale(0.92); }
+          70%      { transform:translate(50px,-60px) scale(1.12); }
+        }
+        @keyframes aurora-3 {
+          0%,100% { transform:translate(0,0) scale(1); }
+          50%      { transform:translate(30px,80px) scale(1.08); }
+        }
+        @keyframes fade-up {
+          from { opacity:0; transform:translateY(18px); }
           to   { opacity:1; transform:translateY(0);    }
         }
-        .rc  { animation: ring-cw   30s linear      infinite; }
-        .rcc { animation: ring-ccw  22s linear      infinite; }
-        .rc2 { animation: ring-cw   44s linear      infinite; }
-        .gp  { animation: glow-p     5s ease-in-out infinite; }
-        .fi  { animation: fade-in  .45s ease-out both; }
+        .a1 { animation: aurora-1 18s ease-in-out infinite; }
+        .a2 { animation: aurora-2 22s ease-in-out infinite; }
+        .a3 { animation: aurora-3 28s ease-in-out infinite; }
+        .fu { animation: fade-up  .5s ease-out both; }
+        .fu1{ animation: fade-up  .5s .1s ease-out both; }
+        .fu2{ animation: fade-up  .5s .2s ease-out both; }
+        .fu3{ animation: fade-up  .5s .3s ease-out both; }
+        .fu4{ animation: fade-up  .5s .4s ease-out both; }
       `}</style>
 
-      {/* ── Wrapper ── */}
-      <div className="relative flex min-h-[100dvh] overflow-hidden bg-white">
+      {/* ── Sfondo globale dark ── */}
+      <div className="relative flex min-h-[100dvh] overflow-hidden" style={{ background: "#080c18" }}>
+
+        {/* Aurora bg layers */}
+        <div className="a1 pointer-events-none absolute -left-60 -top-60 h-[700px] w-[700px] rounded-full opacity-40 blur-[130px]"
+          style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)" }} />
+        <div className="a2 pointer-events-none absolute -bottom-60 right-[20%] h-[600px] w-[600px] rounded-full opacity-30 blur-[110px]"
+          style={{ background: "radial-gradient(circle, #6366f1 0%, transparent 70%)" }} />
+        <div className="a3 pointer-events-none absolute right-0 top-[20%] h-[400px] w-[400px] rounded-full opacity-20 blur-[90px]"
+          style={{ background: "radial-gradient(circle, #8b5cf6 0%, transparent 70%)" }} />
+
+        {/* Dot grid */}
+        <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,.8) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
 
         {/* ══════════════════════════════════════════════════════════════
-            PANNELLO LOGIN  — posizione sinistra in default, nascosto
-            quando brand scivola sopra
+            PANNELLO LOGIN (sinistra)
         ══════════════════════════════════════════════════════════════ */}
         <div
           className="absolute left-0 top-0 hidden h-full w-1/2 items-center justify-center px-16 lg:flex"
           style={{
-            opacity:          reg ? 0 : 1,
-            transform:        reg ? "translateX(-40px)" : "translateX(0)",
-            transition:       "opacity .55s ease, transform .55s ease",
-            pointerEvents:    reg ? "none" : "auto",
-            zIndex:           1,
+            opacity:       reg ? 0 : 1,
+            transform:     reg ? "translateX(-50px)" : "translateX(0)",
+            transition:    "opacity .5s ease, transform .5s ease",
+            pointerEvents: reg ? "none" : "auto",
+            zIndex: 1,
           }}
         >
-          <div className="fi w-full max-w-[360px]">
-            <h2 className="mb-1.5 text-[26px] font-bold tracking-tight text-gray-900">Bentornato/a</h2>
-            <p className="mb-8 text-sm text-gray-400">Inserisci le credenziali per accedere</p>
+          <div className="w-full max-w-[340px]">
+            <div className="fu mb-10">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/30">Bentornato/a</p>
+              <h2 className="text-[32px] font-bold leading-tight tracking-tight text-white">Accedi al tuo<br />account</h2>
+            </div>
 
-            <form onSubmit={lf.handleSubmit(handleLogin)} className="space-y-4">
-              <Field id="le" label="Email"    type="email"    placeholder="tu@esempio.com" reg={lf.register("email")}    err={lf.formState.errors.email?.message} />
-              <Field id="lp" label="Password" type="password" placeholder="••••••••"       reg={lf.register("password")} err={lf.formState.errors.password?.message} />
-              {errL && <Err msg={errL} />}
-              <Btn loading={loadL} label="Accedi" loadingLabel="Accesso…" />
+            <form onSubmit={lf.handleSubmit(handleLogin)} className="space-y-7">
+              <UField id="le" label="Email" type="email" placeholder="tu@esempio.com"
+                reg={lf.register("email")} err={lf.formState.errors.email?.message} />
+              <UField id="lp" label="Password" type="password" placeholder="••••••••"
+                reg={lf.register("password")} err={lf.formState.errors.password?.message} />
+              {errL && <ErrMsg msg={errL} />}
+              <DarkBtn loading={loadL} label="Accedi" loadingLabel="Accesso…" />
             </form>
 
-            {/* Mobile toggle */}
-            <p className="mt-6 text-center text-sm text-gray-400 lg:hidden">
+            <p className="mt-8 text-[13px] text-white/30 lg:hidden">
               Non hai un account?{" "}
-              <button onClick={toggle} className="font-semibold text-blue-600 hover:underline">Registrati</button>
+              <button onClick={toggle} className="text-white/70 hover:text-white underline">Registrati</button>
             </p>
           </div>
         </div>
 
         {/* ══════════════════════════════════════════════════════════════
-            PANNELLO REGISTER — posizione destra in default, nascosto
-            quando brand è a destra
+            PANNELLO REGISTER (destra)
         ══════════════════════════════════════════════════════════════ */}
         <div
           className="absolute right-0 top-0 hidden h-full w-1/2 items-center justify-center px-16 lg:flex"
           style={{
             opacity:       reg ? 1 : 0,
-            transform:     reg ? "translateX(0)" : "translateX(40px)",
-            transition:    "opacity .55s ease, transform .55s ease",
+            transform:     reg ? "translateX(0)" : "translateX(50px)",
+            transition:    "opacity .5s ease, transform .5s ease",
             pointerEvents: reg ? "auto" : "none",
-            zIndex:        1,
+            zIndex: 1,
           }}
         >
-          <div className="fi w-full max-w-[360px]">
-            <h2 className="mb-1.5 text-[26px] font-bold tracking-tight text-gray-900">Crea il tuo account</h2>
-            <p className="mb-8 text-sm text-gray-400">Inizia a usare InvigiTrack gratuitamente</p>
+          <div className="w-full max-w-[340px]">
+            <div className="fu mb-10">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/30">Inizia ora</p>
+              <h2 className="text-[32px] font-bold leading-tight tracking-tight text-white">Crea il tuo<br />account</h2>
+            </div>
 
-            <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-4">
-              <Field id="re" label="Email"    type="email"    placeholder="tu@esempio.com"  reg={rf.register("email")}    err={rf.formState.errors.email?.message} />
-              <Field id="rp" label="Password" type="password" placeholder="Min. 8 caratteri" reg={rf.register("password")} err={rf.formState.errors.password?.message} />
-              <div className="space-y-1.5">
-                <label htmlFor="sk" className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
-                  <KeyRound className="h-3 w-3 text-gray-400" />
-                  Codice di accesso
-                  <span className="font-normal text-gray-400">— opzionale</span>
+            <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-7">
+              <UField id="re" label="Email" type="email" placeholder="tu@esempio.com"
+                reg={rf.register("email")} err={rf.formState.errors.email?.message} />
+              <UField id="rp" label="Password" type="password" placeholder="Min. 8 caratteri"
+                reg={rf.register("password")} err={rf.formState.errors.password?.message} />
+              <div>
+                <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+                  <KeyRound className="h-3 w-3" /> Codice accesso <span className="font-normal normal-case tracking-normal text-white/20">— opzionale</span>
                 </label>
-                <input id="sk" type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...rf.register("secret_key")} />
+                <input type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...rf.register("secret_key")} />
               </div>
-              {errR && <Err msg={errR} />}
-              <Btn loading={loadR} label="Crea account" loadingLabel="Creazione…" />
+              {errR && <ErrMsg msg={errR} />}
+              <DarkBtn loading={loadR} label="Crea account" loadingLabel="Creazione…" />
             </form>
 
-            <p className="mt-5 text-center text-[11px] leading-relaxed text-gray-300">
+            <p className="mt-6 text-center text-[11px] leading-relaxed text-white/20">
               Continuando accetti{" "}
-              <span className="cursor-pointer text-blue-500 hover:underline">Termini</span>
+              <span className="cursor-pointer text-white/40 hover:text-white underline">Termini</span>
               {" "}e{" "}
-              <span className="cursor-pointer text-blue-500 hover:underline">Privacy Policy</span>.
+              <span className="cursor-pointer text-white/40 hover:text-white underline">Privacy Policy</span>.
             </p>
           </div>
         </div>
 
         {/* ══════════════════════════════════════════════════════════════
             PANNELLO BRAND SCORREVOLE
-            default: right-0 (destra)
-            register: left-0 (sinistra)
         ══════════════════════════════════════════════════════════════ */}
         <div
           className="absolute top-0 hidden h-full w-1/2 lg:block"
@@ -171,128 +193,106 @@ export function AuthPage() {
             left:       reg ? 0 : "50%",
             transition: "left .65s cubic-bezier(.77,0,.18,1)",
             zIndex:     10,
-            background: `
-              radial-gradient(ellipse 80% 60% at 20% 15%, rgba(99,102,241,.7) 0%, transparent 55%),
-              radial-gradient(ellipse 70% 80% at 85% 85%, rgba(37,99,235,.55) 0%, transparent 55%),
-              radial-gradient(ellipse 60% 50% at 55% 45%, rgba(79,70,229,.25) 0%, transparent 65%),
-              #07091a
-            `,
           }}
         >
-          {/* Dot grid */}
+          {/* Glass panel */}
           <div
-            className="absolute inset-0 opacity-[0.045]"
+            className="relative flex h-full flex-col items-center justify-center overflow-hidden px-10 text-center"
             style={{
-              backgroundImage: "radial-gradient(circle, rgba(255,255,255,.9) 1px, transparent 1px)",
-              backgroundSize: "36px 36px",
+              background:     "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(24px)",
+              borderLeft:     reg ? "none" : "1px solid rgba(255,255,255,0.07)",
+              borderRight:    reg ? "1px solid rgba(255,255,255,0.07)" : "none",
             }}
-          />
-
-          {/* Anelli */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div style={{ width: 420, height: 420, position: "relative" }}>
-              <div className="rc  absolute inset-0 rounded-full"          style={{ border: "1px solid rgba(255,255,255,.09)" }} />
-              <div className="rcc absolute rounded-full"                  style={{ inset: -56, border: "1px solid rgba(255,255,255,.06)" }} />
-              <div className="rc2 absolute rounded-full"                  style={{ inset: -120, border: "1px solid rgba(255,255,255,.04)" }} />
-            </div>
-          </div>
-
-          {/* Glow */}
-          <div className="gp absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-400/20 blur-3xl" />
-
-          {/* Contenuto centrato */}
-          <div className="relative flex h-full flex-col items-center justify-center px-10 text-center">
+          >
+            {/* Inner glow */}
+            <div className="pointer-events-none absolute inset-0"
+              style={{
+                background: reg
+                  ? "radial-gradient(ellipse 80% 60% at 80% 30%, rgba(99,102,241,.15) 0%, transparent 60%)"
+                  : "radial-gradient(ellipse 80% 60% at 20% 70%, rgba(59,130,246,.15) 0%, transparent 60%)",
+                transition: "background 1s ease",
+              }} />
 
             {/* Logo */}
-            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.15] bg-white/[0.10] shadow-2xl shadow-indigo-500/20 backdrop-blur-sm">
-              <Image src="/logo.png" alt="InvigiTrack" width={34} height={38} priority />
+            <div className="mb-6 flex h-[72px] w-[72px] items-center justify-center rounded-2xl"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
+              <Image src="/logo.png" alt="InvigiTrack" width={36} height={40} priority />
             </div>
 
-            <p className="mb-1 text-[22px] font-bold tracking-tight text-white">InvigiTrack</p>
-
-            {/* Testo contestuale */}
-            <p
-              style={{
-                opacity:    1,
-                transition: "opacity .3s ease",
-              }}
-              className="mt-3 text-sm leading-relaxed text-white/50"
-            >
-              {reg
-                ? "Hai già un account? Accedi qui."
-                : "Non hai ancora un account? Creane uno."}
+            <p className="text-[20px] font-bold tracking-tight text-white">InvigiTrack</p>
+            <p className="mt-2 text-[13px] text-white/30">
+              {reg ? "Hai già un account?" : "Non hai ancora un account?"}
             </p>
 
-            {/* Bottone toggle */}
+            {/* CTA */}
             <button
               onClick={toggle}
-              className="mt-6 rounded-full border border-white/30 bg-white/10 px-7 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              className="mt-6 rounded-full px-8 py-2.5 text-[13px] font-semibold text-white transition-all"
+              style={{ border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.06)" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
             >
               {reg ? "Accedi" : "Registrati"}
             </button>
-          </div>
 
-          {/* Linea di separazione laterale */}
-          <div
-            className="absolute top-0 h-full w-px bg-gradient-to-b from-transparent via-white/[0.07] to-transparent"
-            style={{ left: reg ? "auto" : 0, right: reg ? 0 : "auto" }}
-          />
+            {/* Footer */}
+            <p className="absolute bottom-8 text-[11px] text-white/15">
+              © {new Date().getFullYear()} InvigiTrack
+            </p>
+          </div>
         </div>
 
         {/* ══════════════════════════════════════════════════════════════
-            LAYOUT MOBILE — semplice, niente sliding
+            MOBILE
         ══════════════════════════════════════════════════════════════ */}
-        <div className="flex w-full flex-col items-center justify-center px-6 py-14 lg:hidden">
-
-          <div className="mb-8 flex items-center gap-2.5">
+        <div className="flex w-full flex-col justify-center px-6 py-14 lg:hidden">
+          <div className="mb-10 flex items-center gap-3">
             <Image src="/logo.png" alt="InvigiTrack" width={30} height={33} priority />
-            <span className="text-[15px] font-bold tracking-tight text-gray-900">InvigiTrack</span>
+            <span className="text-[15px] font-bold text-white">InvigiTrack</span>
           </div>
 
-          <div className="w-full max-w-[360px] rounded-2xl border border-gray-100 bg-white p-8 shadow-xl shadow-black/[0.07]">
-
-            {/* Tab mobile */}
-            <div className="mb-7 flex gap-5 border-b border-gray-100">
-              {(["login", "register"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => { setReg(t === "register"); setErrL(null); setErrR(null); lf.reset(); rf.reset() }}
-                  className={`-mb-px pb-3 text-sm font-semibold transition-all ${
-                    (t === "register") === reg
-                      ? "border-b-2 border-blue-600 text-blue-600"
-                      : "text-gray-400 hover:text-gray-600"
-                  }`}
-                >
-                  {t === "login" ? "Accedi" : "Registrati"}
-                </button>
-              ))}
-            </div>
-
-            {!reg ? (
-              <form onSubmit={lf.handleSubmit(handleLogin)} className="space-y-4">
-                <Field id="mle" label="Email"    type="email"    placeholder="tu@esempio.com" reg={lf.register("email")}    err={lf.formState.errors.email?.message} />
-                <Field id="mlp" label="Password" type="password" placeholder="••••••••"       reg={lf.register("password")} err={lf.formState.errors.password?.message} />
-                {errL && <Err msg={errL} />}
-                <Btn loading={loadL} label="Accedi" loadingLabel="Accesso…" />
-              </form>
-            ) : (
-              <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-4">
-                <Field id="mre" label="Email"    type="email"    placeholder="tu@esempio.com"  reg={rf.register("email")}    err={rf.formState.errors.email?.message} />
-                <Field id="mrp" label="Password" type="password" placeholder="Min. 8 caratteri" reg={rf.register("password")} err={rf.formState.errors.password?.message} />
-                <div className="space-y-1.5">
-                  <label htmlFor="msk" className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
-                    <KeyRound className="h-3 w-3 text-gray-400" />
-                    Codice di accesso <span className="font-normal text-gray-400">— opzionale</span>
-                  </label>
-                  <input id="msk" type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...rf.register("secret_key")} />
-                </div>
-                {errR && <Err msg={errR} />}
-                <Btn loading={loadR} label="Crea account" loadingLabel="Creazione…" />
-              </form>
-            )}
+          {/* Tab */}
+          <div className="mb-8 flex gap-6 border-b border-white/10">
+            {(["login", "register"] as const).map(t => (
+              <button key={t}
+                onClick={() => { setReg(t === "register"); setErrL(null); setErrR(null); lf.reset(); rf.reset() }}
+                className={`-mb-px pb-3 text-sm font-semibold transition-all ${
+                  (t === "register") === reg
+                    ? "border-b-2 border-white text-white"
+                    : "text-white/30 hover:text-white/60"
+                }`}
+              >
+                {t === "login" ? "Accedi" : "Registrati"}
+              </button>
+            ))}
           </div>
 
-          <p className="mt-8 text-[11px] text-gray-300">© {new Date().getFullYear()} InvigiTrack</p>
+          {!reg ? (
+            <form onSubmit={lf.handleSubmit(handleLogin)} className="space-y-7">
+              <UField id="mle" label="Email" type="email" placeholder="tu@esempio.com"
+                reg={lf.register("email")} err={lf.formState.errors.email?.message} />
+              <UField id="mlp" label="Password" type="password" placeholder="••••••••"
+                reg={lf.register("password")} err={lf.formState.errors.password?.message} />
+              {errL && <ErrMsg msg={errL} />}
+              <DarkBtn loading={loadL} label="Accedi" loadingLabel="Accesso…" />
+            </form>
+          ) : (
+            <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-7">
+              <UField id="mre" label="Email" type="email" placeholder="tu@esempio.com"
+                reg={rf.register("email")} err={rf.formState.errors.email?.message} />
+              <UField id="mrp" label="Password" type="password" placeholder="Min. 8 caratteri"
+                reg={rf.register("password")} err={rf.formState.errors.password?.message} />
+              <div>
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/30">
+                  Codice accesso <span className="font-normal normal-case text-white/20">— opzionale</span>
+                </label>
+                <input type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...rf.register("secret_key")} />
+              </div>
+              {errR && <ErrMsg msg={errR} />}
+              <DarkBtn loading={loadR} label="Crea account" loadingLabel="Creazione…" />
+            </form>
+          )}
         </div>
 
       </div>
@@ -302,41 +302,42 @@ export function AuthPage() {
 
 // ── Sotto-componenti ──────────────────────────────────────────────────────────
 
-function Field({
-  id, label, type, placeholder, reg, err,
-}: {
+function UField({ id, label, type, placeholder, reg, err }: {
   id: string; label: string; type: string; placeholder: string
-  reg: ReturnType<ReturnType<typeof useForm>["register"]>
-  err?: string
+  reg: ReturnType<ReturnType<typeof useForm>["register"]>; err?: string
 }) {
   return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-xs font-semibold text-gray-500">{label}</label>
-      <input id={id} type={type} placeholder={placeholder} className={inp} {...reg} />
-      {err && <p className="text-[11px] font-medium text-red-500">{err}</p>}
+    <div>
+      <label htmlFor={id} className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+        {label}
+      </label>
+      <input id={id} type={type} placeholder={placeholder}
+        className="w-full border-0 border-b border-white/20 bg-transparent pb-2.5 pt-1 text-sm text-white placeholder:text-white/25 outline-none transition-all duration-300 focus:border-white/60"
+        {...reg}
+      />
+      {err && <p className="mt-1.5 text-[11px] text-red-400">{err}</p>}
     </div>
   )
 }
 
-function Btn({ loading, label, loadingLabel }: { loading: boolean; label: string; loadingLabel: string }) {
+function DarkBtn({ loading, label, loadingLabel }: { loading: boolean; label: string; loadingLabel: string }) {
   return (
     <button
-      type="submit"
-      disabled={loading}
-      className="group mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-blue-600/20 transition-all hover:bg-blue-700 disabled:opacity-60"
+      type="submit" disabled={loading}
+      className="mt-2 w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all disabled:opacity-50"
+      style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.15)" }}
+      onMouseEnter={e => !loading && (e.currentTarget.style.background = "rgba(255,255,255,0.18)")}
+      onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
     >
-      {loading
-        ? <><Loader2 className="h-4 w-4 animate-spin" /> {loadingLabel}</>
-        : <>{label} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>
-      }
+      {loading ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{loadingLabel}</span> : label}
     </button>
   )
 }
 
-function Err({ msg }: { msg: string }) {
+function ErrMsg({ msg }: { msg: string }) {
   return (
-    <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5">
-      <p className="text-xs font-medium text-red-600">{msg}</p>
+    <div className="rounded-xl px-3 py-2.5" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}>
+      <p className="text-xs text-red-400">{msg}</p>
     </div>
   )
 }
