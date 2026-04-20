@@ -48,7 +48,9 @@
       "Bash(cmd /c \"del /f C:\\\\invigitrack\\\\.next\\\\dev\\\\logs\\\\next-development.log 2>&1 & echo done\")",
       "Bash(cmd /c \"dir C:\\\\invigitrack\\\\.next /s /a /b | findstr /i lock 2>&1\")",
       "Bash(cmd /c \"dir C:\\\\invigitrack\\\\.next /s /a-d /b 2>&1 | head -30\")",
-      "Bash(cmd /c \"dir C:\\\\invigitrack\\\\.next /b 2>&1\")"
+      "Bash(cmd /c \"dir C:\\\\invigitrack\\\\.next /b 2>&1\")",
+      "Bash(cmd /c \"rmdir /s /q C:\\\\invigitrack\\\\.next\\\\dev 2>&1 & echo cleaned\")",
+      "Bash(cmd /c \"rmdir /s /q C:\\\\invigitrack\\\\.next\\\\dev 2>&1 & echo done\")"
     ]
   }
 }

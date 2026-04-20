@@ -67,11 +67,16 @@ export function AuthPage() {
           from { opacity:0; transform:translateY(18px); }
           to   { opacity:1; transform:translateY(0);    }
         }
-        .fu { animation: fade-up  .5s ease-out both; }
-        .fu1{ animation: fade-up  .5s .1s ease-out both; }
-        .fu2{ animation: fade-up  .5s .2s ease-out both; }
-        .fu3{ animation: fade-up  .5s .3s ease-out both; }
-        .fu4{ animation: fade-up  .5s .4s ease-out both; }
+        @keyframes fade-in {
+          from { opacity:0; transform:translateY(10px); }
+          to   { opacity:1; transform:translateY(0);    }
+        }
+        .fu  { animation: fade-up .5s ease-out both; }
+        .fu1 { animation: fade-up .5s .1s ease-out both; }
+        .fu2 { animation: fade-up .5s .2s ease-out both; }
+        .fu3 { animation: fade-up .5s .3s ease-out both; }
+        .fu4 { animation: fade-up .5s .4s ease-out both; }
+        .fi  { animation: fade-in .35s ease-out both; }
         .brand-name {
           font-family: var(--font-geist-sans), system-ui, sans-serif;
           font-weight: 800;
@@ -99,10 +104,10 @@ export function AuthPage() {
           style={{ background: "linear-gradient(135deg, rgba(5,8,20,0.68) 0%, rgba(10,14,30,0.55) 100%)" }} />
 
         {/* ══════════════════════════════════════════════════════════════
-            PANNELLO LOGIN (sinistra)
+            PANNELLO LOGIN (sinistra) — desktop
         ══════════════════════════════════════════════════════════════ */}
         <div
-          className="absolute left-0 top-0 hidden h-full w-1/2 items-center justify-center px-16 lg:flex"
+          className="absolute left-0 top-0 hidden h-full w-1/2 items-center justify-center px-16 md:flex"
           style={{
             opacity:       reg ? 0 : 1,
             transform:     reg ? "translateX(-50px)" : "translateX(0)",
@@ -116,7 +121,6 @@ export function AuthPage() {
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/30">Bentornato/a</p>
               <h2 className="text-[32px] font-bold leading-tight tracking-tight text-white">Accedi al tuo<br />account</h2>
             </div>
-
             <form onSubmit={lf.handleSubmit(handleLogin)} className="space-y-7">
               <UField id="le" label="Email" type="email" placeholder="tu@esempio.com"
                 reg={lf.register("email")} err={lf.formState.errors.email?.message} />
@@ -125,19 +129,14 @@ export function AuthPage() {
               {errL && <ErrMsg msg={errL} />}
               <DarkBtn loading={loadL} label="Accedi" loadingLabel="Accesso…" />
             </form>
-
-            <p className="mt-8 text-[13px] text-white/30 lg:hidden">
-              Non hai un account?{" "}
-              <button onClick={toggle} className="text-white/70 hover:text-white underline">Registrati</button>
-            </p>
           </div>
         </div>
 
         {/* ══════════════════════════════════════════════════════════════
-            PANNELLO REGISTER (destra)
+            PANNELLO REGISTER (destra) — desktop
         ══════════════════════════════════════════════════════════════ */}
         <div
-          className="absolute right-0 top-0 hidden h-full w-1/2 items-center justify-center px-16 lg:flex"
+          className="absolute right-0 top-0 hidden h-full w-1/2 items-center justify-center px-16 md:flex"
           style={{
             opacity:       reg ? 1 : 0,
             transform:     reg ? "translateX(0)" : "translateX(50px)",
@@ -151,7 +150,6 @@ export function AuthPage() {
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/30">Inizia ora</p>
               <h2 className="text-[32px] font-bold leading-tight tracking-tight text-white">Crea il tuo<br />account</h2>
             </div>
-
             <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-7">
               <UField id="re" label="Email" type="email" placeholder="tu@esempio.com"
                 reg={rf.register("email")} err={rf.formState.errors.email?.message} />
@@ -159,14 +157,14 @@ export function AuthPage() {
                 reg={rf.register("password")} err={rf.formState.errors.password?.message} />
               <div>
                 <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
-                  <KeyRound className="h-3 w-3" /> Codice accesso <span className="font-normal normal-case tracking-normal text-white/20">— opzionale</span>
+                  <KeyRound className="h-3 w-3" /> Codice accesso
+                  <span className="font-normal normal-case tracking-normal text-white/20">— opzionale</span>
                 </label>
                 <input type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...rf.register("secret_key")} />
               </div>
               {errR && <ErrMsg msg={errR} />}
               <DarkBtn loading={loadR} label="Crea account" loadingLabel="Creazione…" />
             </form>
-
             <p className="mt-6 text-center text-[11px] leading-relaxed text-white/20">
               Continuando accetti{" "}
               <span className="cursor-pointer text-white/40 hover:text-white underline">Termini</span>
@@ -177,17 +175,16 @@ export function AuthPage() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════════
-            PANNELLO BRAND SCORREVOLE
+            PANNELLO BRAND SCORREVOLE — desktop
         ══════════════════════════════════════════════════════════════ */}
         <div
-          className="absolute top-0 hidden h-full w-1/2 lg:block"
+          className="absolute top-0 hidden h-full w-1/2 md:block"
           style={{
             left:       reg ? 0 : "50%",
             transition: "left .65s cubic-bezier(.77,0,.18,1)",
             zIndex:     10,
           }}
         >
-          {/* Glass panel */}
           <div
             className="relative flex h-full flex-col items-center justify-center overflow-hidden px-10 text-center"
             style={{
@@ -197,7 +194,6 @@ export function AuthPage() {
               borderRight:    reg ? "1px solid rgba(255,255,255,0.07)" : "none",
             }}
           >
-            {/* Inner glow */}
             <div className="pointer-events-none absolute inset-0"
               style={{
                 background: reg
@@ -206,9 +202,7 @@ export function AuthPage() {
                 transition: "background 1s ease",
               }} />
 
-            {/* Logo */}
             <Image src="/logo.png" alt="InvigiTrack" width={130} height={143} priority className="mb-6 drop-shadow-2xl" />
-
             <p className="brand-name">InvigiTrack</p>
             <p className="mt-3 text-[12px] font-light tracking-[0.12em] text-white/45">
               Organizza. Supervisiona. Semplifica.
@@ -216,8 +210,6 @@ export function AuthPage() {
             <p className="mt-5 text-[13px] text-white/30">
               {reg ? "Hai già un account?" : "Non hai ancora un account?"}
             </p>
-
-            {/* CTA */}
             <button
               onClick={toggle}
               className="mt-6 rounded-full px-8 py-2.5 text-[13px] font-semibold text-white transition-all"
@@ -227,8 +219,6 @@ export function AuthPage() {
             >
               {reg ? "Accedi" : "Registrati"}
             </button>
-
-            {/* Footer */}
             <p className="absolute bottom-8 text-[11px] text-white/15">
               © {new Date().getFullYear()} InvigiTrack
             </p>
@@ -236,55 +226,83 @@ export function AuthPage() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════════
-            MOBILE
+            MOBILE — glass card centrata sulla foto
         ══════════════════════════════════════════════════════════════ */}
-        <div className="flex w-full flex-col justify-center px-6 py-14 lg:hidden">
-          <div className="mb-10 flex items-center gap-3">
-            <Image src="/logo.png" alt="InvigiTrack" width={30} height={33} priority />
-            <span className="text-[15px] font-bold text-white">InvigiTrack</span>
-          </div>
+        <div className="flex min-h-[100dvh] w-full items-center justify-center px-5 py-10 md:hidden">
+          <div
+            className="w-full max-w-[360px] overflow-hidden rounded-3xl"
+            style={{
+              background:           "rgba(255,255,255,0.07)",
+              backdropFilter:       "blur(28px)",
+              WebkitBackdropFilter: "blur(28px)",
+              border:               "1px solid rgba(255,255,255,0.12)",
+              boxShadow:            "0 24px 80px rgba(0,0,0,0.45)",
+            }}
+          >
+            {/* Header: logo + brand */}
+            <div
+              className="flex flex-col items-center px-7 pb-6 pt-8 text-center"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              <Image src="/logo.png" alt="InvigiTrack" width={72} height={79} priority className="mb-4 drop-shadow-2xl" />
+              <p className="brand-name" style={{ fontSize: "36px" }}>InvigiTrack</p>
+              <p className="mt-2 text-[11px] tracking-[0.12em] text-white/40">
+                Organizza. Supervisiona. Semplifica.
+              </p>
+            </div>
 
-          {/* Tab */}
-          <div className="mb-8 flex gap-6 border-b border-white/10">
-            {(["login", "register"] as const).map(t => (
-              <button key={t}
-                onClick={() => { setReg(t === "register"); setErrL(null); setErrR(null); lf.reset(); rf.reset() }}
-                className={`-mb-px pb-3 text-sm font-semibold transition-all ${
-                  (t === "register") === reg
-                    ? "border-b-2 border-white text-white"
-                    : "text-white/30 hover:text-white/60"
-                }`}
-              >
-                {t === "login" ? "Accedi" : "Registrati"}
-              </button>
-            ))}
-          </div>
+            {/* Tab bar */}
+            <div className="flex border-b border-white/10 px-7">
+              {(["login", "register"] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => { setReg(t === "register"); setErrL(null); setErrR(null); lf.reset(); rf.reset() }}
+                  className={`-mb-px flex-1 py-3.5 text-[13px] font-semibold transition-all ${
+                    (t === "register") === reg
+                      ? "border-b-2 border-white/70 text-white"
+                      : "text-white/30 hover:text-white/60"
+                  }`}
+                >
+                  {t === "login" ? "Accedi" : "Registrati"}
+                </button>
+              ))}
+            </div>
 
-          {!reg ? (
-            <form onSubmit={lf.handleSubmit(handleLogin)} className="space-y-7">
-              <UField id="mle" label="Email" type="email" placeholder="tu@esempio.com"
-                reg={lf.register("email")} err={lf.formState.errors.email?.message} />
-              <UField id="mlp" label="Password" type="password" placeholder="••••••••"
-                reg={lf.register("password")} err={lf.formState.errors.password?.message} />
-              {errL && <ErrMsg msg={errL} />}
-              <DarkBtn loading={loadL} label="Accedi" loadingLabel="Accesso…" />
-            </form>
-          ) : (
-            <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-7">
-              <UField id="mre" label="Email" type="email" placeholder="tu@esempio.com"
-                reg={rf.register("email")} err={rf.formState.errors.email?.message} />
-              <UField id="mrp" label="Password" type="password" placeholder="Min. 8 caratteri"
-                reg={rf.register("password")} err={rf.formState.errors.password?.message} />
-              <div>
-                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/30">
-                  Codice accesso <span className="font-normal normal-case text-white/20">— opzionale</span>
-                </label>
-                <input type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...rf.register("secret_key")} />
-              </div>
-              {errR && <ErrMsg msg={errR} />}
-              <DarkBtn loading={loadR} label="Crea account" loadingLabel="Creazione…" />
-            </form>
-          )}
+            {/* Form con animazione al cambio tab */}
+            <div key={reg ? "reg" : "login"} className="fi px-7 py-7">
+              {!reg ? (
+                <form onSubmit={lf.handleSubmit(handleLogin)} className="space-y-6">
+                  <UField id="mle" label="Email" type="email" placeholder="tu@esempio.com"
+                    reg={lf.register("email")} err={lf.formState.errors.email?.message} />
+                  <UField id="mlp" label="Password" type="password" placeholder="••••••••"
+                    reg={lf.register("password")} err={lf.formState.errors.password?.message} />
+                  {errL && <ErrMsg msg={errL} />}
+                  <DarkBtn loading={loadL} label="Accedi" loadingLabel="Accesso…" />
+                </form>
+              ) : (
+                <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-6">
+                  <UField id="mre" label="Email" type="email" placeholder="tu@esempio.com"
+                    reg={rf.register("email")} err={rf.formState.errors.email?.message} />
+                  <UField id="mrp" label="Password" type="password" placeholder="Min. 8 caratteri"
+                    reg={rf.register("password")} err={rf.formState.errors.password?.message} />
+                  <div>
+                    <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+                      <KeyRound className="h-3 w-3" /> Codice accesso
+                      <span className="font-normal normal-case tracking-normal text-white/20">— opzionale</span>
+                    </label>
+                    <input type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...rf.register("secret_key")} />
+                  </div>
+                  {errR && <ErrMsg msg={errR} />}
+                  <DarkBtn loading={loadR} label="Crea account" loadingLabel="Creazione…" />
+                </form>
+              )}
+            </div>
+
+            {/* Footer card */}
+            <p className="pb-5 text-center text-[11px] text-white/20">
+              © {new Date().getFullYear()} InvigiTrack
+            </p>
+          </div>
         </div>
 
       </div>
