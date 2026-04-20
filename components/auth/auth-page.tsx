@@ -63,48 +63,40 @@ export function AuthPage() {
   return (
     <>
       <style>{`
-        @keyframes aurora-1 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          40%      { transform:translate(60px,-80px) scale(1.15); }
-          70%      { transform:translate(-40px,50px) scale(0.9); }
-        }
-        @keyframes aurora-2 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          40%      { transform:translate(-70px,60px) scale(0.92); }
-          70%      { transform:translate(50px,-60px) scale(1.12); }
-        }
-        @keyframes aurora-3 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          50%      { transform:translate(30px,80px) scale(1.08); }
-        }
         @keyframes fade-up {
           from { opacity:0; transform:translateY(18px); }
           to   { opacity:1; transform:translateY(0);    }
         }
-        .a1 { animation: aurora-1 18s ease-in-out infinite; }
-        .a2 { animation: aurora-2 22s ease-in-out infinite; }
-        .a3 { animation: aurora-3 28s ease-in-out infinite; }
         .fu { animation: fade-up  .5s ease-out both; }
         .fu1{ animation: fade-up  .5s .1s ease-out both; }
         .fu2{ animation: fade-up  .5s .2s ease-out both; }
         .fu3{ animation: fade-up  .5s .3s ease-out both; }
         .fu4{ animation: fade-up  .5s .4s ease-out both; }
+        .brand-name {
+          font-family: var(--font-geist-sans), system-ui, sans-serif;
+          font-weight: 800;
+          font-size: 52px;
+          letter-spacing: -0.03em;
+          line-height: 1;
+          color: rgba(220, 230, 245, 0.92);
+        }
       `}</style>
 
-      {/* ── Sfondo globale dark ── */}
-      <div className="relative flex min-h-[100dvh] overflow-hidden" style={{ background: "#080c18" }}>
+      {/* ── Sfondo: foto Big Ben ── */}
+      <div className="relative flex min-h-[100dvh] overflow-hidden bg-[#0a0c14]">
 
-        {/* Aurora bg layers */}
-        <div className="a1 pointer-events-none absolute -left-60 -top-60 h-[700px] w-[700px] rounded-full opacity-40 blur-[130px]"
-          style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)" }} />
-        <div className="a2 pointer-events-none absolute -bottom-60 right-[20%] h-[600px] w-[600px] rounded-full opacity-30 blur-[110px]"
-          style={{ background: "radial-gradient(circle, #6366f1 0%, transparent 70%)" }} />
-        <div className="a3 pointer-events-none absolute right-0 top-[20%] h-[400px] w-[400px] rounded-full opacity-20 blur-[90px]"
-          style={{ background: "radial-gradient(circle, #8b5cf6 0%, transparent 70%)" }} />
-
-        {/* Dot grid */}
-        <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
-          style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,.8) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+        {/* Immagine di sfondo */}
+        <Image
+          src="/big-ben.jpg"
+          alt=""
+          fill
+          priority
+          style={{ objectFit: "cover", objectPosition: "70% center" }}
+          className="pointer-events-none select-none"
+        />
+        {/* Overlay scuro */}
+        <div className="pointer-events-none absolute inset-0"
+          style={{ background: "linear-gradient(135deg, rgba(5,8,20,0.68) 0%, rgba(10,14,30,0.55) 100%)" }} />
 
         {/* ══════════════════════════════════════════════════════════════
             PANNELLO LOGIN (sinistra)
@@ -200,7 +192,7 @@ export function AuthPage() {
             className="relative flex h-full flex-col items-center justify-center overflow-hidden px-10 text-center"
             style={{
               background:     "rgba(255,255,255,0.04)",
-              backdropFilter: "blur(24px)",
+              backdropFilter: "blur(16px)",
               borderLeft:     reg ? "none" : "1px solid rgba(255,255,255,0.07)",
               borderRight:    reg ? "1px solid rgba(255,255,255,0.07)" : "none",
             }}
@@ -215,13 +207,13 @@ export function AuthPage() {
               }} />
 
             {/* Logo */}
-            <div className="mb-6 flex h-[72px] w-[72px] items-center justify-center rounded-2xl"
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
-              <Image src="/logo.png" alt="InvigiTrack" width={36} height={40} priority />
-            </div>
+            <Image src="/logo.png" alt="InvigiTrack" width={130} height={143} priority className="mb-6 drop-shadow-2xl" />
 
-            <p className="text-[20px] font-bold tracking-tight text-white">InvigiTrack</p>
-            <p className="mt-2 text-[13px] text-white/30">
+            <p className="brand-name">InvigiTrack</p>
+            <p className="mt-3 text-[12px] font-light tracking-[0.12em] text-white/45">
+              Organizza. Supervisiona. Semplifica.
+            </p>
+            <p className="mt-5 text-[13px] text-white/30">
               {reg ? "Hai già un account?" : "Non hai ancora un account?"}
             </p>
 

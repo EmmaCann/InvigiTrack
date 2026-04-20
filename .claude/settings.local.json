@@ -39,7 +39,16 @@
       "Bash(curl -s http://localhost:64031 -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -s http://localhost:49949 -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -s http://localhost:65371/auth/login -o /dev/null -w \"%{http_code}\")",
-      "Bash(node -e \"require\\('@supabase/supabase-js'\\)\")"
+      "Bash(node -e \"require\\('@supabase/supabase-js'\\)\")",
+      "Bash(taskkill /PID 37948 /F)",
+      "Bash(cmd /c \"taskkill /PID 37948 /F\")",
+      "Bash(cmd /c \"taskkill /PID 37472 /F && timeout /t 3 /nobreak > nul\")",
+      "Bash(cmd /c \"taskkill /PID 37472 /F\")",
+      "Bash(cmd /c \"taskkill /IM node.exe /F 2>&1\")",
+      "Bash(cmd /c \"del /f C:\\\\invigitrack\\\\.next\\\\dev\\\\logs\\\\next-development.log 2>&1 & echo done\")",
+      "Bash(cmd /c \"dir C:\\\\invigitrack\\\\.next /s /a /b | findstr /i lock 2>&1\")",
+      "Bash(cmd /c \"dir C:\\\\invigitrack\\\\.next /s /a-d /b 2>&1 | head -30\")",
+      "Bash(cmd /c \"dir C:\\\\invigitrack\\\\.next /b 2>&1\")"
     ]
   }
 }
