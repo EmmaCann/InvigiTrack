@@ -33,14 +33,24 @@ export function AuthPage() {
   const [reg,   setReg]   = useState(false)
   const [errL,  setErrL]  = useState<string | null>(null)
   const [errR,  setErrR]  = useState<string | null>(null)
-  const [loadL, setLoadL] = useState(false)
-  const [loadR, setLoadR] = useState(false)
+  const [loadL,  setLoadL]  = useState(false)
+  const [loadR,  setLoadR]  = useState(false)
+  const [loadML, setLoadML] = useState(false)
+  const [loadMR, setLoadMR] = useState(false)
+  const [errML,  setErrML]  = useState<string | null>(null)
+  const [errMR,  setErrMR]  = useState<string | null>(null)
 
+  // Istanze desktop
   const lf = useForm<LV>({ resolver: zodResolver(loginSchema),    defaultValues: { email: "", password: "" } })
   const rf = useForm<RV>({ resolver: zodResolver(registerSchema), defaultValues: { email: "", password: "", secret_key: "" } })
+  // Istanze mobile separate (evita conflitti sui ref dei campi)
+  const mlf = useForm<LV>({ resolver: zodResolver(loginSchema),    defaultValues: { email: "", password: "" } })
+  const mrf = useForm<RV>({ resolver: zodResolver(registerSchema), defaultValues: { email: "", password: "", secret_key: "" } })
 
   function toggle() {
-    setReg(v => !v); setErrL(null); setErrR(null); lf.reset(); rf.reset()
+    setReg(v => !v)
+    setErrL(null); setErrR(null); lf.reset(); rf.reset()
+    setErrML(null); setErrMR(null); mlf.reset(); mrf.reset()
   }
 
   async function handleLogin(v: LV) {
@@ -58,6 +68,23 @@ export function AuthPage() {
     if (v.secret_key) fd.set("secret_key", v.secret_key)
     const r = await register(fd)
     if (r?.error) { setErrR(r.error); setLoadR(false) }
+  }
+
+  async function handleMobileLogin(v: LV) {
+    setErrML(null); setLoadML(true)
+    const fd = new FormData()
+    fd.set("email", v.email); fd.set("password", v.password)
+    const r = await login(fd)
+    if (r?.error) { setErrML(r.error); setLoadML(false) }
+  }
+
+  async function handleMobileRegister(v: RV) {
+    setErrMR(null); setLoadMR(true)
+    const fd = new FormData()
+    fd.set("email", v.email); fd.set("password", v.password)
+    if (v.secret_key) fd.set("secret_key", v.secret_key)
+    const r = await register(fd)
+    if (r?.error) { setErrMR(r.error); setLoadMR(false) }
   }
 
   return (
@@ -271,29 +298,29 @@ export function AuthPage() {
             {/* Form con animazione al cambio tab */}
             <div key={reg ? "reg" : "login"} className="fi px-7 py-7">
               {!reg ? (
-                <form onSubmit={lf.handleSubmit(handleLogin)} className="space-y-6">
+                <form onSubmit={mlf.handleSubmit(handleMobileLogin)} className="space-y-6">
                   <UField id="mle" label="Email" type="email" placeholder="tu@esempio.com"
-                    reg={lf.register("email")} err={lf.formState.errors.email?.message} />
+                    reg={mlf.register("email")} err={mlf.formState.errors.email?.message} />
                   <UField id="mlp" label="Password" type="password" placeholder="••••••••"
-                    reg={lf.register("password")} err={lf.formState.errors.password?.message} />
-                  {errL && <ErrMsg msg={errL} />}
-                  <DarkBtn loading={loadL} label="Accedi" loadingLabel="Accesso…" />
+                    reg={mlf.register("password")} err={mlf.formState.errors.password?.message} />
+                  {errML && <ErrMsg msg={errML} />}
+                  <DarkBtn loading={loadML} label="Accedi" loadingLabel="Accesso…" />
                 </form>
               ) : (
-                <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-6">
+                <form onSubmit={mrf.handleSubmit(handleMobileRegister)} className="space-y-6">
                   <UField id="mre" label="Email" type="email" placeholder="tu@esempio.com"
-                    reg={rf.register("email")} err={rf.formState.errors.email?.message} />
+                    reg={mrf.register("email")} err={mrf.formState.errors.email?.message} />
                   <UField id="mrp" label="Password" type="password" placeholder="Min. 8 caratteri"
-                    reg={rf.register("password")} err={rf.formState.errors.password?.message} />
+                    reg={mrf.register("password")} err={mrf.formState.errors.password?.message} />
                   <div>
                     <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
                       <KeyRound className="h-3 w-3" /> Codice accesso
                       <span className="font-normal normal-case tracking-normal text-white/20">— opzionale</span>
                     </label>
-                    <input type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...rf.register("secret_key")} />
+                    <input type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...mrf.register("secret_key")} />
                   </div>
-                  {errR && <ErrMsg msg={errR} />}
-                  <DarkBtn loading={loadR} label="Crea account" loadingLabel="Creazione…" />
+                  {errMR && <ErrMsg msg={errMR} />}
+                  <DarkBtn loading={loadMR} label="Crea account" loadingLabel="Creazione…" />
                 </form>
               )}
             </div>
