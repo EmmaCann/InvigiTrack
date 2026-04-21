@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { X, PlayCircle, BookOpen } from "lucide-react"
+import { useState, useEffect } from "react"
+import { X, PlayCircle, FileText, ChevronRight, ArrowLeft } from "lucide-react"
 import { TUTORIAL_ITEMS, getTutorialsByCategory } from "@/lib/help-content"
+import { useIsMobile } from "@/hooks/use-is-mobile"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 
 interface Props {
@@ -11,21 +13,34 @@ interface Props {
   initialSection?: string
 }
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  "Iniziare":     "🚀",
+  "Sessioni":     "📋",
+  "Pagamenti":    "💶",
+  "Calendario":   "📅",
+  "Impostazioni": "⚙️",
+}
+
 export function HelpDialog({ open, onClose, initialSection }: Props) {
   const grouped  = getTutorialsByCategory()
-  const [selected, setSelected] = useState(initialSection ?? TUTORIAL_ITEMS[0].id)
-  const tabsRef  = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobile()
+
+  const [selected,   setSelected]   = useState<string | null>(initialSection ?? null)
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list")
 
   useEffect(() => {
-    if (initialSection) setSelected(initialSection)
+    if (initialSection) {
+      setSelected(initialSection)
+      setMobileView("detail")
+    }
   }, [initialSection])
 
-  // Scroll active pill into view on mobile
   useEffect(() => {
-    if (!open || !tabsRef.current) return
-    const active = tabsRef.current.querySelector("[data-active='true']") as HTMLElement | null
-    active?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" })
-  }, [selected, open])
+    if (!open) {
+      // Reset on close
+      setTimeout(() => { setMobileView("list") }, 300)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -41,40 +56,169 @@ export function HelpDialog({ open, onClose, initialSection }: Props) {
     return () => window.removeEventListener("keydown", onKey)
   }, [open, onClose])
 
-  const item = TUTORIAL_ITEMS.find((i) => i.id === selected) ?? TUTORIAL_ITEMS[0]
+  const item = selected ? (TUTORIAL_ITEMS.find((i) => i.id === selected) ?? null) : null
+
+  function selectItem(id: string) {
+    setSelected(id)
+    setMobileView("detail")
+  }
+
+  function goBack() {
+    setMobileView("list")
+  }
+
+  // ── Mobile: Sheet dal basso ──────────────────────────────────────────────────
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+        <SheetContent
+          side="bottom"
+          className="flex flex-col gap-0 rounded-t-2xl p-0"
+          style={{ height: "92dvh" }}
+        >
+          <SheetTitle className="sr-only">Tutorial e aiuto</SheetTitle>
+
+          {/* Drag handle */}
+          <div className="flex shrink-0 justify-center pt-3 pb-1">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
+          </div>
+
+          {/* Vista lista categorie */}
+          {mobileView === "list" && (
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-border/40 px-5 py-3.5">
+                <div>
+                  <h2 className="text-base font-bold text-foreground">Tutorial</h2>
+                  <p className="text-xs text-muted-foreground">Guida all'uso di InvigiTrack</p>
+                </div>
+                <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Categorie + voci */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+                {Object.entries(grouped).map(([category, items]) => (
+                  <div key={category}>
+                    {/* Header categoria */}
+                    <div className="mb-2 flex items-center gap-2 px-1">
+                      <span className="text-lg leading-none">{CATEGORY_EMOJI[category] ?? "📌"}</span>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                        {category}
+                      </p>
+                    </div>
+
+                    {/* Voci */}
+                    <div className="space-y-1.5">
+                      {items.map((i) => (
+                        <button
+                          key={i.id}
+                          type="button"
+                          onClick={() => selectItem(i.id)}
+                          className="flex w-full items-center gap-3 rounded-2xl border border-border/40 bg-white/60 px-4 py-3.5 text-left transition-colors hover:border-primary/30 hover:bg-primary/[0.03]"
+                        >
+                          <div className={cn(
+                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+                            i.videoSrc ? "bg-primary/10" : "bg-muted/60",
+                          )}>
+                            {i.videoSrc
+                              ? <PlayCircle className="h-4 w-4 text-primary" />
+                              : <FileText   className="h-4 w-4 text-muted-foreground" />
+                            }
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-foreground">{i.title}</p>
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground">{i.description}</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Vista dettaglio voce */}
+          {mobileView === "detail" && item && (
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center gap-3 border-b border-border/40 px-4 py-3.5">
+                <button
+                  type="button"
+                  onClick={goBack}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border/40 bg-white/60 text-muted-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                    {CATEGORY_EMOJI[item.category] ?? ""} {item.category}
+                  </p>
+                  <h2 className="truncate text-sm font-bold text-foreground">{item.title}</h2>
+                </div>
+                <button onClick={onClose} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Contenuto */}
+              <div className="flex-1 overflow-y-auto px-5 py-5">
+                <p className="mb-5 text-sm text-muted-foreground">{item.description}</p>
+
+                {item.videoSrc && (
+                  <video
+                    key={item.videoSrc}
+                    src={item.videoSrc}
+                    controls
+                    className="mb-5 w-full rounded-2xl bg-black object-contain"
+                    style={{ maxHeight: "220px" }}
+                  />
+                )}
+
+                <div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">
+                  {item.body}
+                </div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  // ── Desktop: overlay a due colonne ───────────────────────────────────────────
 
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center sm:p-4">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
       <button
         type="button"
         className="absolute inset-0 cursor-default bg-black/30 backdrop-blur-sm"
-        aria-label="Chiudi aiuto"
         onClick={onClose}
       />
 
-      {/* Panel */}
       <div
-        className="relative flex w-full max-w-4xl overflow-hidden rounded-t-3xl border border-white/50 bg-white/95 shadow-2xl backdrop-blur-2xl sm:rounded-3xl"
-        style={{ height: "min(90dvh, 680px)" }}
+        className="relative flex w-full max-w-4xl overflow-hidden rounded-3xl border border-white/50 bg-white/95 shadow-2xl backdrop-blur-2xl"
+        style={{ height: "min(80vh, 680px)" }}
       >
-        {/* Drag handle mobile */}
-        <div className="absolute left-1/2 top-2.5 flex -translate-x-1/2 sm:hidden">
-          <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
-        </div>
-
-        {/* Sidebar sinistra (solo desktop) */}
-        <nav className="hidden w-52 shrink-0 overflow-y-auto border-r border-border/40 bg-white/60 py-5 sm:block">
+        {/* Sidebar sinistra — categorie */}
+        <nav className="w-56 shrink-0 overflow-y-auto border-r border-border/40 bg-white/60 py-5">
           <p className="px-4 pb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
             Tutorial
           </p>
           {Object.entries(grouped).map(([category, items]) => (
-            <div key={category} className="mb-4">
-              <p className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/50">
-                {category}
-              </p>
+            <div key={category} className="mb-3">
+              <div className="flex items-center gap-1.5 px-4 py-1">
+                <span className="text-sm">{CATEGORY_EMOJI[category] ?? "📌"}</span>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/60">
+                  {category}
+                </p>
+              </div>
               {items.map((i) => (
                 <button
                   key={i.id}
@@ -89,7 +233,7 @@ export function HelpDialog({ open, onClose, initialSection }: Props) {
                 >
                   {i.videoSrc
                     ? <PlayCircle className="h-3 w-3 shrink-0 text-muted-foreground/40" />
-                    : <BookOpen   className="h-3 w-3 shrink-0 text-muted-foreground/40" />
+                    : <FileText   className="h-3 w-3 shrink-0 text-muted-foreground/40" />
                   }
                   <span className="truncate">{i.title}</span>
                 </button>
@@ -98,65 +242,46 @@ export function HelpDialog({ open, onClose, initialSection }: Props) {
           ))}
         </nav>
 
-        {/* Main area */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-
-          {/* Mobile tab scroll */}
-          <div
-            ref={tabsRef}
-            className="flex items-center gap-2 overflow-x-auto border-b border-border/30 bg-white/60 px-4 pb-2.5 pt-6 [&::-webkit-scrollbar]:hidden sm:hidden"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {TUTORIAL_ITEMS.map((i) => (
-              <button
-                key={i.id}
-                data-active={selected === i.id ? "true" : "false"}
-                type="button"
-                onClick={() => setSelected(i.id)}
-                className={cn(
-                  "shrink-0 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors",
-                  selected === i.id
-                    ? "border-primary/40 bg-primary/8 text-primary"
-                    : "border-border/40 text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {i.title}
-              </button>
-            ))}
-          </div>
-
-          {/* Close button (desktop) */}
+        {/* Contenuto */}
+        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
           <button
             type="button"
             onClick={onClose}
             className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted"
-            aria-label="Chiudi"
           >
             <X className="h-4 w-4" />
           </button>
 
-          {/* Contenuto */}
-          <div className="flex-1 overflow-y-auto p-5 sm:p-8">
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary">
-              {Object.entries(grouped).find(([, items]) => items.some((i) => i.id === selected))?.[0] ?? ""}
-            </p>
-            <h2 className="mb-1 text-lg font-bold text-foreground sm:text-xl">{item.title}</h2>
-            <p className="mb-5 text-sm text-muted-foreground">{item.description}</p>
+          {item ? (
+            <div className="p-8">
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary">
+                {CATEGORY_EMOJI[item.category] ?? ""} {item.category}
+              </p>
+              <h2 className="mb-1 text-xl font-bold text-foreground">{item.title}</h2>
+              <p className="mb-6 text-sm text-muted-foreground">{item.description}</p>
 
-            {item.videoSrc && (
-              <video
-                key={item.videoSrc}
-                src={item.videoSrc}
-                controls
-                className="mb-5 w-full rounded-2xl bg-black object-contain"
-                style={{ maxHeight: "260px" }}
-              />
-            )}
+              {item.videoSrc && (
+                <video
+                  key={item.videoSrc}
+                  src={item.videoSrc}
+                  controls
+                  className="mb-6 w-full rounded-2xl bg-black object-contain"
+                  style={{ maxHeight: "300px" }}
+                />
+              )}
 
-            <div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">
-              {item.body}
+              <div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">
+                {item.body}
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Stato vuoto — nessuna voce selezionata */
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+              <span className="text-5xl">📖</span>
+              <p className="text-base font-semibold text-foreground">Scegli un tutorial</p>
+              <p className="text-sm text-muted-foreground">Seleziona una voce dalla barra laterale</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
