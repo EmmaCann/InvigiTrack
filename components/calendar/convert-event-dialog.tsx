@@ -1,9 +1,11 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { CheckCircle2, Clock, Euro, X, Sparkles } from "lucide-react"
 import { convertEventToSession } from "@/app/actions/calendar-events"
+import { useIsMobile } from "@/hooks/use-is-mobile"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import type { CalendarEvent, Profile, InvigilationRole } from "@/types/database"
 
 // --- Helpers ------------------------------------------------------------------
@@ -37,17 +39,18 @@ interface Props {
 // --- Componente --------------------------------------------------------------
 
 export function ConvertEventDialog({ event, profile, categorySlug, onClose }: Props) {
-  const router = useRouter()
+  const router    = useRouter()
+  const isMobile  = useIsMobile()
 
   const isInvigilation = categorySlug === "invigilation"
 
-  const [startTime,  setStartTime]  = useState("")
-  const [endTime,    setEndTime]    = useState("")
-  const [rate,       setRate]       = useState(profile.default_hourly_rate)
-  const [roleType,   setRoleType]   = useState<InvigilationRole>(profile.role_type ?? "invigilator")
-  const [notes,      setNotes]      = useState(event.notes ?? "")
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState<string | null>(null)
+  const [startTime, setStartTime] = useState("")
+  const [endTime,   setEndTime]   = useState("")
+  const [rate,      setRate]      = useState(profile.default_hourly_rate)
+  const [roleType,  setRoleType]  = useState<InvigilationRole>(profile.role_type ?? "invigilator")
+  const [notes,     setNotes]     = useState(event.notes ?? "")
+  const [loading,   setLoading]   = useState(false)
+  const [error,     setError]     = useState<string | null>(null)
 
   const preview = calcPreview(startTime, endTime, rate)
 
@@ -79,133 +82,171 @@ export function ConvertEventDialog({ event, profile, categorySlug, onClose }: Pr
     onClose()
   }
 
+  const header = (
+    <div className="flex items-start justify-between border-b border-black/[0.07] px-6 py-4">
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          <h2 className="text-sm font-bold text-foreground">Registra ore sessione</h2>
+        </div>
+        <p className="text-xs font-medium text-foreground capitalize">{event.title}</p>
+        <p className="text-[11px] text-muted-foreground capitalize">
+          {dateLabel}{event.location ? ` · ${event.location}` : ""}
+        </p>
+      </div>
+      <button onClick={onClose} className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted/60">
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  )
+
+  const formContent = (
+    <form onSubmit={handleSubmit} className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+
+      {/* Preview live */}
+      <div className={`rounded-2xl border px-4 py-3 transition-all ${
+        preview
+          ? "border-emerald-200/80 bg-emerald-50/50"
+          : "border-primary/15 bg-primary/[0.04]"
+      }`}>
+        {preview ? (
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Durata</p>
+                <p className="text-base font-bold text-foreground">{preview.duration}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Euro className="h-4 w-4 text-emerald-600" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stimato</p>
+                <p className="text-base font-bold text-emerald-700">€{preview.earned.toFixed(2)}</p>
+              </div>
+            </div>
+            <div className="ml-auto flex items-center gap-1 rounded-full bg-emerald-100/80 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">
+              <Sparkles className="h-3 w-3" />
+              Live
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Imposta <span className="font-medium text-foreground">inizio</span> e{" "}
+            <span className="font-medium text-foreground">fine</span> per calcolare il guadagno
+          </p>
+        )}
+      </div>
+
+      {/* Orari */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Inizio</label>
+          <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required className={inputCls} />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Fine</label>
+          <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required className={inputCls} />
+        </div>
+      </div>
+
+      {/* Tariffa (+ Ruolo solo per invigilation) */}
+      <div className={`grid gap-3 ${isInvigilation ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div>
+          <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tariffa (€/h)</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">€</span>
+            <input
+              type="number" step="0.01" min="0"
+              value={rate}
+              onChange={(e) => setRate(parseFloat(e.target.value) || 0)}
+              className={`${inputCls} pl-7`}
+            />
+          </div>
+        </div>
+        {isInvigilation && (
+          <div>
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Ruolo</label>
+            <select
+              value={roleType}
+              onChange={(e) => setRoleType(e.target.value as InvigilationRole)}
+              className={`${inputCls} cursor-pointer appearance-none`}
+            >
+              <option value="invigilator">Invigilator</option>
+              <option value="supervisor">Supervisor</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Note */}
+      <div>
+        <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Note (opzionale)</label>
+        <textarea
+          rows={2}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Note aggiuntive…"
+          className={`${inputCls} resize-none`}
+        />
+      </div>
+
+      {error && (
+        <p className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">{error}</p>
+      )}
+
+      <div className="flex gap-3 pt-1" style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
+        <button
+          type="button"
+          onClick={onClose}
+          className="cursor-pointer flex-1 rounded-xl border border-border/60 bg-white/70 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          Annulla
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 disabled:opacity-60"
+        >
+          {loading
+            ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            : <><CheckCircle2 className="h-4 w-4" /> Conferma sessione</>
+          }
+        </button>
+      </div>
+    </form>
+  )
+
+  // ── Mobile: Sheet dal basso ──────────────────────────────────────────────
+
+  if (isMobile) {
+    return (
+      <Sheet open onOpenChange={(o) => !o && onClose()}>
+        <SheetContent
+          side="bottom"
+          className="flex flex-col gap-0 rounded-t-2xl p-0"
+          style={{ height: "88dvh" }}
+        >
+          <SheetTitle className="sr-only">Registra ore sessione</SheetTitle>
+          <div className="flex shrink-0 justify-center pt-3 pb-1">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
+          </div>
+          {header}
+          {formContent}
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  // ── Desktop: overlay custom ───────────────────────────────────────────────
+
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[3px]" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="relative flex max-h-[90dvh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/40 bg-white/80 shadow-2xl shadow-black/[0.18] backdrop-blur-2xl backdrop-saturate-[1.8]">
-
-          {/* Header */}
-          <div className="flex items-start justify-between border-b border-black/[0.07] px-6 py-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <h2 className="text-sm font-bold text-foreground">Registra ore sessione</h2>
-              </div>
-              <p className="text-xs font-medium text-foreground capitalize">{event.title}</p>
-              <p className="text-[11px] text-muted-foreground capitalize">{dateLabel}{event.location ? ` · ${event.location}` : ""}</p>
-            </div>
-            <button onClick={onClose} className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted/60">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
-
-            {/* Preview live */}
-            <div className={`rounded-2xl border px-4 py-3 transition-all ${
-              preview
-                ? "border-emerald-200/80 bg-emerald-50/50"
-                : "border-primary/15 bg-primary/[0.04]"
-            }`}>
-              {preview ? (
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Durata</p>
-                      <p className="text-base font-bold text-foreground">{preview.duration}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Euro className="h-4 w-4 text-emerald-600" />
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stimato</p>
-                      <p className="text-base font-bold text-emerald-700">€{preview.earned.toFixed(2)}</p>
-                    </div>
-                  </div>
-                  <div className="ml-auto flex items-center gap-1 rounded-full bg-emerald-100/80 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">
-                    <Sparkles className="h-3 w-3" />
-                    Live
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Imposta <span className="font-medium text-foreground">inizio</span> e{" "}
-                  <span className="font-medium text-foreground">fine</span> per calcolare il guadagno
-                </p>
-              )}
-            </div>
-
-            {/* Orari */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Inizio</label>
-                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required className={inputCls} />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Fine</label>
-                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required className={inputCls} />
-              </div>
-            </div>
-
-            {/* Tariffa (+ Ruolo solo per invigilation) */}
-            <div className={`grid gap-3 ${isInvigilation ? "grid-cols-2" : "grid-cols-1"}`}>
-              <div>
-                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tariffa (€/h)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">€</span>
-                  <input
-                    type="number" step="0.01" min="0"
-                    value={rate}
-                    onChange={(e) => setRate(parseFloat(e.target.value) || 0)}
-                    className={`${inputCls} pl-7`}
-                  />
-                </div>
-              </div>
-              {isInvigilation && (
-                <div>
-                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Ruolo</label>
-                  <select
-                    value={roleType}
-                    onChange={(e) => setRoleType(e.target.value as InvigilationRole)}
-                    className={`${inputCls} cursor-pointer appearance-none`}
-                  >
-                    <option value="invigilator">Invigilator</option>
-                    <option value="supervisor">Supervisor</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Note */}
-            <div>
-              <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Note (opzionale)</label>
-              <textarea
-                rows={2}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Note aggiuntive…"
-                className={`${inputCls} resize-none`}
-              />
-            </div>
-
-            {error && (
-              <p className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">{error}</p>
-            )}
-
-            <div className="flex gap-3 pt-1">
-              <button type="button" onClick={onClose} className="cursor-pointer flex-1 rounded-xl border border-border/60 bg-white/70 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground">
-                Annulla
-              </button>
-              <button type="submit" disabled={loading} className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 disabled:opacity-60">
-                {loading
-                  ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  : <><CheckCircle2 className="h-4 w-4" /> Conferma sessione</>
-                }
-              </button>
-            </div>
-          </form>
+          {header}
+          {formContent}
         </div>
       </div>
     </>

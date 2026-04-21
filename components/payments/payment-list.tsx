@@ -151,7 +151,7 @@ export function PaymentList({
       <div className="flex gap-1 rounded-xl border border-border/40 bg-muted/30 p-1">
         {([
           { value: "pending" as Tab, label: "Da Pagare",         icon: AlertCircle, count: unpaidSessions.length },
-          { value: "history" as Tab, label: "Storico Pagamenti", icon: History,     count: payments.length },
+          { value: "history" as Tab, label: "Storico",           icon: History,     count: payments.length },
         ]).map(({ value, label, icon: Icon, count }) => (
           <button
             key={value}
@@ -214,7 +214,7 @@ export function PaymentList({
                       key={session.id}
                       onClick={() => toggle(session.id)}
                       className={cn(
-                        "group flex cursor-pointer items-center gap-4 overflow-hidden rounded-2xl border px-5 py-3.5 transition-all",
+                        "group flex cursor-pointer items-center gap-3 overflow-hidden rounded-2xl border px-4 py-3 transition-all sm:gap-4 sm:px-5 sm:py-3.5",
                         checked
                           ? "border-primary/30 bg-primary/[0.06] shadow-sm shadow-primary/10"
                           : "glass-dashboard border-white/60 hover:border-primary/20",
@@ -228,8 +228,8 @@ export function PaymentList({
                         {checked && <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
 
-                      {/* Data */}
-                      <div className="w-12 shrink-0 text-center">
+                      {/* Data (solo desktop) */}
+                      <div className="hidden w-12 shrink-0 text-center sm:block">
                         <p className="text-base font-bold leading-none text-foreground">
                           {new Date(session.session_date + "T00:00:00").getDate()}
                         </p>
@@ -238,7 +238,7 @@ export function PaymentList({
                         </p>
                       </div>
 
-                      <div className="h-8 w-px shrink-0 bg-border/40" />
+                      <div className="hidden h-8 w-px shrink-0 bg-border/40 sm:block" />
 
                       {/* Info */}
                       <div className="min-w-0 flex-1">
@@ -246,13 +246,14 @@ export function PaymentList({
                           {meta.exam_name ?? "Sessione"}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
+                          <span className="sm:hidden">{formatDate(session.session_date)} · </span>
                           {formatTime(session.start_time)} – {formatTime(session.end_time)}
                           {session.location && ` · ${session.location}`}
                         </p>
                       </div>
 
-                      {/* Status */}
-                      <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                      {/* Status (solo desktop) */}
+                      <span className="hidden shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 sm:inline">
                         Non pagato
                       </span>
 
@@ -286,9 +287,9 @@ export function PaymentList({
           </div>
 
           {/* Filter bar */}
-          <div className="glass-dashboard flex flex-wrap items-center gap-2 rounded-2xl px-3 py-2">
+          <div className="glass-dashboard flex items-center gap-2 overflow-x-auto rounded-2xl px-3 py-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
             {/* Search */}
-            <div className="flex min-w-[180px] flex-1 items-center gap-2 rounded-xl border border-border/30 bg-white/50 px-3 py-2">
+            <div className="flex min-w-[160px] flex-1 items-center gap-2 rounded-xl border border-border/30 bg-white/50 px-3 py-2">
               <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
               <input
                 type="text"

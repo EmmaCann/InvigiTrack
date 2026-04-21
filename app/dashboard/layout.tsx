@@ -80,7 +80,13 @@ export default async function DashboardLayout({
         </div>
 
         <div className="md:hidden">
-          <MobileHeader profile={profile} />
+          <MobileHeader
+            profile={profile}
+            activeWorkspace={activeWorkspace}
+            userCategories={userCategories}
+            availableCategories={availableCategories}
+            unreadNotifications={unreadNotifications}
+          />
         </div>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
@@ -90,6 +96,7 @@ export default async function DashboardLayout({
         <div className="md:hidden">
           <BottomNav />
         </div>
+
 
       </div>
     </div>

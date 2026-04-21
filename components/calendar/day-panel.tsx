@@ -136,7 +136,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                             {meta.exam_name ?? "Sessione"}
                           </p>
                         </div>
-                        <div className="flex shrink-0 items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                           <SessionDialog profile={profile} categorySlug={categorySlug} session={s} />
                           <button
                             onClick={() => setConfirmSessionId(s.id)}
@@ -194,7 +194,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                             {ev.title}
                           </p>
                         </div>
-                        <div className="flex shrink-0 items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                           {!ev.is_converted && (
                             <EventDialog event={ev} />
                           )}

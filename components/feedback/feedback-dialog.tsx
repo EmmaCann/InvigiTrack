@@ -6,14 +6,29 @@ import { sendFeedbackAction } from "@/app/actions/feedback"
 import { cn } from "@/lib/utils"
 import type { FeedbackType } from "@/types/database"
 
-const TYPE_OPTIONS: { value: FeedbackType; label: string; emoji: string; sub: string }[] = [
-  { value: "feature_request", label: "Nuova funzionalità", emoji: "💡", sub: "Hai un'idea da suggerire?" },
-  { value: "bug_report",      label: "Segnala problema",   emoji: "🐛", sub: "Qualcosa non funziona?"   },
-  { value: "suggestion",      label: "Altro",               emoji: "💬", sub: "Commenti generali"        },
+const TYPE_OPTIONS: { value: FeedbackType; label: string; emoji: string }[] = [
+  { value: "feature_request", label: "Nuova funzionalità", emoji: "💡" },
+  { value: "bug_report",      label: "Segnala problema",   emoji: "🐛" },
+  { value: "suggestion",      label: "Altro",               emoji: "💬" },
 ]
 
-export function FeedbackDialog() {
-  const [open,    setOpen]    = useState(false)
+interface Props {
+  /** Modalità controllata: se forniti, il trigger interno è nascosto */
+  open?:         boolean
+  onOpenChange?: (v: boolean) => void
+}
+
+export function FeedbackDialog({ open: controlledOpen, onOpenChange }: Props = {}) {
+  const [internalOpen, setInternalOpen] = useState(false)
+
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+
+  function setOpen(v: boolean) {
+    if (isControlled) { onOpenChange?.(v) }
+    else { setInternalOpen(v) }
+  }
+
   const [type,    setType]    = useState<FeedbackType>("feature_request")
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
@@ -38,26 +53,23 @@ export function FeedbackDialog() {
 
   return (
     <>
-      {/* Trigger button */}
-      <button
-        onClick={() => setOpen(true)}
-        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/40 hover:text-foreground"
-      >
-        <MessageSquarePlus className="h-4 w-4 shrink-0" />
-        <span>Invia feedback</span>
-      </button>
+      {/* Trigger (solo in modalità non controllata) */}
+      {!isControlled && (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/40 hover:text-foreground"
+        >
+          <MessageSquarePlus className="h-4 w-4 shrink-0" />
+          <span>Invia feedback</span>
+        </button>
+      )}
 
-      {/* Overlay */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4">
-          <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-            onClick={handleClose}
-          />
+        <div className="fixed inset-0 z-[400] flex items-end justify-center p-4 sm:items-center">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
           <div className="relative w-full max-w-md rounded-2xl border border-border/60 bg-white shadow-2xl">
 
-            {/* Header */}
-            <div className="flex items-start justify-between px-5 pt-5 pb-4 border-b border-border/40">
+            <div className="flex items-start justify-between border-b border-border/40 px-5 pb-4 pt-5">
               <div>
                 <h2 className="text-base font-semibold text-foreground">Invia feedback</h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">
@@ -70,7 +82,6 @@ export function FeedbackDialog() {
             </div>
 
             {success ? (
-              /* Success state */
               <div className="flex flex-col items-center justify-center px-5 py-10 text-center">
                 <CheckCircle2 className="mb-3 h-10 w-10 text-emerald-500" />
                 <p className="text-sm font-semibold text-foreground">Grazie per il tuo feedback!</p>
@@ -85,7 +96,6 @@ export function FeedbackDialog() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4 px-5 py-4">
 
-                {/* Tipo */}
                 <div>
                   <p className="mb-2 text-xs font-semibold text-foreground">Tipo</p>
                   <div className="grid grid-cols-3 gap-2">
@@ -110,11 +120,8 @@ export function FeedbackDialog() {
                   </div>
                 </div>
 
-                {/* Oggetto */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-foreground">
-                    Oggetto
-                  </label>
+                  <label className="mb-1.5 block text-xs font-semibold text-foreground">Oggetto</label>
                   <input
                     type="text"
                     maxLength={100}
@@ -126,11 +133,8 @@ export function FeedbackDialog() {
                   />
                 </div>
 
-                {/* Messaggio */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-foreground">
-                    Messaggio
-                  </label>
+                  <label className="mb-1.5 block text-xs font-semibold text-foreground">Messaggio</label>
                   <textarea
                     maxLength={1000}
                     placeholder="Descrivi nel dettaglio…"
@@ -143,9 +147,8 @@ export function FeedbackDialog() {
                   <p className="mt-0.5 text-right text-[10px] text-muted-foreground/50">{message.length}/1000</p>
                 </div>
 
-                {/* Nota */}
                 <p className="rounded-xl bg-muted/50 px-3 py-2.5 text-[11px] text-muted-foreground">
-                  Questo non è un canale di supporto urgente. Per problemi urgenti contatta direttamente lo sviluppatore.
+                  Questo non è un canale di supporto urgente.
                 </p>
 
                 {error && <p className="text-xs text-destructive">{error}</p>}

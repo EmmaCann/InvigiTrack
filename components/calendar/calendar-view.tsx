@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Plus } from "lucide-react"
@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { DayPanel } from "./day-panel"
 import { WeekGrid, getWeekStart } from "./week-grid"
 import { EventDialog } from "./event-dialog"
+import { useIsMobile } from "@/hooks/use-is-mobile"
 import type { Session, CalendarEvent, Profile } from "@/types/database"
 
 // --- Helpers ------------------------------------------------------------------
@@ -44,6 +45,7 @@ interface Props {
 export function CalendarView({ sessions, events, profile, categorySlug }: Props) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const isMobile = useIsMobile()
 
   const [view,        setView]        = useState<CalView>("month")
   const [current,     setCurrent]     = useState(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -52,11 +54,14 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
   const [selMonth,    setSelMonth]    = useState(today.getMonth())
   const [selYear,     setSelYear]     = useState(today.getFullYear())
 
+  // On mobile, always show month view
+  const effectiveView: CalView = isMobile ? "month" : view
+
   const year  = current.getFullYear()
   const month = current.getMonth()
 
   // -- Month label + navigazione ------------------------------------------------
-  const monthLabel = view === "month"
+  const monthLabel = effectiveView === "month"
     ? current.toLocaleDateString("it-IT", { month: "long", year: "numeric" })
     : (() => {
         const wEnd = addDays(weekStart, 6)
@@ -66,11 +71,11 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
       })()
 
   function prev() {
-    if (view === "month") setCurrent(new Date(year, month - 1, 1))
+    if (effectiveView === "month") setCurrent(new Date(year, month - 1, 1))
     else setWeekStart((w) => addDays(w, -7))
   }
   function next() {
-    if (view === "month") setCurrent(new Date(year, month + 1, 1))
+    if (effectiveView === "month") setCurrent(new Date(year, month + 1, 1))
     else setWeekStart((w) => addDays(w, 7))
   }
   function goToday() {
@@ -146,7 +151,7 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
     <div className="space-y-4">
 
       {/* -- Header: navigazione + toggle vista ----------------------- */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
 
         {/* Frecce + Oggi */}
         <div className="flex items-center gap-1">
@@ -171,11 +176,11 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
         </div>
 
         {/* Label periodo */}
-        <h3 className="text-sm font-bold capitalize text-foreground flex-1">{monthLabel}</h3>
+        <h3 className="flex-1 text-sm font-bold capitalize text-foreground">{monthLabel}</h3>
 
-        {/* Mini-stats (solo mensile) */}
-        {view === "month" && monthSessions.length > 0 && (
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        {/* Mini-stats (solo mensile, solo desktop) */}
+        {effectiveView === "month" && monthSessions.length > 0 && (
+          <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
             <span>
               <span className="font-semibold text-foreground">{monthSessions.length}</span> sessioni
             </span>
@@ -188,37 +193,39 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
           </div>
         )}
 
-        {/* Toggle Month / Week */}
-        <div className="flex rounded-lg border border-border/40 bg-muted/30 p-0.5">
-          <button
-            onClick={() => setView("month")}
-            className={cn(
-              "flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all",
-              view === "month" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            Mese
-          </button>
-          <button
-            onClick={() => setView("week")}
-            className={cn(
-              "flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all",
-              view === "week" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <CalendarDays className="h-3.5 w-3.5" />
-            Settimana
-          </button>
-        </div>
+        {/* Toggle Month / Week — solo desktop */}
+        {!isMobile && (
+          <div className="flex rounded-lg border border-border/40 bg-muted/30 p-0.5">
+            <button
+              onClick={() => setView("month")}
+              className={cn(
+                "flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all",
+                view === "month" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Mese
+            </button>
+            <button
+              onClick={() => setView("week")}
+              className={cn(
+                "flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all",
+                view === "week" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <CalendarDays className="h-3.5 w-3.5" />
+              Settimana
+            </button>
+          </div>
+        )}
 
         {/* Bottone nuovo evento */}
         <EventDialog
           defaultDate={selDateStr ?? new Date().toISOString().split("T")[0]}
           trigger={
-            <button className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition-colors hover:bg-primary/90">
+            <button className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition-colors hover:bg-primary/90 sm:px-4">
               <Plus className="h-4 w-4" strokeWidth={2.5} />
-              Nuovo Evento
+              <span className="hidden sm:inline">Nuovo Evento</span>
             </button>
           }
         />
@@ -228,12 +235,12 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
 
         {/* Vista mensile */}
-        {view === "month" && (
-          <div className="glass rounded-2xl overflow-hidden shadow-sm shadow-black/[0.04]">
+        {effectiveView === "month" && (
+          <div className="glass overflow-hidden rounded-2xl shadow-sm shadow-black/[0.04]">
             {/* Intestazioni giorno */}
             <div className="grid grid-cols-7 border-b border-white/40">
               {DAY_LABELS.map((d) => (
-                <div key={d} className="py-2.5 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div key={d} className="py-2 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:py-2.5 sm:text-[11px]">
                   {d}
                 </div>
               ))}
@@ -255,8 +262,9 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
                     disabled={day === null}
                     onClick={() => day && selectMonthDay(day)}
                     className={cn(
-                      "relative min-h-[96px] p-2 text-left transition-all border-b border-r border-white/30",
-                      day === null  ? "bg-white/5 cursor-default"
+                      "relative border-b border-r border-white/30 p-1 text-left transition-all sm:p-2",
+                      "min-h-[56px] sm:min-h-[96px]",
+                      day === null  ? "cursor-default bg-white/5"
                       : active      ? "bg-primary/10"
                       : isWeekend   ? "bg-slate-50/40 hover:bg-white/40"
                       :               "hover:bg-white/40",
@@ -266,7 +274,7 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
                     {day && (
                       <>
                         <span className={cn(
-                          "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                          "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold sm:h-6 sm:w-6 sm:text-xs",
                           todayCell ? "bg-primary text-primary-foreground"
                           : active  ? "bg-primary/20 text-primary"
                           :           "text-foreground",
@@ -274,12 +282,28 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
                           {day}
                         </span>
 
-                        <div className="mt-1 space-y-0.5">
+                        {/* Mobile: solo pallini colorati */}
+                        {totalItems > 0 && (
+                          <div className="mt-0.5 flex flex-wrap gap-0.5 sm:hidden">
+                            {daySessions.slice(0, 3).map((s) => (
+                              <span key={s.id} className={cn("h-1.5 w-1.5 rounded-full", STATUS_DOT[s.payment_status])} />
+                            ))}
+                            {dayEvents
+                              .slice(0, Math.max(0, 3 - Math.min(daySessions.length, 3)))
+                              .map((ev) => (
+                                <span key={ev.id} className={cn("h-1.5 w-1.5 rounded-sm", ev.is_converted ? "bg-teal-400" : "bg-violet-400")} />
+                              ))
+                            }
+                          </div>
+                        )}
+
+                        {/* Desktop: etichette testo */}
+                        <div className="mt-1 hidden space-y-0.5 sm:block">
                           {/* Sessioni lavorative */}
                           {daySessions.slice(0, 2).map((s) => {
                             const meta = s.metadata as { exam_name?: string }
                             return (
-                              <div key={s.id} className="flex items-center gap-1 rounded px-1 py-0.5 bg-primary/10">
+                              <div key={s.id} className="flex items-center gap-1 rounded bg-primary/10 px-1 py-0.5">
                                 <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", STATUS_DOT[s.payment_status])} />
                                 <span className="truncate text-[10px] font-medium text-primary/80">
                                   {meta.exam_name ?? "Sessione"}
@@ -289,7 +313,7 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
                           })}
                           {/* Appuntamenti calendario */}
                           {dayEvents.slice(0, daySessions.length >= 2 ? 0 : 2 - daySessions.length).map((ev) => (
-                            <div key={ev.id} className="flex items-center gap-1 rounded px-1 py-0.5 bg-violet-50">
+                            <div key={ev.id} className="flex items-center gap-1 rounded bg-violet-50 px-1 py-0.5">
                               <span className={cn(
                                 "h-1.5 w-1.5 shrink-0 rounded-sm",
                                 ev.is_converted ? "bg-teal-400" : "bg-violet-400",
@@ -300,7 +324,7 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
                             </div>
                           ))}
                           {totalItems > 2 && (
-                            <p className="text-[10px] text-muted-foreground px-1">
+                            <p className="px-1 text-[10px] text-muted-foreground">
                               +{totalItems - 2} altri
                             </p>
                           )}
@@ -335,8 +359,8 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
           </div>
         )}
 
-        {/* Vista settimanale */}
-        {view === "week" && (
+        {/* Vista settimanale (solo desktop) */}
+        {effectiveView === "week" && (
           <WeekGrid
             weekStart={weekStart}
             sessions={sessions}
@@ -345,7 +369,7 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
           />
         )}
 
-        {/* Pannello dettaglio giorno (sempre visibile a destra) */}
+        {/* Pannello dettaglio giorno */}
         <DayPanel
           selectedDay={selectedDay}
           year={selYear}

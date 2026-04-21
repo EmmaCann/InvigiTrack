@@ -285,8 +285,8 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
           Esporta CSV
         </button>
       </div>
-      {/* -- Filter bar — glass unificata ----------------------------- */}
-      <div className="glass-dashboard flex items-center divide-x divide-border/30 overflow-hidden rounded-2xl">
+      {/* -- Filter bar — scrollabile su mobile ----------------------- */}
+      <div className="glass-dashboard flex items-center divide-x divide-border/30 overflow-x-auto rounded-2xl [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
         {/* Search */}
         <div className="flex min-w-0 flex-1 items-center gap-2.5 px-4 py-3">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground/60" />
@@ -515,8 +515,8 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                             </DropdownMenuContent>
                           </DropdownMenu>
 
-                          {/* Azioni — visibili all'hover */}
-                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Azioni — sempre visibili su mobile, hover-only su desktop */}
+                          <div className="flex items-center gap-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                             <SessionDialog profile={profile} categorySlug={categorySlug} session={session} />
 
                             {isConf ? (
