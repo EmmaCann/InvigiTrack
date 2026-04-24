@@ -234,11 +234,23 @@ export function MobileHeader({
 
               <DropdownMenuSeparator />
 
+              {/* Account */}
               <DropdownMenuItem asChild>
                 <a href="/dashboard/settings" className="flex cursor-pointer items-center gap-2">
                   <Settings className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-sm">Impostazioni</span>
                 </a>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              {/* Aiuto */}
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); openDashboardTour() }}
+                className="flex cursor-pointer items-center gap-2"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-sm">Tour</span>
               </DropdownMenuItem>
 
               <DropdownMenuItem
@@ -250,14 +262,6 @@ export function MobileHeader({
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                onSelect={(e) => { e.preventDefault(); openDashboardTour() }}
-                className="flex cursor-pointer items-center gap-2"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-sm">Tour</span>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
                 onSelect={(e) => { e.preventDefault(); setFeedbackOpen(true) }}
                 className="flex cursor-pointer items-center gap-2"
               >
@@ -266,12 +270,15 @@ export function MobileHeader({
               </DropdownMenuItem>
 
               {platformRole === "super_admin" && (
-                <DropdownMenuItem asChild>
-                  <a href="/dashboard/admin" className="flex cursor-pointer items-center gap-2">
-                    <ShieldAlert className="h-3.5 w-3.5 text-violet-500" />
-                    <span className="text-sm font-medium text-violet-700">Pannello Admin</span>
-                  </a>
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <a href="/dashboard/admin" className="flex cursor-pointer items-center gap-2">
+                      <ShieldAlert className="h-3.5 w-3.5 text-violet-500" />
+                      <span className="text-sm font-medium text-violet-700">Pannello Admin</span>
+                    </a>
+                  </DropdownMenuItem>
+                </>
               )}
 
               <DropdownMenuSeparator />
