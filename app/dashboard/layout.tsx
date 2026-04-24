@@ -67,7 +67,7 @@ export default async function DashboardLayout({
       {/* -- Gradient mesh background ------------------------------- */}
       <GradientMesh />
 
-      <DashboardSearchLayer recentSessions={recentSessions} upcomingEvents={upcomingEvents} />
+      <DashboardSearchLayer recentSessions={recentSessions} upcomingEvents={upcomingEvents} platformRole={profile.platform_role} />
 
       {/* -- Sidebar — solo desktop ----------------------------------- */}
       <div className="hidden md:flex">

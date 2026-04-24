@@ -11,6 +11,7 @@ interface Props {
   open:            boolean
   onClose:         () => void
   initialSection?: string
+  platformRole?:   string
 }
 
 const CATEGORY_EMOJI: Record<string, string> = {
@@ -21,8 +22,13 @@ const CATEGORY_EMOJI: Record<string, string> = {
   "Impostazioni": "⚙️",
 }
 
-export function HelpDialog({ open, onClose, initialSection }: Props) {
-  const grouped  = getTutorialsByCategory()
+export function HelpDialog({ open, onClose, initialSection, platformRole }: Props) {
+  // Gli utenti base non vedono il tutorial sui workspace multipli
+  const visibleItems = platformRole === "user"
+    ? TUTORIAL_ITEMS.filter((i) => i.id !== "workspaces")
+    : TUTORIAL_ITEMS
+
+  const grouped = getTutorialsByCategory(visibleItems)
   const isMobile = useIsMobile()
 
   const [selected,   setSelected]   = useState<string | null>(initialSection ?? null)

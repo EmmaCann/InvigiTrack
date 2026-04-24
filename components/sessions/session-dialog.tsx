@@ -9,7 +9,7 @@ import {
   Plus, Pencil, Loader2, Clock, Euro, Copy, Sparkles, CalendarCheck, MapPin, ChevronDown,
 } from "lucide-react"
 
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -356,6 +356,7 @@ export function SessionDialog({
         showCloseButton
         className="flex max-h-[min(92vh,780px)] w-full max-w-[540px] flex-col gap-0 overflow-hidden rounded-2xl border border-white/60 bg-white/95 p-0 shadow-2xl shadow-black/[0.12] backdrop-blur-2xl sm:max-w-[860px]"
       >
+        <DialogTitle className="sr-only">{session ? "Modifica sessione" : "Nuova sessione"}</DialogTitle>
         {formContent}
       </DialogContent>
     </Dialog>

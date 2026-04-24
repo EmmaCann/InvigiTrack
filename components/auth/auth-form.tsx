@@ -12,12 +12,12 @@ import { login, register } from "@/app/actions/auth"
 
 const loginSchema = z.object({
   email:    z.string().email("Email non valida"),
-  password: z.string().min(8, "Minimo 8 caratteri"),
+  password: z.string().min(1, "Inserisci la password"),
 })
 
 const registerSchema = z.object({
   email:      z.string().email("Email non valida"),
-  password:   z.string().min(8, "Minimo 8 caratteri"),
+  password:   z.string().min(6, "Minimo 6 caratteri"),
   secret_key: z.string().optional(),
 })
 
@@ -135,7 +135,7 @@ export function AuthForm({ dark: _ = false }: { dark?: boolean }) {
           />
           <Field
             id="r-password" label="Password" type="password"
-            placeholder="Min. 8 caratteri"
+            placeholder="Min. 6 caratteri"
             registration={registerForm.register("password")}
             error={registerForm.formState.errors.password?.message}
           />

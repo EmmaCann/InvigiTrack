@@ -70,7 +70,7 @@ export async function changePassword(
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user?.email) return { error: "Non autenticato" }
 
-  if (newPassword.length < 8) return { error: "La nuova password deve essere di almeno 8 caratteri" }
+  if (newPassword.length < 6) return { error: "La nuova password deve essere di almeno 6 caratteri" }
   if (currentPassword === newPassword) return { error: "La nuova password deve essere diversa da quella attuale" }
 
   // Verifica la password attuale tentando un sign-in

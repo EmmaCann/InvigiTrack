@@ -13,11 +13,11 @@ import { login, register } from "@/app/actions/auth"
 
 const loginSchema = z.object({
   email:    z.string().email("Email non valida"),
-  password: z.string().min(8, "Minimo 8 caratteri"),
+  password: z.string().min(1, "Inserisci la password"),
 })
 const registerSchema = z.object({
   email:      z.string().email("Email non valida"),
-  password:   z.string().min(8, "Minimo 8 caratteri"),
+  password:   z.string().min(6, "Minimo 6 caratteri"),
   secret_key: z.string().optional(),
 })
 type LV = z.infer<typeof loginSchema>
@@ -181,7 +181,7 @@ export function AuthPage() {
             <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-7">
               <UField id="re" label="Email" type="email" placeholder="tu@esempio.com"
                 reg={rf.register("email")} err={rf.formState.errors.email?.message} />
-              <UField id="rp" label="Password" type="password" placeholder="Min. 8 caratteri"
+              <UField id="rp" label="Password" type="password" placeholder="Min. 6 caratteri"
                 reg={rf.register("password")} err={rf.formState.errors.password?.message} />
               <div>
                 <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
@@ -311,7 +311,7 @@ export function AuthPage() {
                 <form onSubmit={mrf.handleSubmit(handleMobileRegister)} className="space-y-6">
                   <UField id="mre" label="Email" type="email" placeholder="tu@esempio.com"
                     reg={mrf.register("email")} err={mrf.formState.errors.email?.message} />
-                  <UField id="mrp" label="Password" type="password" placeholder="Min. 8 caratteri"
+                  <UField id="mrp" label="Password" type="password" placeholder="Min. 6 caratteri"
                     reg={mrf.register("password")} err={mrf.formState.errors.password?.message} />
                   <div>
                     <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">

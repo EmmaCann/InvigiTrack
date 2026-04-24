@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/data/auth"
 import { insertProfile } from "@/lib/data/profiles"
 import { getCategoryBySlug, grantCategoryAccess } from "@/lib/data/categories"
+import { createNotification } from "@/lib/data/notifications"
 import type { OnboardingData } from "@/types/database"
 
 // --- LOGIN --------------------------------------------------------------------
@@ -86,6 +87,16 @@ export async function createProfile(data: OnboardingData) {
     if (category) {
       await grantCategoryAccess(user.id, category.id)
     }
+
+    // Notifica super_admin: nuovo utente registrato
+    await createNotification({
+      target_type: "role",
+      target_role:  "super_admin",
+      title:        "Nuovo utente registrato",
+      message:      `${user.email} ha completato la registrazione.`,
+      type:         "system",
+      created_by:   user.id,
+    })
 
     return { success: true }
   } catch (err) {

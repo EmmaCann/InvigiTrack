@@ -16,13 +16,14 @@ export function openDashboardSearch() {
 interface SearchData {
   recentSessions: { id: string; exam_name: string; date: string; location?: string }[]
   upcomingEvents: { id: string; title: string; date: string; location?: string }[]
+  platformRole?:  string
 }
 
 /**
  * Layer globale per Spotlight (Ctrl+K) e HelpDialog.
  * Renderizzato una sola volta nel layout — gestisce entrambi i dialog.
  */
-export function DashboardSearchLayer({ recentSessions = [], upcomingEvents = [] }: Partial<SearchData> = {}) {
+export function DashboardSearchLayer({ recentSessions = [], upcomingEvents = [], platformRole }: Partial<SearchData> = {}) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [helpItem,   setHelpItem]   = useState<string | null>(null)
 
@@ -65,6 +66,7 @@ export function DashboardSearchLayer({ recentSessions = [], upcomingEvents = [] 
         open={helpItem !== null}
         onClose={() => setHelpItem(null)}
         initialSection={helpItem ?? undefined}
+        platformRole={platformRole}
       />
     </>
   )

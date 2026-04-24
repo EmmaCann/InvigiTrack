@@ -110,8 +110,8 @@ export const TUTORIAL_ITEMS: TutorialItem[] = [
  * Raggruppa i tutorial per categoria.
  * Restituisce un oggetto { [category]: TutorialItem[] } nell'ordine di inserimento.
  */
-export function getTutorialsByCategory(): Record<string, TutorialItem[]> {
-  return TUTORIAL_ITEMS.reduce(
+export function getTutorialsByCategory(items = TUTORIAL_ITEMS): Record<string, TutorialItem[]> {
+  return items.reduce(
     (acc, item) => {
       if (!acc[item.category]) acc[item.category] = []
       acc[item.category].push(item)
