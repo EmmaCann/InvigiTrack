@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, useMemo } from "react"
-import { CheckSquare, Square, AlertCircle, CheckCircle2, History, Download, Search, Calendar, ChevronDown, Check, X, Filter } from "lucide-react"
+import { CheckSquare, Square, AlertCircle, CheckCircle2, History, Download, Search, Calendar, ChevronDown, Check, X, Filter, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,9 +71,15 @@ export function PaymentList({
   const [showModal,   setShowModal]   = useState(false)
 
   // -- Filtri storico -----------------------------------------------------------
-  const [historySearch,   setHistorySearch]   = useState("")
-  const [historyMethod,   setHistoryMethod]   = useState<"all" | "bank_transfer" | "cash" | "other">("all")
+  const [historySearch,    setHistorySearch]    = useState("")
+  const [historyMethod,    setHistoryMethod]    = useState<"all" | "bank_transfer" | "cash" | "other">("all")
   const [historyDateRange, setHistoryDateRange] = useState<"all" | "30d" | "3m" | "1y">("all")
+
+  // -- Filtri da pagare --------------------------------------------------------
+  const [pendingSearch,    setPendingSearch]    = useState("")
+  const [pendingDateRange, setPendingDateRange] = useState<"all" | "30d" | "3m" | "1y">("all")
+  const [pendingPage,      setPendingPage]      = useState(0)
+  const [historyPage,      setHistoryPage]      = useState(0)
 
   // -- Selezione ---------------------------------------------------------------
   function toggle(id: string) {
@@ -84,17 +90,41 @@ export function PaymentList({
     })
   }
 
+  const filteredUnpaidSessions = useMemo(() => {
+    let result = unpaidSessions
+
+    if (pendingSearch.trim()) {
+      const q = pendingSearch.trim().toLowerCase()
+      result = result.filter((s) =>
+        ((s.metadata as { exam_name?: string }).exam_name ?? "").toLowerCase().includes(q) ||
+        (s.location ?? "").toLowerCase().includes(q)
+      )
+    }
+
+    if (pendingDateRange !== "all") {
+      const cutoff = new Date()
+      if (pendingDateRange === "30d") cutoff.setDate(cutoff.getDate() - 30)
+      if (pendingDateRange === "3m")  cutoff.setMonth(cutoff.getMonth() - 3)
+      if (pendingDateRange === "1y")  cutoff.setFullYear(cutoff.getFullYear() - 1)
+      result = result.filter((s) => new Date(s.session_date + "T00:00:00") >= cutoff)
+    }
+
+    return result
+  }, [unpaidSessions, pendingSearch, pendingDateRange])
+
+  const hasPendingFilters = !!(pendingSearch || pendingDateRange !== "all")
+
   function toggleAll() {
-    if (selected.size === unpaidSessions.length) {
+    if (selected.size === filteredUnpaidSessions.length) {
       setSelected(new Set())
     } else {
-      setSelected(new Set(unpaidSessions.map((s) => s.id)))
+      setSelected(new Set(filteredUnpaidSessions.map((s) => s.id)))
     }
   }
 
   const selectedSessions = unpaidSessions.filter((s) => selected.has(s.id))
   const selectedTotal    = selectedSessions.reduce((a, s) => a + s.earned, 0)
-  const allSelected      = selected.size === unpaidSessions.length && unpaidSessions.length > 0
+  const allSelected      = selected.size === filteredUnpaidSessions.length && filteredUnpaidSessions.length > 0
 
   const filteredPayments = useMemo(() => {
     let result = payments
@@ -124,6 +154,14 @@ export function PaymentList({
   }, [payments, historySearch, historyMethod, historyDateRange])
 
   const hasHistoryFilters = !!(historySearch || historyMethod !== "all" || historyDateRange !== "all")
+
+  const PAGE_SIZE = 10
+
+  const pendingTotalPages  = Math.ceil(filteredUnpaidSessions.length / PAGE_SIZE)
+  const paginatedPending   = filteredUnpaidSessions.slice(pendingPage * PAGE_SIZE, (pendingPage + 1) * PAGE_SIZE)
+
+  const historyTotalPages  = Math.ceil(filteredPayments.length / PAGE_SIZE)
+  const paginatedHistory   = filteredPayments.slice(historyPage * PAGE_SIZE, (historyPage + 1) * PAGE_SIZE)
 
   function handleSuccess() {
     setShowModal(false)
@@ -187,6 +225,59 @@ export function PaymentList({
             </div>
           ) : (
             <>
+              {/* Filter bar */}
+              <div className="glass-dashboard flex items-center gap-2 overflow-x-auto rounded-2xl px-3 py-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+                {/* Search */}
+                <div className="flex min-w-[160px] flex-1 items-center gap-2 rounded-xl border border-border/30 bg-white/50 px-3 py-2">
+                  <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                  <input
+                    type="text"
+                    placeholder="Cerca sessioni…"
+                    value={pendingSearch}
+                    onChange={(e) => { setPendingSearch(e.target.value); setPendingPage(0) }}
+                    className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground/50"
+                  />
+                  {pendingSearch && (
+                    <button onClick={() => { setPendingSearch(""); setPendingPage(0) }} className="cursor-pointer">
+                      <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Date range */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                      <Calendar className="h-3.5 w-3.5 shrink-0" />
+                      {pendingDateRange === "all" ? "Tutto il periodo" : pendingDateRange === "30d" ? "Ultimi 30gg" : pendingDateRange === "3m" ? "Ultimi 3 mesi" : "Quest'anno"}
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+                    {[
+                      { v: "all" as const,  l: "Tutto il periodo" },
+                      { v: "30d" as const,  l: "Ultimi 30 giorni" },
+                      { v: "3m" as const,   l: "Ultimi 3 mesi" },
+                      { v: "1y" as const,   l: "Quest'anno" },
+                    ].map(({ v, l }) => (
+                      <DropdownMenuItem key={v} onClick={() => { setPendingDateRange(v); setPendingPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
+                        {l} {pendingDateRange === v && <Check className="h-3 w-3 text-primary" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Clear */}
+                {hasPendingFilters && (
+                  <button
+                    onClick={() => { setPendingSearch(""); setPendingDateRange("all"); setPendingPage(0) }}
+                    className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/30 bg-white/50 px-2.5 py-2 text-xs text-muted-foreground transition-colors hover:text-destructive"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
               {/* Toolbar seleziona tutte */}
               <div className="flex items-center gap-3">
                 <button
@@ -199,13 +290,20 @@ export function PaymentList({
                   {allSelected ? "Deseleziona tutte" : "Seleziona tutte"}
                 </button>
                 <span className="text-xs text-muted-foreground">
-                  {unpaidSessions.length} session{unpaidSessions.length !== 1 ? "i" : "e"} · €{unpaidSessions.reduce((a, s) => a + s.earned, 0).toFixed(2)} totale
+                  {filteredUnpaidSessions.length} session{filteredUnpaidSessions.length !== 1 ? "i" : "e"} · €{filteredUnpaidSessions.reduce((a, s) => a + s.earned, 0).toFixed(2)} totale
                 </span>
               </div>
 
               {/* Lista sessioni */}
+              {filteredUnpaidSessions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/50 py-10 text-center">
+                  <Search className="mb-3 h-8 w-8 text-muted-foreground/40" />
+                  <p className="text-sm font-semibold text-foreground">Nessun risultato</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Prova a modificare i filtri.</p>
+                </div>
+              ) : (
               <div className="space-y-2">
-                {unpaidSessions.map((session) => {
+                {paginatedPending.map((session) => {
                   const meta     = session.metadata as { exam_name?: string }
                   const checked  = selected.has(session.id)
 
@@ -265,6 +363,32 @@ export function PaymentList({
                   )
                 })}
               </div>
+              )}
+
+              {/* Paginazione Da Pagare */}
+              {pendingTotalPages > 1 && (
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs text-muted-foreground">
+                    Pagina {pendingPage + 1} di {pendingTotalPages}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setPendingPage((p) => p - 1)}
+                      disabled={pendingPage === 0}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-white/60 text-muted-foreground disabled:opacity-30 hover:bg-white hover:text-foreground cursor-pointer disabled:cursor-default"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setPendingPage((p) => p + 1)}
+                      disabled={pendingPage >= pendingTotalPages - 1}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-white/60 text-muted-foreground disabled:opacity-30 hover:bg-white hover:text-foreground cursor-pointer disabled:cursor-default"
+                    >
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -295,11 +419,11 @@ export function PaymentList({
                 type="text"
                 placeholder="Cerca pagamenti…"
                 value={historySearch}
-                onChange={(e) => setHistorySearch(e.target.value)}
+                onChange={(e) => { setHistorySearch(e.target.value); setHistoryPage(0) }}
                 className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground/50"
               />
               {historySearch && (
-                <button onClick={() => setHistorySearch("")} className="cursor-pointer">
+                <button onClick={() => { setHistorySearch(""); setHistoryPage(0) }} className="cursor-pointer">
                   <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
                 </button>
               )}
@@ -321,7 +445,7 @@ export function PaymentList({
                   { v: "cash" as const,          l: "Contanti" },
                   { v: "other" as const,         l: "Altro" },
                 ].map(({ v, l }) => (
-                  <DropdownMenuItem key={v} onClick={() => setHistoryMethod(v)} className="flex cursor-pointer items-center justify-between text-xs">
+                  <DropdownMenuItem key={v} onClick={() => { setHistoryMethod(v); setHistoryPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
                     {l} {historyMethod === v && <Check className="h-3 w-3 text-primary" />}
                   </DropdownMenuItem>
                 ))}
@@ -344,7 +468,7 @@ export function PaymentList({
                   { v: "3m" as const,   l: "Ultimi 3 mesi" },
                   { v: "1y" as const,   l: "Quest'anno" },
                 ].map(({ v, l }) => (
-                  <DropdownMenuItem key={v} onClick={() => setHistoryDateRange(v)} className="flex cursor-pointer items-center justify-between text-xs">
+                  <DropdownMenuItem key={v} onClick={() => { setHistoryDateRange(v); setHistoryPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
                     {l} {historyDateRange === v && <Check className="h-3 w-3 text-primary" />}
                   </DropdownMenuItem>
                 ))}
@@ -354,7 +478,7 @@ export function PaymentList({
             {/* Clear */}
             {hasHistoryFilters && (
               <button
-                onClick={() => { setHistorySearch(""); setHistoryMethod("all"); setHistoryDateRange("all") }}
+                onClick={() => { setHistorySearch(""); setHistoryMethod("all"); setHistoryDateRange("all"); setHistoryPage(0) }}
                 className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/30 bg-white/50 px-2.5 py-2 text-xs text-muted-foreground transition-colors hover:text-destructive"
               >
                 <X className="h-3.5 w-3.5" />
@@ -374,14 +498,41 @@ export function PaymentList({
               </p>
             </div>
           ) : (
-            filteredPayments.map((p) => <PaymentHistoryCard key={p.id} payment={p} />)
+            <div className="space-y-3">
+              {paginatedHistory.map((p) => <PaymentHistoryCard key={p.id} payment={p} />)}
+
+              {/* Paginazione Storico */}
+              {historyTotalPages > 1 && (
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs text-muted-foreground">
+                    Pagina {historyPage + 1} di {historyTotalPages}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setHistoryPage((p) => p - 1)}
+                      disabled={historyPage === 0}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-white/60 text-muted-foreground disabled:opacity-30 hover:bg-white hover:text-foreground cursor-pointer disabled:cursor-default"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setHistoryPage((p) => p + 1)}
+                      disabled={historyPage >= historyTotalPages - 1}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-white/60 text-muted-foreground disabled:opacity-30 hover:bg-white hover:text-foreground cursor-pointer disabled:cursor-default"
+                    >
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
 
       {/* -- Toolbar contestuale (selezione attiva) --------------------- */}
       {selected.size > 0 && tab === "pending" && (
-        <div className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/50 bg-foreground/95 px-5 py-3.5 shadow-2xl shadow-black/30 backdrop-blur-xl">
+        <div className="fixed bottom-[calc(56px+env(safe-area-inset-bottom)+16px)] left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/50 bg-foreground/95 px-5 py-3.5 shadow-2xl shadow-black/30 backdrop-blur-xl md:bottom-6">
           <div className="text-sm text-white/80">
             <span className="font-bold text-white">{selected.size}</span> selezionate ·{" "}
             <span className="font-bold text-white">€{selectedTotal.toFixed(2)}</span>

@@ -57,7 +57,7 @@ export default async function SettingsPage() {
         </div>
 
         {/* Tab-bar mobile */}
-        <div className="mb-6 flex gap-2 overflow-x-auto pb-1 md:hidden">
+        <div className="mb-6 flex gap-2 overflow-x-auto pb-1 md:hidden [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
           {[
             { id: "profilo",   label: "Profilo"       },
             { id: "password",  label: "Password"      },

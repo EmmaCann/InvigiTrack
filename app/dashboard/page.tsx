@@ -159,8 +159,9 @@ export default async function DashboardPage() {
   const maxMonthEarned = Math.max(...monthsData.map((m) => m.earned), 1)
 
   // Unpaid alerts
-  const unpaidAlerts = allSessions.filter((s) => s.payment_status !== "paid").slice(0, 3)
-  const unpaidTotal  = allSessions.filter((s) => s.payment_status !== "paid").length
+  const unpaidAll    = allSessions.filter((s) => s.payment_status !== "paid")
+  const unpaidAlerts = unpaidAll.slice(0, 3)
+  const unpaidTotal  = unpaidAll.length
 
   return (
     <div className="space-y-7">
@@ -354,6 +355,11 @@ export default async function DashboardPage() {
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-600">
                 Unpaid Alerts
               </p>
+              {unpaidTotal > 0 && (
+                <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-100 px-1.5 text-[10px] font-bold text-amber-700">
+                  {unpaidTotal}
+                </span>
+              )}
             </div>
             {unpaidAlerts.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
@@ -384,9 +390,10 @@ export default async function DashboardPage() {
                 })}
                 <Link
                   href="/dashboard/payments"
-                  className="mt-1 flex w-full items-center justify-center rounded-xl border border-primary/20 bg-primary/5 py-2 text-xs font-bold uppercase tracking-[0.1em] text-primary transition-colors hover:bg-primary/10"
+                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-primary/5 py-2 text-xs font-bold uppercase tracking-[0.1em] text-primary transition-colors hover:bg-primary/10"
                 >
-                  Risolvi tutto
+                  {unpaidTotal > 3 ? `Vedi tutte (${unpaidTotal})` : "Vai ai pagamenti"}
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
             )}
@@ -394,26 +401,29 @@ export default async function DashboardPage() {
           )}
 
           {/* Prossimi eventi */}
-          {showWidget("calendar_events") && (
+          {showWidget("calendar_events") && (() => {
+            const shownEvents = pendingEvents.slice(0, 5)
+            const eventsTotal = pendingEvents.length
+            return (
             <div className="glass-dashboard rounded-2xl px-5 pt-5 pb-4">
               <div className="mb-4 flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-violet-500" />
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-600">
                   Prossimi eventi
                 </p>
-                {pendingEvents.length > 0 && (
-                  <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-violet-100 text-[10px] font-bold text-violet-700">
-                    {pendingEvents.length}
+                {eventsTotal > 0 && (
+                  <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-violet-100 px-1.5 text-[10px] font-bold text-violet-700">
+                    {eventsTotal}
                   </span>
                 )}
               </div>
-              {pendingEvents.length === 0 ? (
+              {shownEvents.length === 0 ? (
                 <p className="py-3 text-center text-xs text-muted-foreground">
                   Nessun evento in programma
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {pendingEvents.map((ev) => (
+                  {shownEvents.map((ev) => (
                     <Link
                       key={ev.id}
                       href="/dashboard/calendar"
@@ -429,13 +439,19 @@ export default async function DashboardPage() {
                       <ArrowRight className="h-3.5 w-3.5 shrink-0 text-violet-400" />
                     </Link>
                   ))}
-                  <p className="pt-1 text-center text-[11px] text-muted-foreground">
-                    Apri il calendario per registrare le ore
-                  </p>
+                  {eventsTotal > 5 && (
+                    <Link
+                      href="/dashboard/calendar"
+                      className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 py-2 text-xs font-bold uppercase tracking-[0.1em] text-violet-700 transition-colors hover:bg-violet-100"
+                    >
+                      Vedi tutti ({eventsTotal}) <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
-          )}
+            )
+          })()}
 
         </div>
       </div>
