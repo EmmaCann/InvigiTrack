@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -194,9 +195,9 @@ export function AuthPage() {
             </form>
             <p className="mt-6 text-center text-[11px] leading-relaxed text-white/20">
               Continuando accetti{" "}
-              <span className="cursor-pointer text-white/40 hover:text-white underline">Termini</span>
+              <Link href="/terms"   target="_blank" className="text-white/40 hover:text-white underline">Termini</Link>
               {" "}e{" "}
-              <span className="cursor-pointer text-white/40 hover:text-white underline">Privacy Policy</span>.
+              <Link href="/privacy" target="_blank" className="text-white/40 hover:text-white underline">Privacy Policy</Link>.
             </p>
           </div>
         </div>

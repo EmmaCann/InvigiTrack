@@ -4,7 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server"
-import type { Profile, OnboardingData, PlatformRole, DashboardPrefs, AnalyticsPrefs, SessionsPrefs, PaymentsPrefs } from "@/types/database"
+import type { Profile, OnboardingData, PlatformRole, DashboardPrefs, AnalyticsPrefs, SessionsPrefs, PaymentsPrefs, UiState } from "@/types/database"
 
 // --- READ ---------------------------------------------------------------------
 
@@ -141,6 +141,30 @@ export async function updateAnalyticsPrefs(
   const { error } = await supabase
     .from("profiles")
     .update({ analytics_prefs: prefs })
+    .eq("id", userId)
+  if (error) return { error: error.message }
+  return {}
+}
+
+/**
+ * Aggiorna (merge) il campo ui_state del profilo.
+ * Usa la concatenazione JSONB di Postgres per preservare le chiavi esistenti.
+ */
+export async function updateUiState(
+  userId: string,
+  patch: Partial<UiState>,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  // Prima leggi lo stato attuale, poi fai merge lato client (compatibile con RLS)
+  const { data: current } = await supabase
+    .from("profiles")
+    .select("ui_state")
+    .eq("id", userId)
+    .single()
+  const merged = { ...(current?.ui_state ?? {}), ...patch }
+  const { error } = await supabase
+    .from("profiles")
+    .update({ ui_state: merged })
     .eq("id", userId)
   if (error) return { error: error.message }
   return {}

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -159,9 +160,9 @@ export function AuthForm({ dark: _ = false }: { dark?: boolean }) {
 
           <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
             Continuando accetti i{" "}
-            <span className="cursor-pointer text-primary hover:underline">Termini di Servizio</span>
+            <Link href="/terms"   target="_blank" className="text-primary hover:underline">Termini di Servizio</Link>
             {" "}e la{" "}
-            <span className="cursor-pointer text-primary hover:underline">Privacy Policy</span>.
+            <Link href="/privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</Link>.
           </p>
         </form>
       )}

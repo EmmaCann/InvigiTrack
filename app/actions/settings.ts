@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { updateProfile as dbUpdateProfile, updateDashboardPrefs as dbUpdateDashboardPrefs, updateSessionsPrefs as dbUpdateSessionsPrefs, updatePaymentsPrefs as dbUpdatePaymentsPrefs } from "@/lib/data/profiles"
+import { updateProfile as dbUpdateProfile, updateDashboardPrefs as dbUpdateDashboardPrefs, updateSessionsPrefs as dbUpdateSessionsPrefs, updatePaymentsPrefs as dbUpdatePaymentsPrefs, updateUiState } from "@/lib/data/profiles"
 import { getCurrentUser } from "@/lib/data/auth"
 import type { DashboardPrefs, SessionsPrefs, PaymentsPrefs } from "@/types/database"
 
@@ -23,6 +23,21 @@ export async function updateProfileName(
   const result = await dbUpdateProfile(user.id, { full_name: trimmed })
   if (result.error) return { error: result.error }
 
+  revalidatePath("/dashboard", "layout")
+  return {}
+}
+
+// --- UI State -----------------------------------------------------------------
+
+/**
+ * Segna il welcome popup come visto per questo account.
+ * Chiamato dal WelcomeDialog al click su "Capito, entriamo".
+ */
+export async function markWelcomeSeen(): Promise<{ error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) return { error: "Non autenticato" }
+  const result = await updateUiState(user.id, { welcome_seen: true })
+  if (result.error) return { error: result.error }
   revalidatePath("/dashboard", "layout")
   return {}
 }

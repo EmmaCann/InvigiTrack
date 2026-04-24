@@ -22,6 +22,12 @@ const SECTION_GROUPS = [
       { id: "analytics", label: "Analytics"  },
     ],
   },
+  {
+    label: "Altro",
+    sections: [
+      { id: "legale", label: "Legale" },
+    ],
+  },
 ]
 
 const ALL_SECTIONS = SECTION_GROUPS.flatMap((g) => g.sections)

@@ -16,8 +16,9 @@ import { SettingsSidebar }            from "@/components/settings/settings-sideb
 import { PageHelpButton }             from "@/components/help/page-help-button"
 import {
   User, KeyRound, Layers, LayoutDashboard, BarChart3,
-  CalendarCheck, CreditCard, HardDrive,
+  CalendarCheck, CreditCard, HardDrive, Scale,
 } from "lucide-react"
+import Link from "next/link"
 
 export default async function SettingsPage() {
   const user    = await getCurrentUser()
@@ -67,6 +68,7 @@ export default async function SettingsPage() {
             { id: "sessioni",  label: "Sessioni"      },
             { id: "pagamenti", label: "Pagamenti"     },
             { id: "analytics", label: "Analytics"     },
+            { id: "legale",    label: "Legale"         },
           ].map(({ id, label }) => (
             <a key={id} href={`#${id}`}
               className="shrink-0 rounded-full border border-border/60 bg-white/70 px-4 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
@@ -156,6 +158,27 @@ export default async function SettingsPage() {
             <SectionHeader icon={BarChart3} title="Analytics" sub="Widget, anno fiscale e obiettivi" />
             <div className="glass-dashboard rounded-2xl px-6 py-6">
               <AnalyticsPrefsForm currentPrefs={profile.analytics_prefs ?? {}} />
+            </div>
+          </section>
+
+          {/* ── Legale ───────────────────────────────────────────── */}
+          <section id="legale" className="scroll-mt-6 space-y-5">
+            <SectionHeader icon={Scale} title="Legale" sub="Termini di utilizzo e privacy policy" />
+            <div className="glass-dashboard rounded-2xl px-6 py-5 flex flex-wrap gap-4">
+              <Link
+                href="/terms"
+                target="_blank"
+                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Termini di utilizzo →
+              </Link>
+              <Link
+                href="/privacy"
+                target="_blank"
+                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Privacy policy →
+              </Link>
             </div>
           </section>
 

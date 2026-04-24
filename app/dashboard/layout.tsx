@@ -11,6 +11,7 @@ import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { DashboardSearchLayer } from "@/components/layout/dashboard-search-layer"
+import { WelcomeDialog }        from "@/components/onboarding/welcome-dialog"
 
 export default async function DashboardLayout({
   children,
@@ -97,8 +98,11 @@ export default async function DashboardLayout({
           <BottomNav />
         </div>
 
-
       </div>
+
+      {/* Welcome popup — rendered last so it's always above everything */}
+      {!profile.ui_state?.welcome_seen && <WelcomeDialog />}
+
     </div>
   )
 }

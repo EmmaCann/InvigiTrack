@@ -171,6 +171,14 @@ export type SessionMetadata =
 
 // --- Tabelle del database -----------------------------------------------------
 
+/**
+ * Stato UI per-account — traccia popup/dialog/tour visualizzati.
+ * Estendibile: aggiungere nuove chiavi senza migration.
+ */
+export interface UiState {
+  welcome_seen?: boolean   // popup di benvenuto al primo accesso
+}
+
 /** Riga della tabella `profiles` */
 export interface Profile {
   id: string                          // = auth.users.id
@@ -184,6 +192,7 @@ export interface Profile {
   analytics_prefs:  AnalyticsPrefs   // preferenze pagina analytics
   sessions_prefs:   SessionsPrefs    // preferenze pagina sessioni
   payments_prefs:   PaymentsPrefs    // preferenze pagina pagamenti
+  ui_state:         UiState          // stato popup/dialog per-account
   created_at: string
   updated_at: string
 }
