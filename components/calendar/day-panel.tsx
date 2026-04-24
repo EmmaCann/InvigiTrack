@@ -50,6 +50,8 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
   const router    = useRouter()
   const [, start] = useTransition()
 
+  const knownLocations = Array.from(new Set(sessions.map((s) => s.location).filter(Boolean) as string[])).sort()
+
   const [confirmSessionId, setConfirmSessionId] = useState<string | null>(null)
   const [confirmEventId,   setConfirmEventId]   = useState<string | null>(null)
   const [deletingId,       setDeletingId]       = useState<string | null>(null)
@@ -137,7 +139,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                           </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-                          <SessionDialog profile={profile} categorySlug={categorySlug} session={s} />
+                          <SessionDialog profile={profile} categorySlug={categorySlug} session={s} knownLocations={knownLocations} />
                           <button
                             onClick={() => setConfirmSessionId(s.id)}
                             className="cursor-pointer flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"

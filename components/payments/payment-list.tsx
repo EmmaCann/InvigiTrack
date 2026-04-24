@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, useMemo } from "react"
-import { CheckSquare, Square, AlertCircle, CheckCircle2, History, Download, Search, Calendar, ChevronDown, Check, X, Filter, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react"
+import { CheckSquare, Square, AlertCircle, CheckCircle2, History, Download, Search, Calendar, ChevronDown, Check, X, Filter, ChevronLeft, ChevronRight as ChevronRightIcon, MapPin } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,8 +78,14 @@ export function PaymentList({
   // -- Filtri da pagare --------------------------------------------------------
   const [pendingSearch,    setPendingSearch]    = useState("")
   const [pendingDateRange, setPendingDateRange] = useState<"all" | "30d" | "3m" | "1y">("all")
+  const [pendingLocation,  setPendingLocation]  = useState("all")
   const [pendingPage,      setPendingPage]      = useState(0)
   const [historyPage,      setHistoryPage]      = useState(0)
+
+  const pendingLocations = useMemo(
+    () => Array.from(new Set(unpaidSessions.map((s) => s.location).filter(Boolean) as string[])).sort(),
+    [unpaidSessions],
+  )
 
   // -- Selezione ---------------------------------------------------------------
   function toggle(id: string) {
@@ -109,10 +115,14 @@ export function PaymentList({
       result = result.filter((s) => new Date(s.session_date + "T00:00:00") >= cutoff)
     }
 
-    return result
-  }, [unpaidSessions, pendingSearch, pendingDateRange])
+    if (pendingLocation !== "all") {
+      result = result.filter((s) => s.location === pendingLocation)
+    }
 
-  const hasPendingFilters = !!(pendingSearch || pendingDateRange !== "all")
+    return result
+  }, [unpaidSessions, pendingSearch, pendingDateRange, pendingLocation])
+
+  const hasPendingFilters = !!(pendingSearch || pendingDateRange !== "all" || pendingLocation !== "all")
 
   function toggleAll() {
     if (selected.size === filteredUnpaidSessions.length) {
@@ -267,10 +277,33 @@ export function PaymentList({
                   </DropdownMenuContent>
                 </DropdownMenu>
 
+                {/* Location filter */}
+                {pendingLocations.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        {pendingLocation === "all" ? "Tutte le sedi" : pendingLocation}
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+                      <DropdownMenuItem onClick={() => { setPendingLocation("all"); setPendingPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
+                        Tutte le sedi {pendingLocation === "all" && <Check className="h-3 w-3 text-primary" />}
+                      </DropdownMenuItem>
+                      {pendingLocations.map((l) => (
+                        <DropdownMenuItem key={l} onClick={() => { setPendingLocation(l); setPendingPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
+                          {l} {pendingLocation === l && <Check className="h-3 w-3 text-primary" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
                 {/* Clear */}
                 {hasPendingFilters && (
                   <button
-                    onClick={() => { setPendingSearch(""); setPendingDateRange("all"); setPendingPage(0) }}
+                    onClick={() => { setPendingSearch(""); setPendingDateRange("all"); setPendingLocation("all"); setPendingPage(0) }}
                     className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/30 bg-white/50 px-2.5 py-2 text-xs text-muted-foreground transition-colors hover:text-destructive"
                   >
                     <X className="h-3.5 w-3.5" />

@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import {
-  Plus, Pencil, Loader2, Clock, Euro, Copy, Sparkles, CalendarCheck,
+  Plus, Pencil, Loader2, Clock, Euro, Copy, Sparkles, CalendarCheck, MapPin, ChevronDown,
 } from "lucide-react"
 
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
@@ -59,20 +59,21 @@ function todayISO() { return new Date().toISOString().split("T")[0] }
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
-  profile:          Profile
-  categorySlug:     string
-  session?:         Session
-  lastSession?:     Session
-  defaultDate?:     string
+  profile:           Profile
+  categorySlug:      string
+  session?:          Session
+  lastSession?:      Session
+  knownLocations?:   string[]
+  defaultDate?:      string
   defaultStartTime?: string
-  trigger?:         React.ReactNode
-  onSuccess?:       () => void
+  trigger?:          React.ReactNode
+  onSuccess?:        () => void
 }
 
 // ── Componente principale ─────────────────────────────────────────────────────
 
 export function SessionDialog({
-  profile, categorySlug, session, lastSession,
+  profile, categorySlug, session, lastSession, knownLocations = [],
   defaultDate, defaultStartTime, trigger, onSuccess,
 }: Props) {
   const router  = useRouter()
@@ -266,10 +267,10 @@ export function SessionDialog({
 
           <div className={`grid gap-3 ${isInvigilation ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
             <Field label="Sede / scuola" error={form.formState.errors.location?.message}>
-              <Input
-                className="h-10 rounded-xl text-sm"
-                placeholder="es. Westfield Academy"
-                {...form.register("location")}
+              <LocationCombobox
+                value={form.watch("location") ?? ""}
+                onChange={(v) => form.setValue("location", v, { shouldValidate: true })}
+                suggestions={knownLocations}
               />
             </Field>
             {isInvigilation && (
@@ -358,6 +359,90 @@ export function SessionDialog({
         {formContent}
       </DialogContent>
     </Dialog>
+  )
+}
+
+// ── LocationCombobox ──────────────────────────────────────────────────────────
+
+function LocationCombobox({
+  value, onChange, suggestions,
+}: { value: string; onChange: (v: string) => void; suggestions: string[] }) {
+  const [open,    setOpen]    = useState(false)
+  const [query,   setQuery]   = useState(value)
+  const containerRef          = useRef<HTMLDivElement>(null)
+
+  // Keep query in sync when form resets
+  useEffect(() => { setQuery(value) }, [value])
+
+  // Close on outside click
+  useEffect(() => {
+    function onPointerDown(e: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown)
+    return () => document.removeEventListener("pointerdown", onPointerDown)
+  }, [])
+
+  const filtered = query.trim()
+    ? suggestions.filter((s) => s.toLowerCase().includes(query.trim().toLowerCase()))
+    : suggestions
+
+  function select(loc: string) {
+    setQuery(loc)
+    onChange(loc)
+    setOpen(false)
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setQuery(e.target.value)
+    onChange(e.target.value)
+    setOpen(true)
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative flex items-center">
+        <MapPin className="pointer-events-none absolute left-3 h-3.5 w-3.5 text-muted-foreground/50" />
+        <input
+          type="text"
+          value={query}
+          onChange={handleInputChange}
+          onFocus={() => setOpen(true)}
+          placeholder="es. Westfield Academy"
+          className="h-10 w-full rounded-xl border border-input bg-background pl-8 pr-8 text-sm shadow-sm outline-none placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-colors"
+        />
+        {suggestions.length > 0 && (
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setOpen((v) => !v)}
+            className="absolute right-2.5 text-muted-foreground/50 hover:text-muted-foreground"
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {open && filtered.length > 0 && (
+        <ul className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-border/60 bg-white py-1 shadow-lg shadow-black/[0.08]">
+          {filtered.map((loc) => (
+            <li key={loc}>
+              <button
+                type="button"
+                onPointerDown={(e) => e.preventDefault()} // keep focus on input
+                onClick={() => select(loc)}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground hover:bg-primary/[0.06] hover:text-primary"
+              >
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                {loc}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 

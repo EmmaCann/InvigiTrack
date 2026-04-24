@@ -25,6 +25,8 @@ export default async function SessionsPage() {
     ? [...sessions].sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
     : undefined
 
+  const knownLocations = Array.from(new Set(sessions.map((s) => s.location).filter(Boolean) as string[])).sort()
+
   return (
     <div className="space-y-6 ">
 
@@ -39,7 +41,7 @@ export default async function SessionsPage() {
             Registra e gestisci tutte le tue sessioni di lavoro
           </p>
         </div>
-        <SessionDialog profile={profile} categorySlug={category.slug} lastSession={lastCreated} />
+        <SessionDialog profile={profile} categorySlug={category.slug} lastSession={lastCreated} knownLocations={knownLocations} />
       </div>
 
       {/* -- Lista ---------------------------------------------------- */}

@@ -517,7 +517,7 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
 
                           {/* Azioni — sempre visibili su mobile, hover-only su desktop */}
                           <div className="flex items-center gap-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-                            <SessionDialog profile={profile} categorySlug={categorySlug} session={session} />
+                            <SessionDialog profile={profile} categorySlug={categorySlug} session={session} knownLocations={locations} />
 
                             {isConf ? (
                               <div className="flex items-center gap-1 ml-1">
@@ -603,7 +603,7 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <SessionDialog profile={profile} categorySlug={categorySlug} session={session} />
+                  <SessionDialog profile={profile} categorySlug={categorySlug} session={session} knownLocations={locations} />
                   {isConf ? (
                     <div className="flex items-center gap-1">
                       <button onClick={() => handleDelete(session.id)} disabled={isDel} className="cursor-pointer rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-destructive text-destructive-foreground">

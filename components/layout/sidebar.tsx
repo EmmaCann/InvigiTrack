@@ -3,7 +3,8 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { CalendarClock, MapPin, Clock, BookOpen, ShieldCheck } from "lucide-react"
+import { useState } from "react"
+import { CalendarClock, MapPin, Clock, BookOpen, ShieldCheck, MessageSquarePlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, SETTINGS_ITEM, isActiveRoute } from "./nav-items"
 import { openHelpDialog } from "@/lib/help-events"
@@ -67,6 +68,7 @@ export function Sidebar({
   platformRole?: PlatformRole
 }) {
   const pathname = usePathname()
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   return (
     <aside className="glass-strong flex h-full w-64 shrink-0 flex-col border-r border-white/55 shadow-lg shadow-primary/[0.06]">
@@ -129,17 +131,26 @@ export function Sidebar({
       </nav>
 
       {/* -- Tutorial + Feedback ------------------------------------ */}
-      <div className="px-3 pb-2 space-y-0.5">
+      <div className="mx-5 mb-3 h-px bg-border/40" />
+      <div className="px-3 pb-3 space-y-0.5">
         <button
           type="button"
           onClick={() => openHelpDialog()}
-          className="flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold uppercase tracking-[0.07em] text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+          className="group flex w-full items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
         >
-          <BookOpen className="h-[1.05rem] w-[1.05rem] shrink-0 text-muted-foreground/60" strokeWidth={1.85} />
-          <span>Tutorial</span>
+          <BookOpen className="h-4 w-4 shrink-0 transition-colors group-hover:text-primary" strokeWidth={1.7} />
+          <span className="font-medium">Tutorial</span>
         </button>
-        <FeedbackDialog />
+        <button
+          type="button"
+          onClick={() => setFeedbackOpen(true)}
+          className="group flex w-full items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
+        >
+          <MessageSquarePlus className="h-4 w-4 shrink-0 transition-colors group-hover:text-primary" strokeWidth={1.7} />
+          <span className="font-medium">Invia feedback</span>
+        </button>
       </div>
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
       {/* -- Next Shift --------------------------------------------- */}
       <div className="px-3 pb-8">
