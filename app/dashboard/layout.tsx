@@ -12,6 +12,7 @@ import { MobileHeader } from "@/components/layout/mobile-header"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { DashboardSearchLayer } from "@/components/layout/dashboard-search-layer"
 import { WelcomeDialog }        from "@/components/onboarding/welcome-dialog"
+import { DashboardTour }        from "@/components/onboarding/dashboard-tour"
 
 export default async function DashboardLayout({
   children,
@@ -102,6 +103,9 @@ export default async function DashboardLayout({
 
       {/* Welcome popup — rendered last so it's always above everything */}
       {!profile.ui_state?.welcome_seen && <WelcomeDialog />}
+
+      {/* Tour interattivo — auto-start dopo il welcome, sempre riattivabile */}
+      <DashboardTour autoStart={!!profile.ui_state?.welcome_seen && !profile.ui_state?.tour_seen} />
 
     </div>
   )

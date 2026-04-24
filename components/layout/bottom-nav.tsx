@@ -10,6 +10,7 @@ export function BottomNav() {
 
   return (
     <nav
+      data-tour="bottom-nav"
       className="relative flex shrink-0 items-center border-t border-border/60 bg-white/80 backdrop-blur-xl px-1"
       style={{ paddingBottom: "env(safe-area-inset-bottom)", height: "calc(56px + env(safe-area-inset-bottom))" }}
     >

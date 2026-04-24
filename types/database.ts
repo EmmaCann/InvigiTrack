@@ -177,6 +177,7 @@ export type SessionMetadata =
  */
 export interface UiState {
   welcome_seen?: boolean   // popup di benvenuto al primo accesso
+  tour_seen?:    boolean   // tour interattivo della dashboard
 }
 
 /** Riga della tabella `profiles` */

@@ -180,7 +180,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* -- Stat cards — vetro dashboard ----------------------------- */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div data-tour="stat-cards" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
           <div
             key={stat.label}
@@ -206,7 +206,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_300px]">
 
         {/* -- Sessioni recenti (sinistra) ----------------------------- */}
-        <div className="glass-dashboard rounded-2xl">
+        <div data-tour="recent-sessions" className="glass-dashboard rounded-2xl">
           <div className="flex items-start justify-between gap-4 border-b border-white/50 px-5 pb-4 pt-5">
             <div>
               <h3 className="text-base font-semibold text-foreground">Ultime sessioni</h3>
@@ -297,7 +297,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* -- Destra — widget configurabili ------------------- */}
-        <div className="flex flex-col gap-4">
+        <div data-tour="widgets" className="flex flex-col gap-4">
 
           {/* Hours Trend */}
           {showWidget("hours_trend") && (

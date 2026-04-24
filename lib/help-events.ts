@@ -12,3 +12,10 @@ export function openHelpDialog(tutorialId?: string) {
     new CustomEvent(OPEN_HELP_EVENT, { detail: { tutorialId } }),
   )
 }
+
+export const OPEN_TOUR_EVENT = "invigitrack-open-tour"
+
+export function openDashboardTour() {
+  if (typeof window === "undefined") return
+  window.dispatchEvent(new CustomEvent(OPEN_TOUR_EVENT))
+}

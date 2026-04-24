@@ -42,6 +42,18 @@ export async function markWelcomeSeen(): Promise<{ error?: string }> {
   return {}
 }
 
+/**
+ * Segna il tour interattivo della dashboard come visto.
+ */
+export async function markTourSeen(): Promise<{ error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) return { error: "Non autenticato" }
+  const result = await updateUiState(user.id, { tour_seen: true })
+  if (result.error) return { error: result.error }
+  revalidatePath("/dashboard", "layout")
+  return {}
+}
+
 // --- Password -----------------------------------------------------------------
 
 /**

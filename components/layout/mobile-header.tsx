@@ -5,7 +5,7 @@ import Image from "next/image"
 import { useState } from "react"
 import {
   LogOut, Settings, ChevronDown, ShieldCheck,
-  Search, Check, Plus, ArrowLeft, BookOpen, MessageSquarePlus, ShieldAlert,
+  Search, Check, Plus, ArrowLeft, BookOpen, MessageSquarePlus, ShieldAlert, Sparkles,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge"
 import { logout } from "@/app/actions/auth"
 import { switchWorkspace, addWorkspace } from "@/app/actions/workspace"
 import { openDashboardSearch } from "@/components/layout/dashboard-search-layer"
-import { openHelpDialog } from "@/lib/help-events"
+import { openHelpDialog, openDashboardTour } from "@/lib/help-events"
 import { NotificationBell } from "@/components/layout/notification-bell"
 import { FeedbackDialog } from "@/components/feedback/feedback-dialog"
 import { cn } from "@/lib/utils"
@@ -77,7 +77,7 @@ export function MobileHeader({
 
   return (
     <>
-      <header className="glass flex h-14 shrink-0 items-center justify-between border-b border-white/40 px-4">
+      <header data-tour="mobile-header" className="glass flex h-14 shrink-0 items-center justify-between border-b border-white/40 px-4">
 
         {/* Logo — stile identico sidebar desktop */}
         <Link href="/dashboard" className="flex min-w-0 items-center gap-3">
@@ -247,6 +247,14 @@ export function MobileHeader({
               >
                 <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-sm">Tutorial</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); openDashboardTour() }}
+                className="flex cursor-pointer items-center gap-2"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-sm">Tour</span>
               </DropdownMenuItem>
 
               <DropdownMenuItem

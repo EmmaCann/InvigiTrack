@@ -4,10 +4,10 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
-import { CalendarClock, MapPin, Clock, BookOpen, ShieldCheck, MessageSquarePlus } from "lucide-react"
+import { CalendarClock, MapPin, Clock, BookOpen, ShieldCheck, MessageSquarePlus, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, SETTINGS_ITEM, isActiveRoute } from "./nav-items"
-import { openHelpDialog } from "@/lib/help-events"
+import { openHelpDialog, openDashboardTour } from "@/lib/help-events"
 import { FeedbackDialog } from "@/components/feedback/feedback-dialog"
 import type { CalendarEvent, PlatformRole } from "@/types/database"
 
@@ -71,7 +71,7 @@ export function Sidebar({
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   return (
-    <aside className="glass-strong flex h-full w-64 shrink-0 flex-col border-r border-white/55 shadow-lg shadow-primary/[0.06]">
+    <aside data-tour="sidebar" className="glass-strong flex h-full w-64 shrink-0 flex-col border-r border-white/55 shadow-lg shadow-primary/[0.06]">
 
       {/* -- Logo --------------------------------------------------- */}
       <Link
@@ -109,12 +109,14 @@ export function Sidebar({
 
         <div className="mx-5 my-3 h-px bg-border/40" />
 
-        <NavLink
-          href={SETTINGS_ITEM.href}
-          label={SETTINGS_ITEM.label}
-          icon={SETTINGS_ITEM.icon}
-          active={isActiveRoute(SETTINGS_ITEM.href, pathname)}
-        />
+        <div data-tour="settings-nav">
+          <NavLink
+            href={SETTINGS_ITEM.href}
+            label={SETTINGS_ITEM.label}
+            icon={SETTINGS_ITEM.icon}
+            active={isActiveRoute(SETTINGS_ITEM.href, pathname)}
+          />
+        </div>
 
         {/* Link pannello admin — solo super_admin */}
         {platformRole === "super_admin" && (
@@ -130,9 +132,17 @@ export function Sidebar({
         )}
       </nav>
 
-      {/* -- Tutorial + Feedback ------------------------------------ */}
+      {/* -- Tutorial / Tour / Feedback ----------------------------- */}
       <div className="mx-5 mb-3 h-px bg-border/40" />
       <div className="px-3 pb-3 space-y-0.5">
+        <button
+          type="button"
+          onClick={() => openDashboardTour()}
+          className="group flex w-full items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
+        >
+          <Sparkles className="h-4 w-4 shrink-0 transition-colors group-hover:text-primary" strokeWidth={1.7} />
+          <span className="font-medium">Tour</span>
+        </button>
         <button
           type="button"
           onClick={() => openHelpDialog()}
@@ -142,6 +152,7 @@ export function Sidebar({
           <span className="font-medium">Tutorial</span>
         </button>
         <button
+          data-tour="feedback-btn"
           type="button"
           onClick={() => setFeedbackOpen(true)}
           className="group flex w-full items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
@@ -154,7 +165,7 @@ export function Sidebar({
 
       {/* -- Next Shift --------------------------------------------- */}
       <div className="px-3 pb-8">
-        <Link href="/dashboard/calendar" className="block rounded-xl border border-border/50 bg-muted/50 px-4 py-4 transition-colors hover:border-primary/30 hover:bg-primary/5">
+        <Link data-tour="next-shift" href="/dashboard/calendar" className="block rounded-xl border border-border/50 bg-muted/50 px-4 py-4 transition-colors hover:border-primary/30 hover:bg-primary/5">
           <div className="mb-1.5 flex items-center gap-1.5">
             <CalendarClock className="h-3 w-3 text-muted-foreground" />
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
