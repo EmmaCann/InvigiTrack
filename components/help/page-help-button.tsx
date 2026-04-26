@@ -30,13 +30,14 @@ export function PageHelpButton({ help }: { help: PageHelp }) {
         <div className="w-[272px] rounded-2xl border border-border/60 bg-white px-5 py-4 shadow-[0_8px_32px_rgba(15,23,42,0.14)] space-y-2.5">
           <p className="text-sm font-medium leading-snug text-foreground">{help.lines[0]}</p>
           <p className="text-sm leading-snug text-muted-foreground">{help.lines[1]}</p>
-          <button
+          {/* TODO: riabilitare quando i contenuti (video/descrizioni) sono pronti */}
+          {/* <button
             type="button"
             onClick={openTutorial}
             className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
           >
             Vedi tutorial <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          </button> */}
         </div>
       )}
 

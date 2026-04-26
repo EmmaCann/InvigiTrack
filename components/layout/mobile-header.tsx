@@ -244,8 +244,8 @@ export function MobileHeader({
 
               <DropdownMenuSeparator />
 
-              {/* Aiuto */}
-              <DropdownMenuItem
+              {/* TODO: riabilitare quando i contenuti (video/descrizioni) sono pronti */}
+              {/* <DropdownMenuItem
                 onSelect={(e) => { e.preventDefault(); openDashboardTour() }}
                 className="flex cursor-pointer items-center gap-2"
               >
@@ -259,7 +259,7 @@ export function MobileHeader({
               >
                 <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-sm">Tutorial</span>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
 
               <DropdownMenuItem
                 onSelect={(e) => { e.preventDefault(); setFeedbackOpen(true) }}

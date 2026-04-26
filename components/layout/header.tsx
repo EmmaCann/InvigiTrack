@@ -287,13 +287,14 @@ export function Header({
               </a>
             </DropdownMenuItem>
 
-            <DropdownMenuItem
+            {/* TODO: riabilitare quando i contenuti (video/descrizioni) sono pronti */}
+            {/* <DropdownMenuItem
               onSelect={(e) => { e.preventDefault(); openHelpDialog() }}
               className="flex cursor-pointer items-center gap-2"
             >
               <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-sm">Tutorial</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
 
             <DropdownMenuSeparator />
 
