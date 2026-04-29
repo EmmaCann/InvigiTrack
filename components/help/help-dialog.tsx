@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, PlayCircle, FileText, ChevronRight, ArrowLeft } from "lucide-react"
+import { X, PlayCircle, FileText, ImageIcon, ChevronRight, ArrowLeft } from "lucide-react"
 import { TUTORIAL_ITEMS, getTutorialsByCategory } from "@/lib/help-content"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
@@ -20,6 +20,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
   "Pagamenti":    "💶",
   "Calendario":   "📅",
   "Impostazioni": "⚙️",
+  "Feedback":     "💬",
 }
 
 export function HelpDialog({ open, onClose, initialSection, platformRole }: Props) {
@@ -127,11 +128,13 @@ export function HelpDialog({ open, onClose, initialSection, platformRole }: Prop
                         >
                           <div className={cn(
                             "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
-                            i.videoSrc ? "bg-primary/10" : "bg-muted/60",
+                            i.videoSrc ? "bg-primary/10" : i.imageSrc ? "bg-primary/10" : "bg-muted/60",
                           )}>
                             {i.videoSrc
                               ? <PlayCircle className="h-4 w-4 text-primary" />
-                              : <FileText   className="h-4 w-4 text-muted-foreground" />
+                              : i.imageSrc
+                                ? <ImageIcon className="h-4 w-4 text-primary" />
+                                : <FileText  className="h-4 w-4 text-muted-foreground" />
                             }
                           </div>
                           <div className="min-w-0 flex-1">
@@ -181,6 +184,15 @@ export function HelpDialog({ open, onClose, initialSection, platformRole }: Prop
                     src={item.videoSrc}
                     controls
                     className="mb-5 w-full rounded-2xl bg-black object-contain"
+                    style={{ maxHeight: "220px" }}
+                  />
+                )}
+                {item.imageSrc && (
+                  <img
+                    key={item.imageSrc}
+                    src={item.imageSrc}
+                    alt={item.title}
+                    className="mb-5 w-full rounded-2xl border border-border/30 object-contain shadow-sm"
                     style={{ maxHeight: "220px" }}
                   />
                 )}
@@ -239,7 +251,9 @@ export function HelpDialog({ open, onClose, initialSection, platformRole }: Prop
                 >
                   {i.videoSrc
                     ? <PlayCircle className="h-3 w-3 shrink-0 text-muted-foreground/40" />
-                    : <FileText   className="h-3 w-3 shrink-0 text-muted-foreground/40" />
+                    : i.imageSrc
+                      ? <ImageIcon className="h-3 w-3 shrink-0 text-muted-foreground/40" />
+                      : <FileText  className="h-3 w-3 shrink-0 text-muted-foreground/40" />
                   }
                   <span className="truncate">{i.title}</span>
                 </button>
@@ -272,6 +286,15 @@ export function HelpDialog({ open, onClose, initialSection, platformRole }: Prop
                   src={item.videoSrc}
                   controls
                   className="mb-6 w-full rounded-2xl bg-black object-contain"
+                  style={{ maxHeight: "300px" }}
+                />
+              )}
+              {item.imageSrc && (
+                <img
+                  key={item.imageSrc}
+                  src={item.imageSrc}
+                  alt={item.title}
+                  className="mb-6 w-full rounded-2xl border border-border/30 object-contain shadow-sm"
                   style={{ maxHeight: "300px" }}
                 />
               )}

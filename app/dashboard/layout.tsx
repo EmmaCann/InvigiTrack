@@ -104,8 +104,8 @@ export default async function DashboardLayout({
       {/* Welcome popup — rendered last so it's always above everything */}
       {!profile.ui_state?.welcome_seen && <WelcomeDialog />}
 
-      {/* TODO: riabilitare quando i contenuti (video/descrizioni) sono pronti */}
-      {/* <DashboardTour autoStart={!!profile.ui_state?.welcome_seen && !profile.ui_state?.tour_seen} /> */}
+      {/* Tour interattivo — auto-start dopo il welcome, sempre riattivabile */}
+      <DashboardTour autoStart={!!profile.ui_state?.welcome_seen && !profile.ui_state?.tour_seen} />
 
     </div>
   )
