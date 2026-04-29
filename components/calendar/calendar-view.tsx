@@ -7,7 +7,7 @@ import { DayPanel } from "./day-panel"
 import { WeekGrid, getWeekStart } from "./week-grid"
 import { EventDialog } from "./event-dialog"
 import { useIsMobile } from "@/hooks/use-is-mobile"
-import type { Session, CalendarEvent, Profile } from "@/types/database"
+import type { Session, CalendarEvent, Profile, Timetable } from "@/types/database"
 
 // --- Helpers ------------------------------------------------------------------
 
@@ -38,11 +38,12 @@ interface Props {
   events:       CalendarEvent[]
   profile:      Profile
   categorySlug: string
+  timetables:   Timetable[]
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function CalendarView({ sessions, events, profile, categorySlug }: Props) {
+export function CalendarView({ sessions, events, profile, categorySlug, timetables }: Props) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const isMobile = useIsMobile()
@@ -379,6 +380,7 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
           profile={profile}
           lastSession={lastSession}
           categorySlug={categorySlug}
+          timetables={timetables}
         />
       </div>
 
