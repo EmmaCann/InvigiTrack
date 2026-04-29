@@ -6,32 +6,14 @@ import { FileText, Eye, Trash2, Upload, Loader2, AlertCircle } from "lucide-reac
 import { createClient }                      from "@/lib/supabase/client"
 import { saveTimetable, removeTimetable }    from "@/app/actions/timetables"
 import { TimetableViewerDialog }             from "./timetable-viewer-dialog"
+import {
+  detectFileType,
+  getFileExtension,
+  TIMETABLE_ACCEPT,
+  MAX_TIMETABLE_B,
+  MAX_TIMETABLE_MB,
+} from "@/lib/timetable-utils"
 import type { Timetable } from "@/types/database"
-
-const MAX_FILE_MB = 10
-const MAX_FILE_B  = MAX_FILE_MB * 1024 * 1024
-
-const ACCEPTED_MIME = new Set([
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/msword",
-])
-
-function detectFileType(file: File): "pdf" | "docx" | null {
-  if (file.type === "application/pdf") return "pdf"
-  if (
-    file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-    file.type === "application/msword" ||
-    file.name.endsWith(".docx") ||
-    file.name.endsWith(".doc")
-  ) return "docx"
-  return null
-}
-
-function getExtension(file: File): string {
-  if (file.name.includes(".")) return file.name.split(".").pop()!.toLowerCase()
-  return file.type === "application/pdf" ? "pdf" : "docx"
-}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024)         return `${bytes} B`
@@ -67,8 +49,8 @@ export function TimetablePanel({ eventId, userId, title, timetable }: Props) {
       setUploadError("Formato non supportato. Carica un PDF o un file Word (.docx).")
       return
     }
-    if (file.size > MAX_FILE_B) {
-      setUploadError(`Il file supera il limite di ${MAX_FILE_MB} MB.`)
+    if (file.size > MAX_TIMETABLE_B) {
+      setUploadError(`Il file supera il limite di ${MAX_TIMETABLE_MB} MB.`)
       return
     }
 
@@ -76,7 +58,7 @@ export function TimetablePanel({ eventId, userId, title, timetable }: Props) {
     setUploading(true)
 
     try {
-      const ext      = getExtension(file)
+      const ext      = getFileExtension(file)
       const filePath = `${userId}/${crypto.randomUUID()}.${ext}`
       const supabase = createClient()
 
@@ -236,7 +218,7 @@ export function TimetablePanel({ eventId, userId, title, timetable }: Props) {
       <input
         ref={fileRef}
         type="file"
-        accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+        accept={TIMETABLE_ACCEPT}
         className="hidden"
         onChange={handleFileChange}
       />

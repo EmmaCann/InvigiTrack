@@ -48,6 +48,11 @@ export function CalendarView({ sessions, events, profile, categorySlug, timetabl
   today.setHours(0, 0, 0, 0)
   const isMobile = useIsMobile()
 
+  const showTimetable =
+    profile.role_type === "invigilator" ||
+    profile.role_type === "supervisor" ||
+    ((profile.platform_role === "admin" || profile.platform_role === "super_admin") && categorySlug === "invigilation")
+
   const [view,        setView]        = useState<CalView>("month")
   const [current,     setCurrent]     = useState(new Date(today.getFullYear(), today.getMonth(), 1))
   const [weekStart,   setWeekStart]   = useState(() => getWeekStart(today))
@@ -223,6 +228,7 @@ export function CalendarView({ sessions, events, profile, categorySlug, timetabl
         {/* Bottone nuovo evento */}
         <EventDialog
           defaultDate={selDateStr ?? new Date().toISOString().split("T")[0]}
+          showTimetable={showTimetable}
           trigger={
             <button className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition-colors hover:bg-primary/90 sm:px-4">
               <Plus className="h-4 w-4" strokeWidth={2.5} />
