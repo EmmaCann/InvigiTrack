@@ -31,15 +31,17 @@ const inp =
 // ── Componente principale ─────────────────────────────────────────────────────
 
 export function AuthPage() {
-  const [reg,   setReg]   = useState(false)
-  const [errL,  setErrL]  = useState<string | null>(null)
-  const [errR,  setErrR]  = useState<string | null>(null)
-  const [loadL,  setLoadL]  = useState(false)
-  const [loadR,  setLoadR]  = useState(false)
-  const [loadML, setLoadML] = useState(false)
-  const [loadMR, setLoadMR] = useState(false)
-  const [errML,  setErrML]  = useState<string | null>(null)
-  const [errMR,  setErrMR]  = useState<string | null>(null)
+  const [reg,        setReg]        = useState(false)
+  const [errL,       setErrL]       = useState<string | null>(null)
+  const [errR,       setErrR]       = useState<string | null>(null)
+  const [loadL,      setLoadL]      = useState(false)
+  const [loadR,      setLoadR]      = useState(false)
+  const [loadML,     setLoadML]     = useState(false)
+  const [loadMR,     setLoadMR]     = useState(false)
+  const [errML,      setErrML]      = useState<string | null>(null)
+  const [errMR,      setErrMR]      = useState<string | null>(null)
+  const [showCode,   setShowCode]   = useState(false)   // desktop
+  const [showCodeM,  setShowCodeM]  = useState(false)   // mobile
 
   // Istanze desktop
   const lf = useForm<LV>({ resolver: zodResolver(loginSchema),    defaultValues: { email: "", password: "" } })
@@ -184,11 +186,23 @@ export function AuthPage() {
               <UField id="rp" label="Password" type="password" placeholder="Min. 6 caratteri"
                 reg={rf.register("password")} err={rf.formState.errors.password?.message} />
               <div>
-                <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
-                  <KeyRound className="h-3 w-3" /> Codice accesso
-                  <span className="font-normal normal-case tracking-normal text-white/20">— opzionale</span>
-                </label>
-                <input type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...rf.register("secret_key")} />
+                {!showCode ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowCode(true)}
+                    className="flex cursor-pointer items-center gap-1.5 text-[11px] text-white/30 transition-colors hover:text-white/50"
+                  >
+                    <KeyRound className="h-3 w-3" />
+                    Ho un codice di accesso
+                  </button>
+                ) : (
+                  <>
+                    <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+                      <KeyRound className="h-3 w-3" /> Codice accesso
+                    </label>
+                    <input type="password" placeholder="Inserisci il codice" className={inp} autoFocus {...rf.register("secret_key")} />
+                  </>
+                )}
               </div>
               {errR && <ErrMsg msg={errR} />}
               <DarkBtn loading={loadR} label="Crea account" loadingLabel="Creazione…" />
@@ -314,11 +328,23 @@ export function AuthPage() {
                   <UField id="mrp" label="Password" type="password" placeholder="Min. 6 caratteri"
                     reg={mrf.register("password")} err={mrf.formState.errors.password?.message} />
                   <div>
-                    <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
-                      <KeyRound className="h-3 w-3" /> Codice accesso
-                      <span className="font-normal normal-case tracking-normal text-white/20">— opzionale</span>
-                    </label>
-                    <input type="password" placeholder="Lascia vuoto se non ne hai uno" className={inp} {...mrf.register("secret_key")} />
+                    {!showCodeM ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowCodeM(true)}
+                        className="flex cursor-pointer items-center gap-1.5 text-[11px] text-white/30 transition-colors hover:text-white/50"
+                      >
+                        <KeyRound className="h-3 w-3" />
+                        Ho un codice di accesso
+                      </button>
+                    ) : (
+                      <>
+                        <label className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+                          <KeyRound className="h-3 w-3" /> Codice accesso
+                        </label>
+                        <input type="password" placeholder="Inserisci il codice" className={inp} autoFocus {...mrf.register("secret_key")} />
+                      </>
+                    )}
                   </div>
                   {errMR && <ErrMsg msg={errMR} />}
                   <DarkBtn loading={loadMR} label="Crea account" loadingLabel="Creazione…" />
