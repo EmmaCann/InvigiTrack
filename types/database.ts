@@ -320,10 +320,13 @@ export interface OnboardingData {
   default_hourly_rate: number
   /**
    * Usato solo dall'admin: slug della categoria di lavoro primaria
-   * ('invigilation' | 'tutoring' | 'personal_training').
+   * ('invigilation' | 'tutoring' | 'personal_training' | 'custom').
    * Gli utenti normali sono sempre 'invigilation' automaticamente.
    */
   primary_category_slug?: string
+  /** Presente solo quando primary_category_slug === 'custom' */
+  custom_category_label?:       string
+  custom_category_description?: string
 }
 
 /** Dati per creare una nuova sessione */

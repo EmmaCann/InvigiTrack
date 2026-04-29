@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
-import { Loader2, ShieldCheck, UserRound } from "lucide-react"
+import { AlertTriangle, Check, Loader2, ShieldCheck, UserRound } from "lucide-react"
 import { createProfile } from "@/app/actions/auth"
 import type { InvigilationRole } from "@/types/database"
 
@@ -20,11 +20,18 @@ const userSchema = z.object({
     .max(999, "Tariffa troppo alta"),
 })
 
+const PREDEFINED_CATEGORIES = [
+  { value: "invigilation",     label: "Sorveglianza Esami"  },
+  { value: "tutoring",         label: "Ripetizioni Private" },
+  { value: "personal_training",label: "Personal Training"   },
+] as const
+
 const adminSchema = z.object({
   full_name: z.string().min(2, "Il nome deve avere almeno 2 caratteri"),
-  primary_category: z.enum(["invigilation", "tutoring", "personal_training"], {
-    message: "Seleziona un tipo di lavoro",
-  }),
+  primary_category: z.enum(
+    ["invigilation", "tutoring", "personal_training", "custom"],
+    { message: "Seleziona un tipo di lavoro" },
+  ),
   role_type: z.enum(["invigilator", "supervisor"]).optional(),
   default_hourly_rate: z
     .number({ error: "Inserisci un numero valido" })
@@ -47,8 +54,10 @@ type AdminValues = z.infer<typeof adminSchema>
 
 export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
   const router = useRouter()
-  const [serverError, setServerError] = useState<string | null>(null)
-  const [isLoading,   setIsLoading]   = useState(false)
+  const [serverError,  setServerError]  = useState<string | null>(null)
+  const [isLoading,    setIsLoading]    = useState(false)
+  const [customLabel,  setCustomLabel]  = useState("")
+  const [customDesc,   setCustomDesc]   = useState("")
 
   const userForm = useForm<UserValues>({
     resolver: zodResolver(userSchema),
@@ -72,14 +81,24 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
   }
 
   async function onSubmitAdmin(values: AdminValues) {
-    setServerError(null); setIsLoading(true)
+    setServerError(null)
+
+    // Valida categoria personalizzata prima di procedere
+    if (values.primary_category === "custom" && !customLabel.trim()) {
+      setServerError("Inserisci il nome del tipo di lavoro personalizzato")
+      return
+    }
+
+    setIsLoading(true)
     const result = await createProfile({
-      full_name:             values.full_name,
-      role_type:             values.primary_category === "invigilation"
-                               ? (values.role_type as InvigilationRole)
-                               : null,
-      default_hourly_rate:   values.default_hourly_rate,
-      primary_category_slug: values.primary_category,
+      full_name:                    values.full_name,
+      role_type:                    values.primary_category === "invigilation"
+                                      ? (values.role_type as InvigilationRole)
+                                      : null,
+      default_hourly_rate:          values.default_hourly_rate,
+      primary_category_slug:        values.primary_category,
+      custom_category_label:        values.primary_category === "custom" ? customLabel.trim() : undefined,
+      custom_category_description:  values.primary_category === "custom" ? customDesc.trim()  : undefined,
     })
     if (result?.error) { setServerError(result.error); setIsLoading(false); return }
     router.refresh()
@@ -170,22 +189,79 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
               </OField>
 
               <OField label="Tipo di lavoro principale" error={adminForm.formState.errors.primary_category?.message}>
-                <OSelect
-                  placeholder="Seleziona il tipo di lavoro"
-                  options={[
-                    { value: "invigilation",      label: "Sorveglianza Esami" },
-                    { value: "tutoring",           label: "Ripetizioni Private" },
-                    { value: "personal_training",  label: "Personal Training"   },
-                  ]}
-                  onChange={(v) =>
-                    adminForm.setValue(
-                      "primary_category",
-                      v as "invigilation" | "tutoring" | "personal_training",
-                      { shouldValidate: true },
-                    )
-                  }
-                />
+                <div className="space-y-1.5">
+                  {/* Categorie predefinite */}
+                  {PREDEFINED_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.value}
+                      type="button"
+                      onClick={() => adminForm.setValue("primary_category", cat.value, { shouldValidate: true })}
+                      className={`flex w-full items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm transition-all ${
+                        selectedCategory === cat.value
+                          ? "border-primary/40 bg-primary/5 text-primary ring-1 ring-primary/20"
+                          : "border-border/60 bg-muted/20 text-foreground/80 hover:bg-muted/40"
+                      }`}
+                    >
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-bold text-muted-foreground">
+                        {cat.label[0]}
+                      </span>
+                      <span className="flex-1 text-left">{cat.label}</span>
+                      {selectedCategory === cat.value && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
+                    </button>
+                  ))}
+
+                  {/* Opzione categoria personalizzata */}
+                  <button
+                    type="button"
+                    onClick={() => adminForm.setValue("primary_category", "custom", { shouldValidate: true })}
+                    className={`flex w-full items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm transition-all ${
+                      selectedCategory === "custom"
+                        ? "border-amber-400/50 bg-amber-50/60 text-amber-800 ring-1 ring-amber-300/40"
+                        : "border-dashed border-border/60 bg-white/10 text-muted-foreground hover:text-foreground hover:bg-muted/20"
+                    }`}
+                  >
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-100 text-[11px]">✏️</span>
+                    <span className="flex-1 text-left">Il tuo lavoro non è tra questi?</span>
+                    {selectedCategory === "custom" && <Check className="h-3.5 w-3.5 shrink-0 text-amber-600" />}
+                  </button>
+                </div>
               </OField>
+
+              {/* Pannello categoria personalizzata */}
+              {selectedCategory === "custom" && (
+                <div className="rounded-xl border border-amber-300/50 bg-amber-50/50 px-4 py-3.5 space-y-3">
+                  <div className="flex items-start gap-2.5 text-amber-800">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                    <p className="text-xs leading-relaxed">
+                      <span className="font-semibold">Attenzione:</span> la categoria che crei verrà aggiunta al database e sarà visibile a tutti gli utenti della piattaforma.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-amber-700">
+                      Nome del tipo di lavoro <span className="text-amber-500">*</span>
+                    </p>
+                    <input
+                      type="text"
+                      value={customLabel}
+                      onChange={(e) => setCustomLabel(e.target.value)}
+                      placeholder="es. Life Coaching, Fisioterapia…"
+                      className="w-full rounded-xl border border-amber-300/60 bg-white/80 px-4 py-2.5 text-sm outline-none focus:border-amber-400/60 focus:ring-2 focus:ring-amber-200/60"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-amber-700">
+                      Descrizione <span className="text-amber-400/70">(opzionale)</span>
+                    </p>
+                    <input
+                      type="text"
+                      value={customDesc}
+                      onChange={(e) => setCustomDesc(e.target.value)}
+                      placeholder="Breve descrizione del tipo di lavoro…"
+                      className="w-full rounded-xl border border-amber-300/60 bg-white/80 px-4 py-2.5 text-sm outline-none focus:border-amber-400/60 focus:ring-2 focus:ring-amber-200/60"
+                    />
+                  </div>
+                </div>
+              )}
 
               {selectedCategory === "invigilation" && (
                 <OField label="Ruolo" error={adminForm.formState.errors.role_type?.message}>

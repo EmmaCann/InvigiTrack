@@ -58,7 +58,9 @@
       "Bash(cmd /c \"wmic process where \\\\\"name='node.exe'\\\\\" get ProcessId\")",
       "Bash(cmd /c \"tasklist /FI \\\\\"IMAGENAME eq node.exe\\\\\" 2>&1\")",
       "Bash(tasklist.exe /FI \"IMAGENAME eq node.exe\")",
-      "Bash(cmd /c tasklist)"
+      "Bash(cmd /c tasklist)",
+      "Bash(xargs grep *)",
+      "Bash(xargs ls *)"
     ]
   }
 }

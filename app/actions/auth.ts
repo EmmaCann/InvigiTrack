@@ -11,7 +11,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/data/auth"
 import { insertProfile } from "@/lib/data/profiles"
-import { getCategoryBySlug, grantCategoryAccess } from "@/lib/data/categories"
+import { getCategoryBySlug, grantCategoryAccess, insertCategory } from "@/lib/data/categories"
 import { createNotification } from "@/lib/data/notifications"
 import type { OnboardingData } from "@/types/database"
 
@@ -83,9 +83,22 @@ export async function createProfile(data: OnboardingData) {
     // Sia admin che user ricevono solo la categoria selezionata —
     // le altre si aggiungono manualmente tramite "Nuovo workspace" nell'header.
     const slug = data.primary_category_slug ?? "invigilation"
-    const category = await getCategoryBySlug(slug)
-    if (category) {
-      await grantCategoryAccess(user.id, category.id)
+    let categoryId: string | undefined
+
+    if (slug === "custom" && data.custom_category_label) {
+      // Crea la nuova categoria personalizzata (visibile a tutti gli utenti)
+      const catResult = await insertCategory({
+        label:       data.custom_category_label,
+        description: data.custom_category_description,
+      })
+      categoryId = catResult.id
+    } else {
+      const category = await getCategoryBySlug(slug)
+      categoryId = category?.id
+    }
+
+    if (categoryId) {
+      await grantCategoryAccess(user.id, categoryId)
     }
 
     // Notifica super_admin: nuovo utente registrato
