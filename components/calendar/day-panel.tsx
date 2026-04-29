@@ -196,7 +196,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                             {ev.title}
                           </p>
                         </div>
-                        <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+                        <div className="flex shrink-0 items-center gap-0.5">
                           {!ev.is_converted && (
                             <EventDialog event={ev} />
                           )}
@@ -213,6 +213,12 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                         <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                           <MapPin className="h-2.5 w-2.5" />
                           {ev.location}
+                        </p>
+                      )}
+
+                      {ev.notes && (
+                        <p className="mt-1 text-xs text-muted-foreground/80 italic leading-snug">
+                          {ev.notes}
                         </p>
                       )}
 

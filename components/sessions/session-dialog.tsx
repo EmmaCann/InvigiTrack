@@ -147,7 +147,7 @@ export function SessionDialog({
   }
 
   const defaultTrigger = isEdit ? (
-    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100">
+    <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-primary hover:bg-primary/10">
       <Pencil className="h-3.5 w-3.5" />
     </Button>
   ) : (

@@ -515,8 +515,8 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                             </DropdownMenuContent>
                           </DropdownMenu>
 
-                          {/* Azioni — sempre visibili su mobile, hover-only su desktop */}
-                          <div className="flex items-center gap-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+                          {/* Azioni */}
+                          <div className="flex items-center gap-0.5">
                             <SessionDialog profile={profile} categorySlug={categorySlug} session={session} knownLocations={locations} />
 
                             {isConf ? (
