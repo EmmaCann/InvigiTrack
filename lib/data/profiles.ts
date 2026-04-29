@@ -39,6 +39,20 @@ export async function getProfileById(userId: string): Promise<Profile | null> {
   return data
 }
 
+/**
+ * Restituisce tutti i profili — email + nome — per il select utenti nel pannello admin.
+ * Usato solo da super_admin (accesso limitato dalla RLS e dalla route).
+ */
+export async function getAllProfiles(): Promise<Array<{ id: string; email: string; full_name: string | null }>> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, email, full_name")
+    .order("email")
+  if (error || !data) return []
+  return data as Array<{ id: string; email: string; full_name: string | null }>
+}
+
 /** Trova il profilo super_admin (ce n'è solo uno) */
 export async function getSuperAdminProfile(): Promise<Profile | null> {
   const supabase = await createClient()

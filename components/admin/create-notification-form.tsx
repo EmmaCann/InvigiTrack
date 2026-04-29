@@ -10,9 +10,9 @@ type TargetType = "all" | "role" | "user"
 type NotifType  = "system" | "update" | "maintenance"
 
 const TARGET_OPTIONS: { value: TargetType; label: string; sub: string }[] = [
-  { value: "all",  label: "Tutti gli utenti", sub: "Visibile a chiunque"          },
+  { value: "all",  label: "Tutti gli utenti", sub: "Visibile a chiunque"             },
   { value: "role", label: "Per ruolo",         sub: "Solo utenti con ruolo specifico" },
-  { value: "user", label: "Utente specifico",  sub: "Cerca per email"             },
+  { value: "user", label: "Utente specifico",  sub: "Seleziona dall'elenco"           },
 ]
 
 const TYPE_OPTIONS: { value: NotifType; label: string; emoji: string }[] = [
@@ -27,38 +27,40 @@ const ROLE_OPTIONS: { value: PlatformRole; label: string }[] = [
   { value: "super_admin", label: "Super Admin"    },
 ]
 
-export function CreateNotificationForm() {
-  const [targetType,    setTargetType]    = useState<TargetType>("all")
-  const [targetRole,    setTargetRole]    = useState<PlatformRole>("user")
-  const [targetEmail,   setTargetEmail]   = useState("")
-  const [notifType,     setNotifType]     = useState<NotifType>("system")
-  const [title,         setTitle]         = useState("")
-  const [message,       setMessage]       = useState("")
-  const [loading,       setLoading]       = useState(false)
-  const [success,       setSuccess]       = useState(false)
-  const [error,         setError]         = useState<string | null>(null)
+interface Props {
+  users: Array<{ id: string; email: string; full_name: string | null }>
+}
+
+export function CreateNotificationForm({ users }: Props) {
+  const [targetType,   setTargetType]   = useState<TargetType>("all")
+  const [targetRole,   setTargetRole]   = useState<PlatformRole>("user")
+  const [targetUserId, setTargetUserId] = useState("")
+  const [notifType,    setNotifType]    = useState<NotifType>("system")
+  const [title,        setTitle]        = useState("")
+  const [message,      setMessage]      = useState("")
+  const [loading,      setLoading]      = useState(false)
+  const [success,      setSuccess]      = useState(false)
+  const [error,        setError]        = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim() || !message.trim()) return
+    if (targetType === "user" && !targetUserId) { setError("Seleziona un utente"); return }
     setLoading(true); setError(null); setSuccess(false)
 
     const res = await createNotificationAction({
-      target_type:  targetType,
-      target_role:  targetType === "role" ? targetRole : null,
-      target_user_id: null, // lookup via email non implementato lato client — gestito nel server action
-      title:        title.trim(),
-      message:      message.trim(),
-      type:         notifType,
-      // Per target_type="user" passiamo l'email nel title come prefisso [email]
-      // Il server action risolve l'email → uuid
-      ...(targetType === "user" ? { target_email: targetEmail.trim() } : {}),
+      target_type:    targetType,
+      target_role:    targetType === "role" ? targetRole : null,
+      target_user_id: targetType === "user" ? targetUserId : null,
+      title:          title.trim(),
+      message:        message.trim(),
+      type:           notifType,
     })
 
     setLoading(false)
     if (res.error) { setError(res.error); return }
     setSuccess(true)
-    setTitle(""); setMessage(""); setTargetEmail("")
+    setTitle(""); setMessage(""); setTargetUserId("")
     setTimeout(() => setSuccess(false), 4000)
   }
 
@@ -124,16 +126,21 @@ export function CreateNotificationForm() {
           </select>
         )}
 
-        {/* Input email per utente specifico */}
+        {/* Select utente specifico */}
         {targetType === "user" && (
-          <input
-            type="email"
-            placeholder="Email utente…"
-            value={targetEmail}
-            onChange={(e) => setTargetEmail(e.target.value)}
+          <select
+            value={targetUserId}
+            onChange={(e) => setTargetUserId(e.target.value)}
             required
             className="mt-2 w-full rounded-xl border border-border bg-white/70 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
+          >
+            <option value="">— Seleziona utente —</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.full_name ? `${u.full_name} (${u.email})` : u.email}
+              </option>
+            ))}
+          </select>
         )}
       </div>
 

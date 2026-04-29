@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/data/auth"
-import { getProfileById } from "@/lib/data/profiles"
+import { getProfileById, getAllProfiles } from "@/lib/data/profiles"
 import { getAllNotifications } from "@/lib/data/notifications"
 import { getAllFeedback } from "@/lib/data/feedback"
 import { CreateNotificationForm } from "@/components/admin/create-notification-form"
@@ -14,9 +14,10 @@ export default async function AdminPage() {
   const profile = await getProfileById(user.id)
   if (!profile || profile.platform_role !== "super_admin") redirect("/dashboard")
 
-  const [notifications, feedbackList] = await Promise.all([
+  const [notifications, feedbackList, allUsers] = await Promise.all([
     getAllNotifications(),
     getAllFeedback(),
+    getAllProfiles(),
   ])
 
   const newFeedbackCount = feedbackList.filter((f) => f.status === "new").length
@@ -57,7 +58,7 @@ export default async function AdminPage() {
             <Bell className="h-4 w-4 text-primary" />
             <h3 className="text-base font-semibold text-foreground">Invia notifica</h3>
           </div>
-          <CreateNotificationForm />
+          <CreateNotificationForm users={allUsers} />
 
           {/* Notifiche inviate di recente */}
           {notifications.length > 0 && (

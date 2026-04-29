@@ -59,7 +59,10 @@
       "Bash(cmd /c \"tasklist /FI \\\\\"IMAGENAME eq node.exe\\\\\" 2>&1\")",
       "Bash(tasklist.exe /FI \"IMAGENAME eq node.exe\")",
       "Bash(cmd /c tasklist)",
-      "Bash(dir \"C:\\\\invigitrack\\\\public\\\\tutorial\")"
+      "Bash(dir \"C:\\\\invigitrack\\\\public\\\\tutorial\")",
+      "Bash(xargs grep *)",
+      "Bash(xargs ls *)"
+
     ]
   }
 }

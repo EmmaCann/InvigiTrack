@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Pencil, Trash2, AlertTriangle, Check, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { updateWorkspace, deleteWorkspace, addWorkspace } from "@/app/actions/workspace"
+import { updateWorkspace, deleteWorkspace, addWorkspace, createCategoryAndWorkspace } from "@/app/actions/workspace"
 import type { UserWorkspace, WorkCategory } from "@/types/database"
 
 // --- Preset emoji ---------------------------------------------------------------
@@ -257,6 +257,9 @@ function WorkspaceCard({
 
 // --- Form creazione nuovo workspace ---------------------------------------------
 
+// Sentinel per indicare che l'utente vuole creare una categoria personalizzata
+const CUSTOM_CAT = "__custom__"
+
 function AddWorkspaceForm({
   allCategories,
   onDone,
@@ -264,18 +267,31 @@ function AddWorkspaceForm({
   allCategories: WorkCategory[]
   onDone: () => void
 }) {
-  const [name, setName]             = useState("")
-  const [selectedCat, setSelectedCat] = useState<string>("")
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState<string | null>(null)
+  const [name,          setName]          = useState("")
+  const [selectedCat,   setSelectedCat]   = useState<string>("")
+  const [customLabel,   setCustomLabel]   = useState("")
+  const [customDesc,    setCustomDesc]    = useState("")
+  const [loading,       setLoading]       = useState(false)
+  const [error,         setError]         = useState<string | null>(null)
+
+  const isCustom = selectedCat === CUSTOM_CAT
 
   async function handleCreate() {
     if (!name.trim() || !selectedCat) return
-    const cat = allCategories.find((c) => c.id === selectedCat)
-    if (!cat) return
     setLoading(true)
     setError(null)
-    const res = await addWorkspace(cat.id, name.trim())
+
+    let res: { error?: string }
+
+    if (isCustom) {
+      if (!customLabel.trim()) { setError("Inserisci il nome del tipo di lavoro"); setLoading(false); return }
+      res = await createCategoryAndWorkspace(customLabel.trim(), customDesc.trim(), name.trim())
+    } else {
+      const cat = allCategories.find((c) => c.id === selectedCat)
+      if (!cat) { setLoading(false); return }
+      res = await addWorkspace(cat.id, name.trim())
+    }
+
     setLoading(false)
     if (res.error) { setError(res.error); return }
     onDone()
@@ -331,15 +347,74 @@ function AddWorkspaceForm({
               {selectedCat === cat.id && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
             </button>
           ))}
+
+          {/* Opzione categoria personalizzata */}
+          <button
+            type="button"
+            onClick={() => setSelectedCat(selectedCat === CUSTOM_CAT ? "" : CUSTOM_CAT)}
+            className={cn(
+              "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors border",
+              isCustom
+                ? "border-amber-400/50 bg-amber-50/60 text-amber-800 ring-1 ring-amber-300/40"
+                : "border-dashed border-border/60 bg-white/20 hover:bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-amber-100 text-[11px]">
+              ✏️
+            </span>
+            <span className="flex-1 text-left text-[13px]">Il tuo lavoro non è tra questi?</span>
+            {isCustom && <Check className="h-3.5 w-3.5 shrink-0 text-amber-600" />}
+          </button>
         </div>
       </div>
+
+      {/* Form categoria personalizzata */}
+      {isCustom && (
+        <div className="rounded-xl border border-amber-300/50 bg-amber-50/50 px-4 py-3.5 space-y-3">
+          {/* Warning */}
+          <div className="flex items-start gap-2.5 text-amber-800">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+            <p className="text-xs leading-relaxed">
+              <span className="font-semibold">Attenzione:</span> la categoria che crei verrà aggiunta al database e sarà visibile a tutti gli utenti della piattaforma. Assicurati che il nome sia chiaro e rappresentativo.
+            </p>
+          </div>
+
+          {/* Nome categoria */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+              Nome del tipo di lavoro <span className="text-amber-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={customLabel}
+              onChange={(e) => setCustomLabel(e.target.value)}
+              placeholder="es. Life Coaching, Fisioterapia…"
+              className="w-full rounded-lg border border-amber-300/60 bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400/50"
+            />
+          </div>
+
+          {/* Descrizione opzionale */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+              Descrizione <span className="text-amber-400/70">(opzionale)</span>
+            </label>
+            <input
+              type="text"
+              value={customDesc}
+              onChange={(e) => setCustomDesc(e.target.value)}
+              placeholder="Breve descrizione del tipo di lavoro…"
+              className="w-full rounded-lg border border-amber-300/60 bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400/50"
+            />
+          </div>
+        </div>
+      )}
 
       {error && <p className="text-xs text-destructive">{error}</p>}
 
       {/* Crea button */}
       <button
         type="button"
-        disabled={!name.trim() || !selectedCat || loading}
+        disabled={!name.trim() || !selectedCat || (isCustom && !customLabel.trim()) || loading}
         onClick={handleCreate}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
       >

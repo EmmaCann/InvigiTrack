@@ -221,6 +221,51 @@ export async function deleteWorkspaceData(
 // --- WRITE --------------------------------------------------------------------
 
 /**
+ * Inserisce una nuova categoria nel DB (visibile a tutti gli utenti).
+ * Il slug viene derivato dal label: minuscolo, spazi → `_`, caratteri speciali rimossi.
+ * Usato per le categorie personalizzate create dagli admin.
+ */
+export async function insertCategory(data: {
+  label:        string
+  description?: string
+}): Promise<{ id?: string; error?: string }> {
+  const supabase = await createClient()
+
+  // Genera slug da label — es. "Life Coaching" → "life_coaching"
+  const baseSlug = data.label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40)
+
+  // Verifica unicità slug — se esiste già, aggiunge suffisso timestamp
+  const { data: existing } = await supabase
+    .from("work_categories")
+    .select("id")
+    .eq("slug", baseSlug)
+    .maybeSingle()
+
+  const slug = existing ? `${baseSlug}_${Date.now()}` : baseSlug
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: row, error } = await supabase
+    .from("work_categories")
+    .insert({
+      slug,
+      label:       data.label.trim(),
+      description: data.description?.trim() || null,
+      is_active:   true,
+    })
+    .select("id")
+    .single()
+
+  if (error) return { error: error.message }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return { id: (row as any)?.id as string | undefined }
+}
+
+/**
  * Concede l'accesso a una categoria a un utente.
  * `name` è il nome personalizzato del workspace (es. "Cambridge Invigilation").
  * Se omesso, in fase di display viene usato il label della categoria.
