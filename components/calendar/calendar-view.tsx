@@ -7,7 +7,7 @@ import { DayPanel } from "./day-panel"
 import { WeekGrid, getWeekStart } from "./week-grid"
 import { EventDialog } from "./event-dialog"
 import { useIsMobile } from "@/hooks/use-is-mobile"
-import type { Session, CalendarEvent, Profile } from "@/types/database"
+import type { Session, CalendarEvent, Profile, Timetable } from "@/types/database"
 
 // --- Helpers ------------------------------------------------------------------
 
@@ -38,14 +38,20 @@ interface Props {
   events:       CalendarEvent[]
   profile:      Profile
   categorySlug: string
+  timetables:   Timetable[]
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function CalendarView({ sessions, events, profile, categorySlug }: Props) {
+export function CalendarView({ sessions, events, profile, categorySlug, timetables }: Props) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const isMobile = useIsMobile()
+
+  const showTimetable =
+    profile.role_type === "invigilator" ||
+    profile.role_type === "supervisor" ||
+    ((profile.platform_role === "admin" || profile.platform_role === "super_admin") && categorySlug === "invigilation")
 
   const [view,        setView]        = useState<CalView>("month")
   const [current,     setCurrent]     = useState(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -222,6 +228,7 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
         {/* Bottone nuovo evento */}
         <EventDialog
           defaultDate={selDateStr ?? new Date().toISOString().split("T")[0]}
+          showTimetable={showTimetable}
           trigger={
             <button className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition-colors hover:bg-primary/90 sm:px-4">
               <Plus className="h-4 w-4" strokeWidth={2.5} />
@@ -379,6 +386,7 @@ export function CalendarView({ sessions, events, profile, categorySlug }: Props)
           profile={profile}
           lastSession={lastSession}
           categorySlug={categorySlug}
+          timetables={timetables}
         />
       </div>
 

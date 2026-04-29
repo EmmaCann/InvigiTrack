@@ -284,6 +284,20 @@ export interface CreateEventData {
   workspace_id?: string  // workspace specifico a cui appartiene l'evento
 }
 
+// --- Timetable ----------------------------------------------------------------
+
+/** Riga della tabella `timetables` — documento per-evento Cambridge (PDF o DOCX) */
+export interface Timetable {
+  id:         string
+  user_id:    string
+  event_id:   string | null   // FK → calendar_events.id
+  file_path:  string | null   // null quando is_expired = true
+  file_type:  "pdf" | "docx"
+  file_size:  number | null   // bytes
+  is_expired: boolean
+  created_at: string
+}
+
 // --- Pagamenti ----------------------------------------------------------------
 
 export type PaymentMethod = "bank_transfer" | "cash" | "other"

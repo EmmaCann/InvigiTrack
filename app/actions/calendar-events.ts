@@ -22,7 +22,7 @@ function revalidate() {
 
 export async function createEvent(
   data: CreateEventData,
-): Promise<{ success?: true; error?: string }> {
+): Promise<{ success?: true; eventId?: string; error?: string }> {
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
 
@@ -31,7 +31,7 @@ export async function createEvent(
   if (result.error) return { error: result.error }
 
   revalidate()
-  return { success: true }
+  return { success: true, eventId: result.event?.id }
 }
 
 // --- Modifica evento ----------------------------------------------------------

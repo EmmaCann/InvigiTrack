@@ -9,7 +9,8 @@ import { ConvertEventDialog } from "./convert-event-dialog"
 import { SessionDialog }      from "@/components/sessions/session-dialog"
 import { removeSession }      from "@/app/actions/sessions"
 import { removeEvent }        from "@/app/actions/calendar-events"
-import type { Session, CalendarEvent, Profile } from "@/types/database"
+import { TimetablePanel }     from "@/components/timetables/timetable-panel"
+import type { Session, CalendarEvent, Profile, Timetable } from "@/types/database"
 
 const STATUS_DOT: Record<string, string> = {
   unpaid:  "bg-amber-400",
@@ -44,13 +45,20 @@ interface Props {
   profile:      Profile
   lastSession?: Session
   categorySlug: string
+  timetables:   Timetable[]
 }
 
-export function DayPanel({ selectedDay, year, month, sessions, events, profile, lastSession, categorySlug }: Props) {
+export function DayPanel({ selectedDay, year, month, sessions, events, profile, lastSession, categorySlug, timetables }: Props) {
   const router    = useRouter()
   const [, start] = useTransition()
 
   const knownLocations = Array.from(new Set(sessions.map((s) => s.location).filter(Boolean) as string[])).sort()
+
+  // Visibilità timetable: invigilator/supervisor sempre; admin/super_admin solo se workspace invigilation
+  const showTimetable =
+    profile.role_type === "invigilator" ||
+    profile.role_type === "supervisor" ||
+    ((profile.platform_role === "admin" || profile.platform_role === "super_admin") && categorySlug === "invigilation")
 
   const [confirmSessionId, setConfirmSessionId] = useState<string | null>(null)
   const [confirmEventId,   setConfirmEventId]   = useState<string | null>(null)
@@ -111,6 +119,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                 {dateStr && (
                   <EventDialog
                     defaultDate={dateStr}
+                    showTimetable={showTimetable}
                     trigger={
                       <button className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary/90">
                         <Plus className="h-3.5 w-3.5" />
@@ -220,6 +229,16 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                         <p className="mt-1 text-xs text-muted-foreground/80 italic leading-snug">
                           {ev.notes}
                         </p>
+                      )}
+
+                      {/* Timetable PDF — solo per invigilator/supervisor/admin invigilation */}
+                      {showTimetable && (
+                        <TimetablePanel
+                          eventId={ev.id}
+                          userId={profile.id}
+                          title={ev.title}
+                          timetable={timetables.find((t) => t.event_id === ev.id) ?? null}
+                        />
                       )}
 
                       {/* CTA conversione: solo se passato e non ancora convertito */}

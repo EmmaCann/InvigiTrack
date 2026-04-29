@@ -1,10 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, X, CalendarDays, MapPin, AlignLeft, Clock } from "lucide-react"
-import { createEvent, editEvent } from "@/app/actions/calendar-events"
-import { useIsMobile } from "@/hooks/use-is-mobile"
+import { Plus, Pencil, X, CalendarDays, MapPin, AlignLeft, Clock, Upload, FileText } from "lucide-react"
+import { createEvent, editEvent }        from "@/app/actions/calendar-events"
+import { saveTimetable }                 from "@/app/actions/timetables"
+import { createClient }                  from "@/lib/supabase/client"
+import { detectFileType, getFileExtension, TIMETABLE_ACCEPT, MAX_TIMETABLE_B, MAX_TIMETABLE_MB } from "@/lib/timetable-utils"
+import { useIsMobile }                   from "@/hooks/use-is-mobile"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import type { CalendarEvent } from "@/types/database"
 
@@ -27,21 +30,26 @@ const inputCls =
 // --- Props --------------------------------------------------------------------
 
 interface Props {
-  defaultDate?: string
-  event?:       CalendarEvent
-  trigger?:     React.ReactNode
+  defaultDate?:    string
+  event?:          CalendarEvent
+  trigger?:        React.ReactNode
+  showTimetable?:  boolean   // mostra il file picker solo per ruoli invigilator/supervisor/admin
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function EventDialog({ defaultDate, event, trigger }: Props) {
+export function EventDialog({ defaultDate, event, trigger, showTimetable = false }: Props) {
   const router   = useRouter()
   const isMobile = useIsMobile()
   const isEdit   = !!event
 
-  const [open,    setOpen]    = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState<string | null>(null)
+  const timetableFileRef = useRef<HTMLInputElement>(null)
+
+  const [open,           setOpen]          = useState(false)
+  const [loading,        setLoading]       = useState(false)
+  const [error,          setError]         = useState<string | null>(null)
+  const [timetableFile,  setTimetableFile] = useState<File | null>(null)
+  const [timetableError, setTimetableError] = useState<string | null>(null)
 
   const [date,      setDate]      = useState(defaultDate ?? "")
   const [title,     setTitle]     = useState("")
@@ -68,8 +76,30 @@ export function EventDialog({ defaultDate, event, trigger }: Props) {
         setEndTime("")
       }
       setError(null)
+      setTimetableFile(null)
+      setTimetableError(null)
     }
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // --- File picker -------------------------------------------------------------
+
+  function handleTimetableChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!detectFileType(file)) {
+      setTimetableError("Formato non supportato. Carica un PDF o un file Word (.docx).")
+      return
+    }
+    if (file.size > MAX_TIMETABLE_B) {
+      setTimetableError(`Il file supera il limite di ${MAX_TIMETABLE_MB} MB.`)
+      return
+    }
+    setTimetableError(null)
+    setTimetableFile(file)
+    if (timetableFileRef.current) timetableFileRef.current.value = ""
+  }
+
+  // --- Submit ------------------------------------------------------------------
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -85,13 +115,48 @@ export function EventDialog({ defaultDate, event, trigger }: Props) {
       start_time: startTime || undefined,
       end_time:   endTime   || undefined,
     }
-    const result = isEdit ? await editEvent(event!.id, data) : await createEvent(data)
 
-    setLoading(false)
-    if (result.error) { setError(result.error); return }
+    if (isEdit) {
+      const result = await editEvent(event!.id, data)
+      setLoading(false)
+      if (result.error) { setError(result.error); return }
+    } else {
+      const result = await createEvent(data)
+      if (result.error) { setLoading(false); setError(result.error); return }
+
+      // Se c'è un file timetable, caricalo subito dopo aver creato l'evento
+      if (timetableFile && result.eventId) {
+        const fileType = detectFileType(timetableFile)
+        if (fileType) {
+          const ext      = getFileExtension(timetableFile)
+          const supabase = createClient()
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const filePath = `${user.id}/${crypto.randomUUID()}.${ext}`
+            const { error: uploadErr } = await supabase.storage
+              .from("timetables")
+              .upload(filePath, timetableFile, { upsert: false })
+            if (!uploadErr) {
+              await saveTimetable({
+                event_id:  result.eventId,
+                file_path: filePath,
+                file_type: fileType,
+                file_size: timetableFile.size,
+              })
+            }
+            // Se l'upload fallisce, l'evento è comunque creato — l'utente può caricare dal pannello
+          }
+        }
+      }
+
+      setLoading(false)
+    }
+
     setOpen(false)
     router.refresh()
   }
+
+  // --- Trigger defaults --------------------------------------------------------
 
   const defaultTrigger = isEdit ? (
     <button className="flex cursor-pointer h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary">
@@ -103,6 +168,8 @@ export function EventDialog({ defaultDate, event, trigger }: Props) {
       Nuovo Appuntamento
     </button>
   )
+
+  // --- Form --------------------------------------------------------------------
 
   const formContent = (
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -180,6 +247,46 @@ export function EventDialog({ defaultDate, event, trigger }: Props) {
           </div>
         </Field>
 
+        {/* File timetable — solo per nuovi eventi e ruoli abilitati */}
+        {showTimetable && !isEdit && (
+          <Field label="Timetable (opzionale)">
+            {timetableFile ? (
+              <div className="flex items-center justify-between rounded-xl border border-blue-200/60 bg-blue-50/40 px-3 py-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                  <span className="truncate text-sm text-foreground">{timetableFile.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTimetableFile(null)}
+                  className="cursor-pointer ml-2 shrink-0 text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setTimetableError(null); timetableFileRef.current?.click() }}
+                className="flex w-full cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border/60 bg-white/70 px-3 py-2.5 text-sm text-muted-foreground/60 transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                <Upload className="h-3.5 w-3.5 shrink-0" />
+                Carica timetable PDF o Word
+              </button>
+            )}
+            {timetableError && (
+              <p className="mt-1 text-[11px] text-destructive">{timetableError}</p>
+            )}
+            <input
+              ref={timetableFileRef}
+              type="file"
+              accept={TIMETABLE_ACCEPT}
+              className="hidden"
+              onChange={handleTimetableChange}
+            />
+          </Field>
+        )}
+
         {error && (
           <p className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">
             {error}
@@ -208,6 +315,8 @@ export function EventDialog({ defaultDate, event, trigger }: Props) {
       </div>
     </form>
   )
+
+  // --- Header ------------------------------------------------------------------
 
   const dialogHeader = (
     <div className="flex items-center justify-between border-b border-black/[0.07] px-6 py-4">
