@@ -138,7 +138,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={() => openDashboardTour()}
-          className="group flex w-full items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
+          className="group flex w-full cursor-pointer items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
         >
           <Sparkles className="h-4 w-4 shrink-0 transition-colors group-hover:text-primary" strokeWidth={1.7} />
           <span className="font-medium">Tour</span>
@@ -146,7 +146,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={() => openHelpDialog()}
-          className="group flex w-full items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
+          className="group flex w-full cursor-pointer items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
         >
           <BookOpen className="h-4 w-4 shrink-0 transition-colors group-hover:text-primary" strokeWidth={1.7} />
           <span className="font-medium">Tutorial</span>
@@ -155,7 +155,7 @@ export function Sidebar({
           data-tour="feedback-btn"
           type="button"
           onClick={() => setFeedbackOpen(true)}
-          className="group flex w-full items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
+          className="group flex w-full cursor-pointer items-center gap-3 rounded-lg px-3.5 py-2 text-sm text-muted-foreground/70 transition-colors hover:bg-white/50 hover:text-foreground"
         >
           <MessageSquarePlus className="h-4 w-4 shrink-0 transition-colors group-hover:text-primary" strokeWidth={1.7} />
           <span className="font-medium">Invia feedback</span>
