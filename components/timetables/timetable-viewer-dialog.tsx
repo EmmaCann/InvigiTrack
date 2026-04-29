@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, Download, Loader2, AlertCircle, ExternalLink } from "lucide-react"
+import { X, Download, Loader2, AlertCircle } from "lucide-react"
 import { getTimetableSignedUrl } from "@/app/actions/timetables"
-import { useIsMobile }           from "@/hooks/use-is-mobile"
 
 interface Props {
   filePath: string
@@ -16,7 +15,6 @@ export function TimetableViewerDialog({ filePath, fileType, title, onClose }: Pr
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState<string | null>(null)
-  const isMobile = useIsMobile()
 
   useEffect(() => {
     getTimetableSignedUrl(filePath).then((res) => {
@@ -29,18 +27,11 @@ export function TimetableViewerDialog({ filePath, fileType, title, onClose }: Pr
     })
   }, [filePath])
 
-  // URL per Office Online Viewer (DOCX)
-  const officeViewerUrl = signedUrl
-    ? `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(signedUrl)}`
-    : null
-
-  // Su mobile + DOCX: Office Online iframe non funziona in Safari/iOS → link diretto
-  const showMobileDocxFallback = isMobile && fileType === "docx" && !!signedUrl
-
+  // PDF → diretto; DOCX → Google Docs Viewer (funziona in iframe su desktop e mobile)
   const iframeSrc = signedUrl
     ? fileType === "pdf"
       ? signedUrl
-      : officeViewerUrl!
+      : `https://docs.google.com/viewer?url=${encodeURIComponent(signedUrl)}&embedded=true`
     : null
 
   return (
@@ -99,36 +90,7 @@ export function TimetableViewerDialog({ filePath, fileType, title, onClose }: Pr
           </div>
         )}
 
-        {/* Mobile + DOCX: Office Online non funziona in iframe su Safari/iOS */}
-        {showMobileDocxFallback && (
-          <div className="flex flex-col items-center gap-4 px-8 text-center">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              La visualizzazione inline dei file Word non è supportata su mobile.
-            </p>
-            <a
-              href={officeViewerUrl!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Apri nel browser
-            </a>
-            <a
-              href={signedUrl!}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex cursor-pointer items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-semibold text-foreground hover:bg-muted"
-            >
-              <Download className="h-4 w-4" />
-              Scarica il file
-            </a>
-          </div>
-        )}
-
-        {/* Desktop o PDF: iframe normale */}
-        {iframeSrc && !showMobileDocxFallback && (
+        {iframeSrc && (
           <iframe
             src={iframeSrc}
             title={title}
