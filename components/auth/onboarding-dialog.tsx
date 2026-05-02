@@ -111,10 +111,10 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-background to-primary/5 backdrop-blur-sm" />
 
       {/* Card */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl shadow-black/[0.12]">
+      <div className="relative flex w-full max-w-md flex-col overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl shadow-black/[0.12]" style={{ maxHeight: "90dvh" }}>
 
         {/* Header */}
-        <div className="border-b border-border/20 bg-primary/[0.04] px-7 py-6">
+        <div className="shrink-0 border-b border-border/20 bg-primary/[0.04] px-7 py-6">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
             {isAdmin
               ? <ShieldCheck className="h-5 w-5 text-primary" />
@@ -140,8 +140,8 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
 
         {/* ── Form USER ──────────────────────────────────────────────────── */}
         {!isAdmin && (
-          <form onSubmit={userForm.handleSubmit(onSubmitUser)}>
-            <div className="space-y-5 px-7 py-6">
+          <form onSubmit={userForm.handleSubmit(onSubmitUser)} className="relative flex min-h-0 flex-1 flex-col">
+            <div className="flex-1 space-y-5 overflow-y-auto px-7 py-6 pb-10">
 
               <OField label="Nome completo" error={userForm.formState.errors.full_name?.message}>
                 <OInput
@@ -172,14 +172,15 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
               {serverError && <p className="text-sm text-destructive">{serverError}</p>}
             </div>
 
+            <div className="pointer-events-none absolute inset-x-0 bottom-[84px] h-16 bg-gradient-to-t from-white to-transparent" />
             <SubmitBar isLoading={isLoading} />
           </form>
         )}
 
         {/* ── Form ADMIN ─────────────────────────────────────────────────── */}
         {isAdmin && (
-          <form onSubmit={adminForm.handleSubmit(onSubmitAdmin)}>
-            <div className="space-y-5 px-7 py-6">
+          <form onSubmit={adminForm.handleSubmit(onSubmitAdmin)} className="relative flex min-h-0 flex-1 flex-col">
+            <div className="flex-1 space-y-5 overflow-y-auto px-7 py-6 pb-10">
 
               <OField label="Nome completo" error={adminForm.formState.errors.full_name?.message}>
                 <OInput
@@ -287,6 +288,7 @@ export function OnboardingDialog({ isAdmin }: { isAdmin: boolean }) {
               {serverError && <p className="text-sm text-destructive">{serverError}</p>}
             </div>
 
+            <div className="pointer-events-none absolute inset-x-0 bottom-[84px] h-16 bg-gradient-to-t from-white to-transparent" />
             <SubmitBar isLoading={isLoading} />
           </form>
         )}
