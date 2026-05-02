@@ -77,7 +77,7 @@ export async function convertEventToSession(
     start_time:  string
     end_time:    string
     hourly_rate: number
-    role_type:   InvigilationRole
+    role_type?:  InvigilationRole  // solo per workspace invigilation
     notes?:      string
     // title, location, event_date vengono dall'evento
     title:       string
@@ -103,7 +103,10 @@ export async function convertEventToSession(
     notes:        sessionData.notes,
     metadata: {
       exam_name: sessionData.title,
-      role_type: sessionData.role_type,
+      // role_type solo per workspace invigilation — altri workspace non lo usano
+      ...(category.slug === "invigilation" && sessionData.role_type
+        ? { role_type: sessionData.role_type }
+        : {}),
     },
   })
 

@@ -69,7 +69,7 @@ export function ConvertEventDialog({ event, profile, categorySlug, onClose }: Pr
       start_time:  startTime,
       end_time:    endTime,
       hourly_rate: rate,
-      role_type:   roleType,
+      role_type:   isInvigilation ? roleType : undefined,
       notes:       notes || undefined,
       title:       event.title,
       location:    event.location ?? undefined,

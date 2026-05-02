@@ -449,9 +449,11 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                             <span className="font-semibold text-sm text-foreground truncate">
                               {meta.exam_name ?? "Sessione"}
                             </span>
-                            <span className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium capitalize text-muted-foreground">
-                              {meta.role_type ?? profile.role_type}
-                            </span>
+                            {categorySlug === "invigilation" && (meta.role_type ?? profile.role_type) && (
+                              <span className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium capitalize text-muted-foreground">
+                                {meta.role_type ?? profile.role_type}
+                              </span>
+                            )}
                           </div>
 
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
