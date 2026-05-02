@@ -136,6 +136,14 @@ export function Header({
           </Badge>
         )}
 
+        {/* Super Admin badge */}
+        {profile.platform_role === "super_admin" && (
+          <Badge variant="secondary" className="hidden gap-1 text-[10px] sm:inline-flex bg-violet-500/10 text-violet-600 border-violet-300/40">
+            <ShieldCheck className="h-3 w-3" />
+            Super Admin
+          </Badge>
+        )}
+
         {/* Notifiche */}
         <NotificationBell initialUnreadCount={unreadNotifications} />
 
