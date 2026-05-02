@@ -572,18 +572,42 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                 )}
               >
                 <div className="flex min-w-0 flex-1 flex-col gap-1 pl-1">
+                  {/* Titolo + ruolo */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">
-                      {new Date(session.session_date + "T00:00:00").toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" })}
-                    </span>
                     <span className="font-semibold text-sm text-foreground truncate">
                       {meta.exam_name ?? "Sessione"}
                     </span>
+                    <span className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium capitalize text-muted-foreground">
+                      {meta.role_type ?? profile.role_type}
+                    </span>
                   </div>
+                  {/* Data con anno · orario · durata · sede */}
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                    <span>{session.start_time.slice(0,5)} – {session.end_time.slice(0,5)}</span>
-                    {session.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{session.location}</span>}
+                    <span className="capitalize">
+                      {new Date(session.session_date + "T00:00:00").toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                    </span>
+                    <span className="text-border">·</span>
+                    <span>{session.start_time.slice(0, 5)} – {session.end_time.slice(0, 5)}</span>
+                    <span className="text-border">·</span>
+                    <span className="font-medium text-foreground/70">
+                      {Math.floor(session.duration_minutes / 60) > 0
+                        ? `${Math.floor(session.duration_minutes / 60)}h${session.duration_minutes % 60 > 0 ? ` ${session.duration_minutes % 60}min` : ""}`
+                        : `${session.duration_minutes}min`
+                      }
+                    </span>
+                    {session.location && (
+                      <>
+                        <span className="text-border">·</span>
+                        <span className="flex items-center gap-0.5">
+                          <MapPin className="h-3 w-3" />
+                          {session.location}
+                        </span>
+                      </>
+                    )}
                   </div>
+                  {session.notes && (
+                    <p className="text-xs text-muted-foreground/80 italic mt-0.5">{session.notes}</p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between gap-3 sm:justify-end">
                   <span className="text-sm font-bold tabular-nums text-foreground">€{session.earned.toFixed(2)}</span>

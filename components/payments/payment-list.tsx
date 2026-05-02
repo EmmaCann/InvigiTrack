@@ -367,6 +367,9 @@ export function PaymentList({
                         <p className="mt-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
                           {new Date(session.session_date + "T00:00:00").toLocaleDateString("it-IT", { month: "short" })}
                         </p>
+                        <p className="mt-0 text-[9px] font-medium text-muted-foreground/60">
+                          {new Date(session.session_date + "T00:00:00").getFullYear()}
+                        </p>
                       </div>
 
                       <div className="hidden h-8 w-px shrink-0 bg-border/40 sm:block" />
@@ -400,7 +403,7 @@ export function PaymentList({
 
               {/* Paginazione Da Pagare */}
               {pendingTotalPages > 1 && (
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center justify-between pt-1 pr-14">
                   <span className="text-xs text-muted-foreground">
                     Pagina {pendingPage + 1} di {pendingTotalPages}
                   </span>
@@ -536,7 +539,7 @@ export function PaymentList({
 
               {/* Paginazione Storico */}
               {historyTotalPages > 1 && (
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center justify-between pt-1 pr-14">
                   <span className="text-xs text-muted-foreground">
                     Pagina {historyPage + 1} di {historyTotalPages}
                   </span>
