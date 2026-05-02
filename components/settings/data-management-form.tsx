@@ -10,15 +10,18 @@ function downloadCsv(rows: AllDataCsvRow[]) {
   const lines = [
     headers.join(","),
     ...rows.map((r) =>
-      headers.map((h) => `"${String(r[h]).replace(/"/g, '""')}"`).join(",")
+      headers.map((h) => `"${String(r[h] ?? "").replace(/"/g, '""')}"`).join(",")
     ),
   ]
-  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" })
+  const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8;" })
   const url  = URL.createObjectURL(blob)
   const a    = document.createElement("a")
   a.href     = url
   a.download = `invigitrack-export-${new Date().toISOString().split("T")[0]}.csv`
+  // Deve essere nel DOM per funzionare su tutti i browser
+  document.body.appendChild(a)
   a.click()
+  document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
 
@@ -27,14 +30,17 @@ export function DataManagementForm() {
   const [archiveLoading, setArchiveLoading] = useState(false)
   const [archiveConfirm, setArchiveConfirm] = useState(false)
   const [exportDone,     setExportDone]     = useState(false)
+  const [exportError,    setExportError]    = useState<string | null>(null)
   const [archiveResult,  setArchiveResult]  = useState<{ count: number; error?: string } | null>(null)
 
   async function handleExport() {
     setExportLoading(true)
     setExportDone(false)
+    setExportError(null)
     const res = await exportAllDataCsv()
     setExportLoading(false)
-    if (res.error || !res.rows) return
+    if (res.error) { setExportError(res.error); return }
+    if (!res.rows || res.rows.length === 0) { setExportError("Nessuna sessione da esportare"); return }
     downloadCsv(res.rows)
     setExportDone(true)
     setTimeout(() => setExportDone(false), 4000)
@@ -73,6 +79,9 @@ export function DataManagementForm() {
             }
           </button>
         </div>
+        {exportError && (
+          <p className="mt-2 text-xs text-destructive">{exportError}</p>
+        )}
       </div>
 
       {/* Archive all */}

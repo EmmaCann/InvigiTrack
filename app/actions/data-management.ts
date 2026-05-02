@@ -31,21 +31,39 @@ export async function exportAllDataCsv(): Promise<{ rows?: AllDataCsvRow[]; erro
   if (!user) return { error: "Non autenticato" }
 
   const supabase = await createClient()
-  const { data, error } = await supabase
+
+  // 1. Sessioni (query semplice, senza join — evita problemi schema cache FK)
+  const { data: sessionData, error } = await supabase
     .from("sessions")
-    .select("*, user_category_access!workspace_id(label:name)")
+    .select("*")
     .eq("user_id", user.id)
     .order("session_date", { ascending: false })
 
   if (error) return { error: error.message }
 
-  // Fallback se il join non c'è
-  const sessions = (data ?? []) as (Session & { user_category_access?: { label?: string } })[]
+  const sessions = (sessionData ?? []) as Session[]
+
+  // 2. Nomi workspace — query separata
+  const workspaceIds = Array.from(
+    new Set(sessions.map((s) => s.workspace_id).filter(Boolean))
+  ) as string[]
+  const workspaceNames = new Map<string, string>()
+
+  if (workspaceIds.length > 0) {
+    const { data: wsData } = await supabase
+      .from("user_category_access")
+      .select("id, name")
+      .in("id", workspaceIds)
+    for (const ws of wsData ?? []) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      workspaceNames.set(ws.id, (ws as any).name ?? "")
+    }
+  }
 
   const rows: AllDataCsvRow[] = sessions.map((s) => {
     const meta = s.metadata as Record<string, unknown>
     return {
-      workspace:   s.user_category_access?.label ?? "",
+      workspace:   s.workspace_id ? (workspaceNames.get(s.workspace_id) ?? "") : "",
       data:        s.session_date,
       inizio:      s.start_time.slice(0, 5),
       fine:        s.end_time.slice(0, 5),
