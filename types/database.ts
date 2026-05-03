@@ -304,14 +304,16 @@ export type PaymentMethod = "bank_transfer" | "cash" | "other"
 
 /** Riga della tabella `payments` */
 export interface Payment {
-  id:           string
-  user_id:      string
-  payment_date: string          // "2026-04-01"
-  amount:       number          // importo effettivamente ricevuto
-  method:       PaymentMethod
-  reference:    string | null   // es. numero CRO bonifico
-  notes:        string | null
-  created_at:   string
+  id:                string
+  user_id:           string
+  payment_date:      string          // "2026-04-01"
+  amount:            number          // importo effettivamente ricevuto
+  method:            PaymentMethod
+  reference:         string | null   // es. numero CRO bonifico
+  notes:             string | null
+  prepaid_amount:    number          // importo anticipo incluso in questo pagamento
+  prepaid_remaining: number          // credito anticipo ancora disponibile per sessioni future
+  created_at:        string
 }
 
 /** Riga della tabella `payment_sessions` */

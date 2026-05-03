@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -10,6 +10,7 @@ import {
   CreditCard,
   HelpCircle,
   MapPin,
+  Wallet,
 } from "lucide-react"
 import { removePayment } from "@/app/actions/payments"
 import type { PaymentWithSessions } from "@/types/database"
@@ -43,19 +44,22 @@ function formatDateShort(dateStr: string) {
 // --- Props --------------------------------------------------------------------
 
 interface Props {
-  payment: PaymentWithSessions
+  payment:           PaymentWithSessions
+  onUseCreditClick?: () => void
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function PaymentHistoryCard({ payment }: Props) {
+export function PaymentHistoryCard({ payment, onUseCreditClick }: Props) {
   const router         = useRouter()
   const [, start]      = useTransition()
   const [open,    setOpen]    = useState(false)
   const [confirm, setConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const Icon = METHOD_ICON[payment.method] ?? HelpCircle
+  const Icon            = METHOD_ICON[payment.method] ?? HelpCircle
+  const hasCredit       = payment.prepaid_remaining > 0.01
+  const creditFormatted = `€${payment.prepaid_remaining.toFixed(2)}`
 
   function handleDelete() {
     setLoading(true)
@@ -89,9 +93,18 @@ export function PaymentHistoryCard({ payment }: Props) {
               <span className="text-[11px] text-muted-foreground">· {payment.reference}</span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {payment.sessions.length} session{payment.sessions.length !== 1 ? "i" : "e"} coperte
-          </p>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <p className="text-xs text-muted-foreground">
+              {payment.sessions.length} session{payment.sessions.length !== 1 ? "i" : "e"} coperte
+            </p>
+            {/* Badge credito — sempre visibile se presente */}
+            {hasCredit && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-semibold text-teal-700">
+                <Wallet className="h-2.5 w-2.5" />
+                {creditFormatted} anticipo
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Importo */}
@@ -119,16 +132,15 @@ export function PaymentHistoryCard({ payment }: Props) {
                 Sessioni incluse
               </p>
               {payment.sessions.map((s) => {
-                const meta = s.metadata as { exam_name?: string }
+                const meta = s.metadata as { exam_name?: string; student_name?: string; client_name?: string }
+                const label = meta.exam_name ?? meta.student_name ?? meta.client_name ?? "Sessione"
                 return (
                   <div
                     key={s.id}
                     className="flex items-center justify-between rounded-xl border border-border/40 bg-white/50 px-3.5 py-2.5"
                   >
                     <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {meta.exam_name ?? "Sessione"}
-                      </p>
+                      <p className="text-sm font-medium text-foreground">{label}</p>
                       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                         <span>{formatDateShort(s.session_date)}</span>
                         {s.location && (
@@ -148,6 +160,31 @@ export function PaymentHistoryCard({ payment }: Props) {
                   </div>
                 )
               })}
+            </div>
+          )}
+
+          {/* Sezione credito anticipato */}
+          {hasCredit && (
+            <div className="mb-4 rounded-xl border border-teal-200/60 bg-teal-50/60 px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-teal-800">Credito anticipato disponibile</p>
+                  <p className="mt-0.5 text-xl font-bold tabular-nums text-teal-700">{creditFormatted}</p>
+                  <p className="mt-0.5 text-[11px] text-teal-600/80">
+                    Usalo per saldare sessioni future già pagate in anticipo.
+                  </p>
+                </div>
+                {onUseCreditClick && (
+                  <button
+                    type="button"
+                    onClick={onUseCreditClick}
+                    className="flex shrink-0 items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-teal-700"
+                  >
+                    <Wallet className="h-3.5 w-3.5" />
+                    Usa credito
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

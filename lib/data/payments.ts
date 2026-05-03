@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DAL — Payments
  * Query sulle tabelle `payments` e `payment_sessions`.
  */
@@ -25,15 +25,17 @@ export async function getPaymentsByUser(userId: string): Promise<PaymentWithSess
   if (error || !data) return []
 
   return data.map((p) => ({
-    id:           p.id,
-    user_id:      p.user_id,
-    payment_date: p.payment_date,
-    amount:       p.amount,
-    method:       p.method as PaymentMethod,
-    reference:    p.reference,
-    notes:        p.notes,
-    created_at:   p.created_at,
-    sessions:     (p.payment_sessions ?? [])
+    id:                p.id,
+    user_id:           p.user_id,
+    payment_date:      p.payment_date,
+    amount:            p.amount,
+    method:            p.method as PaymentMethod,
+    reference:         p.reference,
+    notes:             p.notes,
+    prepaid_amount:    p.prepaid_amount    ?? 0,
+    prepaid_remaining: p.prepaid_remaining ?? 0,
+    created_at:        p.created_at,
+    sessions:          (p.payment_sessions ?? [])
       .map((ps: { sessions: Session }) => ps.sessions)
       .filter(Boolean) as Session[],
   }))
@@ -44,30 +46,36 @@ export async function getPaymentsByUser(userId: string): Promise<PaymentWithSess
 /**
  * Crea un pagamento e lo collega alle sessioni indicate.
  * Aggiorna anche payment_status = 'paid' su tutte le sessioni.
+ * Accetta un importo anticipo opzionale per sessioni future.
  */
 export async function createPayment(
   userId: string,
   sessionIds: string[],
   data: {
-    payment_date: string
-    amount: number
-    method: PaymentMethod
-    reference?: string
-    notes?: string
+    payment_date:    string
+    amount:          number
+    method:          PaymentMethod
+    reference?:      string
+    notes?:          string
+    prepaid_amount?: number
   },
 ): Promise<{ error?: string; payment?: Payment }> {
   const supabase = await createClient()
+
+  const prepaidAmt = data.prepaid_amount ?? 0
 
   // 1. Inserisci il record di pagamento
   const { data: payment, error: payErr } = await supabase
     .from("payments")
     .insert({
-      user_id:      userId,
-      payment_date: data.payment_date,
-      amount:       data.amount,
-      method:       data.method,
-      reference:    data.reference ?? null,
-      notes:        data.notes ?? null,
+      user_id:           userId,
+      payment_date:      data.payment_date,
+      amount:            data.amount,
+      method:            data.method,
+      reference:         data.reference  ?? null,
+      notes:             data.notes      ?? null,
+      prepaid_amount:    prepaidAmt,
+      prepaid_remaining: prepaidAmt,
     })
     .select()
     .single<Payment>()
@@ -98,6 +106,73 @@ export async function createPayment(
   }
 
   return { payment }
+}
+
+/**
+ * Usa il credito anticipato di un pagamento per coprire sessioni future.
+ * Collega le sessioni al pagamento originale, le marca come "paid" e
+ * decrementa prepaid_remaining.
+ */
+export async function usePrepaidCredit(
+  paymentId: string,
+  sessionIds: string[],
+  userId: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  if (sessionIds.length === 0) return { error: "Nessuna sessione selezionata" }
+
+  // 1. Recupera le sessioni per sommare gli earned
+  const { data: sessions, error: sErr } = await supabase
+    .from("sessions")
+    .select("id, earned")
+    .in("id", sessionIds)
+    .eq("user_id", userId)
+
+  if (sErr || !sessions) return { error: sErr?.message ?? "Sessioni non trovate" }
+
+  const totalEarned = sessions.reduce((sum: number, s: { earned: number }) => sum + s.earned, 0)
+
+  // 2. Inserisci le junction payment_sessions
+  const junctions = sessionIds.map((sid) => ({
+    payment_id: paymentId,
+    session_id: sid,
+  }))
+
+  const { error: jErr } = await supabase
+    .from("payment_sessions")
+    .insert(junctions)
+
+  if (jErr) return { error: jErr.message }
+
+  // 3. Marca le sessioni come pagate
+  const paidAt = new Date().toISOString()
+  const { error: updErr } = await supabase
+    .from("sessions")
+    .update({ payment_status: "paid", paid_at: paidAt })
+    .in("id", sessionIds)
+
+  if (updErr) return { error: updErr.message }
+
+  // 4. Decrementa prepaid_remaining (non scende sotto zero)
+  const { data: currentPayment, error: pErr } = await supabase
+    .from("payments")
+    .select("prepaid_remaining")
+    .eq("id", paymentId)
+    .single()
+
+  if (pErr || !currentPayment) return { error: pErr?.message ?? "Pagamento non trovato" }
+
+  const newRemaining = Math.max(0, (currentPayment.prepaid_remaining ?? 0) - totalEarned)
+
+  const { error: decErr } = await supabase
+    .from("payments")
+    .update({ prepaid_remaining: newRemaining })
+    .eq("id", paymentId)
+
+  if (decErr) return { error: decErr.message }
+
+  return {}
 }
 
 /**

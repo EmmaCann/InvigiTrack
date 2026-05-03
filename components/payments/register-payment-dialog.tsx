@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { X, AlertTriangle, CheckCircle2, Banknote, CreditCard, HelpCircle } from "lucide-react"
+import { X, AlertTriangle, CheckCircle2, Banknote, CreditCard, HelpCircle, Plus, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { registerPayment } from "@/app/actions/payments"
 import { useIsMobile } from "@/hooks/use-is-mobile"
@@ -44,13 +44,35 @@ export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
 
   const expectedTotal = sessions.reduce((a, s) => a + s.earned, 0)
 
-  const [date,      setDate]      = useState(todayStr())
-  const [amount,    setAmount]    = useState(expectedTotal.toFixed(2))
-  const [method,    setMethod]    = useState<PaymentMethod>("bank_transfer")
-  const [reference, setReference] = useState("")
-  const [notes,     setNotes]     = useState("")
-  const [error,     setError]     = useState<string | null>(null)
-  const [loading,   setLoading]   = useState(false)
+  const [date,         setDate]         = useState(todayStr())
+  const [amount,       setAmount]       = useState(expectedTotal.toFixed(2))
+  const [method,       setMethod]       = useState<PaymentMethod>("bank_transfer")
+  const [reference,    setReference]    = useState("")
+  const [notes,        setNotes]        = useState("")
+  const [error,        setError]        = useState<string | null>(null)
+  const [loading,      setLoading]      = useState(false)
+  const [showAnticipo, setShowAnticipo] = useState(false)
+  const [anticipo,     setAnticipo]     = useState("")
+
+  const anticipoNum = parseFloat(anticipo) || 0
+
+  // Quando l'utente abilita/modifica l'anticipo, aggiorna l'importo totale
+  useEffect(() => {
+    if (showAnticipo) {
+      setAmount((expectedTotal + anticipoNum).toFixed(2))
+    } else {
+      setAmount(expectedTotal.toFixed(2))
+      setAnticipo("")
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showAnticipo])
+
+  useEffect(() => {
+    if (showAnticipo) {
+      setAmount((expectedTotal + anticipoNum).toFixed(2))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anticipo])
 
   const amountNum  = parseFloat(amount) || 0
   const difference = Math.round((amountNum - expectedTotal) * 100) / 100
@@ -59,13 +81,21 @@ export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!date || amountNum <= 0) { setError("Inserisci data e importo validi"); return }
+    if (sessions.length === 0 && anticipoNum <= 0) { setError("Seleziona almeno una sessione o aggiungi un anticipo"); return }
     setLoading(true)
     setError(null)
 
     start(async () => {
       const result = await registerPayment(
         sessions.map((s) => s.id),
-        { payment_date: date, amount: amountNum, method, reference: reference || undefined, notes: notes || undefined },
+        {
+          payment_date:    date,
+          amount:          amountNum,
+          method,
+          reference:       reference || undefined,
+          notes:           notes || undefined,
+          prepaid_amount:  showAnticipo && anticipoNum > 0 ? anticipoNum : undefined,
+        },
       )
 
       setLoading(false)
@@ -208,6 +238,54 @@ export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
           <span className="text-muted-foreground">Totale atteso</span>
           <span className="text-foreground">€{expectedTotal.toFixed(2)}</span>
         </div>
+      </div>
+
+      {/* Anticipo sessioni future */}
+      <div className="rounded-xl border border-border/40 bg-muted/20">
+        <button
+          type="button"
+          onClick={() => setShowAnticipo((v) => !v)}
+          className={cn(
+            "flex w-full items-center justify-between px-4 py-3 text-sm font-medium transition-colors",
+            showAnticipo ? "text-teal-700" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <span className="flex items-center gap-2">
+            <span className={cn(
+              "flex h-5 w-5 items-center justify-center rounded-md border text-[10px]",
+              showAnticipo ? "border-teal-400/60 bg-teal-50 text-teal-600" : "border-border/60 bg-white text-muted-foreground",
+            )}>
+              {showAnticipo ? <ChevronDown className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+            </span>
+            Anticipo per sessioni future
+          </span>
+          {showAnticipo && anticipoNum > 0 && (
+            <span className="rounded-full bg-teal-100 px-2 py-0.5 text-[11px] font-semibold text-teal-700">
+              +€{anticipoNum.toFixed(2)}
+            </span>
+          )}
+        </button>
+
+        {showAnticipo && (
+          <div className="border-t border-border/30 px-4 pb-4 pt-3 space-y-2">
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Importo anticipo (€)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="es. 30.00"
+              value={anticipo}
+              onChange={(e) => setAnticipo(e.target.value)}
+              autoFocus
+              className="w-full rounded-xl border border-teal-300/60 bg-white/70 px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-teal-400/80 focus:ring-2 focus:ring-teal-200/50"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Il credito sarà utilizzabile per pagare sessioni future dallo storico pagamenti.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Errore */}

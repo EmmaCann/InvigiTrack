@@ -1,7 +1,8 @@
 ﻿"use client"
 
 import { useState, useMemo } from "react"
-import { CheckSquare, Square, AlertCircle, CheckCircle2, History, Download, Search, Calendar, ChevronDown, Check, X, Filter, ChevronLeft, ChevronRight as ChevronRightIcon, MapPin } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { CheckSquare, Square, AlertCircle, CheckCircle2, History, Download, Search, Calendar, ChevronDown, Check, X, Filter, ChevronLeft, ChevronRight as ChevronRightIcon, MapPin, Wallet } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
 import { cn } from "@/lib/utils"
 import { RegisterPaymentDialog } from "./register-payment-dialog"
 import { PaymentHistoryCard } from "./payment-history-card"
+import { UseCreditDialog } from "./use-credit-dialog"
 import type { Session, PaymentWithSessions } from "@/types/database"
 
 // --- Helpers ------------------------------------------------------------------
@@ -66,9 +68,12 @@ export function PaymentList({
   summaryPaidTotal,
   initialTab = "pending",
 }: Props) {
-  const [tab,         setTab]         = useState<Tab>(initialTab)
-  const [selected,    setSelected]    = useState<Set<string>>(new Set())
-  const [showModal,   setShowModal]   = useState(false)
+  const router = useRouter()
+
+  const [tab,           setTab]           = useState<Tab>(initialTab)
+  const [selected,      setSelected]      = useState<Set<string>>(new Set())
+  const [showModal,     setShowModal]     = useState(false)
+  const [creditPayment, setCreditPayment] = useState<PaymentWithSessions | null>(null)
 
   // -- Filtri storico -----------------------------------------------------------
   const [historySearch,    setHistorySearch]    = useState("")
@@ -194,6 +199,30 @@ export function PaymentList({
           </div>
         ))}
       </div>
+
+      {/* -- Banner credito anticipato ---------------------------------- */}
+      {(() => {
+        const totalCredit = payments.reduce((sum, p) => sum + (p.prepaid_remaining ?? 0), 0)
+        if (totalCredit < 0.01) return null
+        return (
+          <div
+            className="flex cursor-pointer items-center gap-3 rounded-2xl border border-teal-200/70 bg-teal-50/70 px-4 py-3 transition-colors hover:bg-teal-50"
+            onClick={() => setTab("history")}
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-teal-100">
+              <Wallet className="h-4 w-4 text-teal-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-teal-800">
+                Hai <span className="tabular-nums">€{totalCredit.toFixed(2)}</span> di credito anticipato disponibile
+              </p>
+              <p className="text-xs text-teal-600/80">
+                Vai allo Storico e clicca "Usa credito" per applicarlo alle sessioni future.
+              </p>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* -- Tab switcher ----------------------------------------------- */}
       <div className="flex gap-1 rounded-xl border border-border/40 bg-muted/30 p-1">
@@ -535,7 +564,13 @@ export function PaymentList({
             </div>
           ) : (
             <div className="space-y-3">
-              {paginatedHistory.map((p) => <PaymentHistoryCard key={p.id} payment={p} />)}
+              {paginatedHistory.map((p) => (
+                <PaymentHistoryCard
+                  key={p.id}
+                  payment={p}
+                  onUseCreditClick={p.prepaid_remaining > 0.01 ? () => setCreditPayment(p) : undefined}
+                />
+              ))}
 
               {/* Paginazione Storico */}
               {historyTotalPages > 1 && (
@@ -588,12 +623,22 @@ export function PaymentList({
         </div>
       )}
 
-      {/* -- Modal ------------------------------------------------------ */}
+      {/* -- Modal registra pagamento ----------------------------------- */}
       {showModal && (
         <RegisterPaymentDialog
           sessions={selectedSessions}
           onClose={() => setShowModal(false)}
           onSuccess={handleSuccess}
+        />
+      )}
+
+      {/* -- Dialog usa credito ----------------------------------------- */}
+      {creditPayment && (
+        <UseCreditDialog
+          payment={creditPayment}
+          unpaidSessions={unpaidSessions}
+          onClose={() => setCreditPayment(null)}
+          onSuccess={() => { setCreditPayment(null); router.refresh() }}
         />
       )}
     </div>
