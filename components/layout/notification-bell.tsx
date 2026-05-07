@@ -34,7 +34,16 @@ export function NotificationBell({ initialUnreadCount }: Props) {
   const [unreadCount,   setUnreadCount]   = useState(initialUnreadCount)
   const [notifications, setNotifications] = useState<NotificationWithRead[]>([])
   const [loading,       setLoading]       = useState(false)
+  const [expanded,      setExpanded]      = useState<Set<string>>(new Set())
   const ref = useRef<HTMLDivElement>(null)
+
+  function toggleExpand(id: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   // Chiudi cliccando fuori
   useEffect(() => {
@@ -100,8 +109,11 @@ export function NotificationBell({ initialUnreadCount }: Props) {
             ) : (
               <ul className="divide-y divide-border/30">
                 {notifications.map((n) => {
-                  const conf = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system
-                  const Icon = conf.icon
+                  const conf       = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system
+                  const Icon       = conf.icon
+                  const isExpanded = expanded.has(n.id)
+                  const isLong     = n.message.length > 100
+
                   return (
                     <li
                       key={n.id}
@@ -122,7 +134,17 @@ export function NotificationBell({ initialUnreadCount }: Props) {
                             <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                           )}
                         </div>
-                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.message}</p>
+                        <p className={cn("mt-0.5 text-xs text-muted-foreground", !isExpanded && "line-clamp-2")}>
+                          {n.message}
+                        </p>
+                        {isLong && (
+                          <button
+                            onClick={() => toggleExpand(n.id)}
+                            className="mt-0.5 text-[10px] font-medium text-primary/70 hover:text-primary"
+                          >
+                            {isExpanded ? "Riduci ↑" : "Leggi di più ↓"}
+                          </button>
+                        )}
                         <p className="mt-1 text-[10px] text-muted-foreground/60">{timeAgo(n.created_at)}</p>
                       </div>
                     </li>
