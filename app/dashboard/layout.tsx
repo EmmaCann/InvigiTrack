@@ -22,7 +22,11 @@ export default async function DashboardLayout({
   const user = await getCurrentUser()
   if (!user) redirect("/auth/login")
 
-  const profile = await getProfileById(user.id)
+  // Run profile + workspace in parallel — neither depends on the other
+  const [profile, workspaceResult] = await Promise.all([
+    getProfileById(user.id),
+    getActiveWorkspace(user.id).catch(() => null),
+  ])
 
   if (!profile) {
     return (
@@ -33,7 +37,8 @@ export default async function DashboardLayout({
     )
   }
 
-  const { category: activeWorkspace, userCategories } = await getActiveWorkspace(user.id)
+  if (!workspaceResult) redirect("/auth/login")
+  const { category: activeWorkspace, userCategories } = workspaceResult
 
   const [nextEvent, availableCategories, allSessions, allEvents, unreadNotifications] = await Promise.all([
     getNextEvent(user.id, activeWorkspace.workspaceId),

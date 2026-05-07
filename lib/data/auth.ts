@@ -10,6 +10,7 @@
  * riutilizzabile invece di essere sparso in ogni Controller.
  */
 
+import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
 import type { User } from "@supabase/supabase-js"
 
@@ -17,8 +18,12 @@ import type { User } from "@supabase/supabase-js"
  * Restituisce l'utente autenticato, oppure null se non loggato.
  * Usa getUser() (non getSession()) per verificare il token
  * direttamente sui server Supabase — più sicuro.
+ *
+ * `cache()` deduplicates calls within a single server render:
+ * layout + page can both call getCurrentUser() — only one Supabase
+ * round-trip happens per request.
  */
-export async function getCurrentUser(): Promise<User | null> {
+export const getCurrentUser = cache(async (): Promise<User | null> => {
   const supabase = await createClient()
   const {
     data: { user },
@@ -27,4 +32,4 @@ export async function getCurrentUser(): Promise<User | null> {
 
   if (error || !user) return null
   return user
-}
+})

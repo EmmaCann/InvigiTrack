@@ -6,6 +6,7 @@
  * invece dello slug, per supportare workspace multipli della stessa categoria.
  */
 
+import { cache } from "react"
 import { cookies } from "next/headers"
 import { getUserCategories } from "@/lib/data/categories"
 import type { UserWorkspace } from "@/types/database"
@@ -24,7 +25,7 @@ export interface ActiveWorkspace {
  * 3. Se il cookie corrisponde a un workspaceId valido, lo usa
  * 4. Altrimenti usa il primo workspace disponibile (default)
  */
-export async function getActiveWorkspace(userId: string): Promise<ActiveWorkspace> {
+export const getActiveWorkspace = cache(async function getActiveWorkspace(userId: string): Promise<ActiveWorkspace> {
   const cookieStore = await cookies()
   const cookieValue = cookieStore.get("invigitrack_workspace")?.value
 
@@ -41,4 +42,4 @@ export async function getActiveWorkspace(userId: string): Promise<ActiveWorkspac
 
   const category = found ?? userCategories[0]
   return { category, userCategories }
-}
+})

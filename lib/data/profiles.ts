@@ -3,6 +3,7 @@
  * Tutte le query sulla tabella `profiles` vivono qui.
  */
 
+import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
 import type { Profile, OnboardingData, PlatformRole, DashboardPrefs, AnalyticsPrefs, SessionsPrefs, PaymentsPrefs, UiState } from "@/types/database"
 
@@ -27,8 +28,10 @@ export async function getProfileByEmail(email: string): Promise<Profile | null> 
  * Cerca un profilo per ID (= auth.users.id).
  * Più efficiente di getProfileByEmail quando abbiamo già l'id dall'auth.
  * Usato nel layout e nelle route protette.
+ *
+ * `cache()` deduplicates calls with the same userId within a single render.
  */
-export async function getProfileById(userId: string): Promise<Profile | null> {
+export const getProfileById = cache(async (userId: string): Promise<Profile | null> => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("profiles")
@@ -37,7 +40,7 @@ export async function getProfileById(userId: string): Promise<Profile | null> {
     .single<Profile>()
   if (error || !data) return null
   return data
-}
+})
 
 /**
  * Restituisce tutti i profili — email + nome — per il select utenti nel pannello admin.

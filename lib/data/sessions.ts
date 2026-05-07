@@ -8,6 +8,7 @@
  * la tua tariffa nelle impostazioni.
  */
 
+import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
 import type { Session, CreateSessionData, PaymentStatus } from "@/types/database"
 
@@ -35,11 +36,14 @@ function calcEarned(durationMinutes: number, hourlyRate: number): number {
 /**
  * Tutte le sessioni di un utente, dalla più recente.
  * Se workspaceId è specificato, filtra per workspace attivo.
+ *
+ * `cache()` deduplicates calls with same (userId, workspaceId) within a
+ * single render — layout and page won't double-fetch.
  */
-export async function getSessionsByUser(
+export const getSessionsByUser = cache(async (
   userId: string,
   workspaceId?: string,
-): Promise<Session[]> {
+): Promise<Session[]> => {
   const supabase = await createClient()
   let query = supabase
     .from("sessions")
@@ -51,7 +55,7 @@ export async function getSessionsByUser(
     .order("start_time", { ascending: false })
   if (error || !data) return []
   return data as Session[]
-}
+})
 
 /**
  * Sessioni di un utente in un mese specifico.

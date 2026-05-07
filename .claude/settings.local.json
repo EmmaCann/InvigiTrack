@@ -61,8 +61,8 @@
       "Bash(cmd /c tasklist)",
       "Bash(dir \"C:\\\\invigitrack\\\\public\\\\tutorial\")",
       "Bash(xargs grep *)",
-      "Bash(xargs ls *)"
-
+      "Bash(xargs ls *)",
+      "Bash(node -e \"console.log\\(require\\('C:/invigitrack/node_modules/next/package.json'\\).version\\)\")"
     ]
   }
 }
