@@ -258,10 +258,15 @@ export function CalendarView({ sessions, events, profile, categorySlug, timetabl
               {cells.map((day, i) => {
                 const daySessions = day ? (byDay.get(day) ?? []) : []
                 const dayEvents   = day ? (eventsByDay.get(day) ?? []) : []
+                // Nasconde le sessioni già mostrate all'interno della card dell'evento convertito
+                const linkedSessionIds = new Set(
+                  dayEvents.filter((ev) => ev.converted_session_id).map((ev) => ev.converted_session_id!)
+                )
+                const visibleSessions = daySessions.filter((s) => !linkedSessionIds.has(s.id))
                 const active      = day !== null && day === selectedDay && selMonth === month && selYear === year
                 const todayCell   = day !== null && isToday(day)
                 const isWeekend   = (i % 7) >= 5
-                const totalItems  = daySessions.length + dayEvents.length
+                const totalItems  = visibleSessions.length + dayEvents.length
 
                 return (
                   <button
@@ -292,13 +297,13 @@ export function CalendarView({ sessions, events, profile, categorySlug, timetabl
                         {/* Mobile: solo pallini colorati */}
                         {totalItems > 0 && (
                           <div className="mt-0.5 flex flex-wrap gap-0.5 sm:hidden">
-                            {daySessions.slice(0, 3).map((s) => (
+                            {visibleSessions.slice(0, 3).map((s) => (
                               <span key={s.id} className={cn("h-1.5 w-1.5 rounded-full", STATUS_DOT[s.payment_status])} />
                             ))}
                             {dayEvents
-                              .slice(0, Math.max(0, 3 - Math.min(daySessions.length, 3)))
+                              .slice(0, Math.max(0, 3 - Math.min(visibleSessions.length, 3)))
                               .map((ev) => (
-                                <span key={ev.id} className={cn("h-1.5 w-1.5 rounded-sm", ev.is_converted ? "bg-teal-400" : "bg-violet-400")} />
+                                <span key={ev.id} className={cn("h-1.5 w-1.5 rounded-sm", ev.is_converted ? "bg-rose-400" : "bg-violet-400")} />
                               ))
                             }
                           </div>
@@ -307,7 +312,7 @@ export function CalendarView({ sessions, events, profile, categorySlug, timetabl
                         {/* Desktop: etichette testo */}
                         <div className="mt-1 hidden space-y-0.5 sm:block">
                           {/* Sessioni lavorative */}
-                          {daySessions.slice(0, 2).map((s) => {
+                          {visibleSessions.slice(0, 2).map((s) => {
                             const meta = s.metadata as { exam_name?: string }
                             return (
                               <div key={s.id} className="flex items-center gap-1 rounded bg-primary/10 px-1 py-0.5">
@@ -319,11 +324,11 @@ export function CalendarView({ sessions, events, profile, categorySlug, timetabl
                             )
                           })}
                           {/* Appuntamenti calendario */}
-                          {dayEvents.slice(0, daySessions.length >= 2 ? 0 : 2 - daySessions.length).map((ev) => (
+                          {dayEvents.slice(0, visibleSessions.length >= 2 ? 0 : 2 - visibleSessions.length).map((ev) => (
                             <div key={ev.id} className="flex items-center gap-1 rounded bg-violet-50 px-1 py-0.5">
                               <span className={cn(
                                 "h-1.5 w-1.5 shrink-0 rounded-sm",
-                                ev.is_converted ? "bg-teal-400" : "bg-violet-400",
+                                ev.is_converted ? "bg-rose-400" : "bg-violet-400",
                               )} />
                               <span className="truncate text-[10px] font-medium text-violet-700">
                                 {ev.title}
@@ -359,7 +364,7 @@ export function CalendarView({ sessions, events, profile, categorySlug, timetabl
                 <span className="text-[10px] text-muted-foreground">Evento</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-sm bg-teal-400" />
+                <span className="h-1.5 w-1.5 rounded-sm bg-rose-400" />
                 <span className="text-[10px] text-muted-foreground">Registrato</span>
               </div>
             </div>

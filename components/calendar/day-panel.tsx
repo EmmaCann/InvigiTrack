@@ -132,8 +132,16 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
             ) : (
               <div className="space-y-2.5">
 
-                {/* -- Sessioni lavorative ------------------------------ */}
-                {sessions.map((s) => {
+                {/* -- Sessioni lavorative (escluse quelle già mostrate dentro un evento convertito) */}
+                {(() => {
+                  const linkedIds = new Set(
+                    events
+                      .filter((ev) => ev.converted_session_id)
+                      .map((ev) => ev.converted_session_id!)
+                  )
+                  return sessions
+                    .filter((s) => !linkedIds.has(s.id))
+                    .map((s) => {
                   const meta   = s.metadata as { exam_name?: string }
                   const isConf = confirmSessionId === s.id
                   const isDel  = deletingId === s.id
@@ -180,13 +188,17 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                       )}
                     </div>
                   )
-                })}
+                })
+                })()}
 
                 {/* -- Eventi calendario -------------------------- */}
                 {events.map((ev) => {
-                  const isConf    = confirmEventId === ev.id
-                  const isDel     = deletingId === ev.id
-                  const isPastDay = isPast(ev.event_date)
+                  const isConf       = confirmEventId === ev.id
+                  const isDel        = deletingId === ev.id
+                  const isPastDay    = isPast(ev.event_date)
+                  const linkedSession = ev.converted_session_id
+                    ? sessions.find((s) => s.id === ev.converted_session_id) ?? null
+                    : null
 
                   return (
                     <div key={ev.id} className={cn(
@@ -252,7 +264,57 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
                         </button>
                       )}
 
-                      {ev.is_converted && (
+                      {/* Dettagli sessione collegata — sostituisce il testo "Sessione registrata" */}
+                      {ev.is_converted && linkedSession && (
+                        <div className="mt-2 border-t border-teal-200/50 pt-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="space-y-0.5 text-xs text-muted-foreground">
+                              <p className="font-medium text-teal-700 flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Sessione registrata
+                              </p>
+                              {linkedSession.start_time && linkedSession.end_time && (
+                                <p className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {formatTime(linkedSession.start_time)} – {formatTime(linkedSession.end_time)}
+                                </p>
+                              )}
+                              <p className="text-[11px]">
+                                {STATUS_LABEL[linkedSession.payment_status]} · €{linkedSession.earned.toFixed(2)}
+                              </p>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-0.5">
+                              <SessionDialog
+                                profile={profile}
+                                categorySlug={categorySlug}
+                                session={linkedSession}
+                                knownLocations={knownLocations}
+                              />
+                              <button
+                                onClick={() => setConfirmSessionId(linkedSession.id)}
+                                className="cursor-pointer flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                          {confirmSessionId === linkedSession.id && (
+                            <div className="mt-2 flex items-center justify-end gap-2 border-t border-border/30 pt-2">
+                              <button onClick={() => setConfirmSessionId(null)} className="cursor-pointer text-[11px] text-muted-foreground hover:text-foreground">Annulla</button>
+                              <button
+                                onClick={() => handleDeleteSession(linkedSession.id)}
+                                disabled={deletingId === linkedSession.id}
+                                className="cursor-pointer rounded-lg bg-destructive px-2.5 py-1 text-[11px] font-semibold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-60"
+                              >
+                                {deletingId === linkedSession.id ? "…" : "Elimina sessione"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Fallback se la sessione non è più presente */}
+                      {ev.is_converted && !linkedSession && (
                         <p className="mt-1.5 text-[11px] font-medium text-teal-600">✓ Sessione registrata</p>
                       )}
 
