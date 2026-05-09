@@ -3,7 +3,8 @@
  * Query sulle tabelle `payments` e `payment_sessions`.
  */
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient }      from "@/lib/supabase/server"
+import { createAdminClient }  from "@/lib/supabase/admin"
 import type { Payment, PaymentMethod, PaymentWithSessions, Session } from "@/types/database"
 
 // --- READ ---------------------------------------------------------------------
@@ -154,21 +155,27 @@ export async function usePrepaidCredit(
 
   if (updErr) return { error: updErr.message }
 
-  // 4. Decrementa prepaid_remaining (non scende sotto zero)
-  const { data: currentPayment, error: pErr } = await supabase
+  // 4. Decrementa prepaid_remaining — usa admin client per bypassare RLS sull'UPDATE
+  //    (il client utente può leggere ma l'UPDATE su payments viene bloccato silenziosamente)
+  const admin = createAdminClient()
+  if (!admin) return { error: "Configurazione server mancante (service role key)" }
+
+  const { data: currentPayment, error: pErr } = await admin
     .from("payments")
     .select("prepaid_remaining")
     .eq("id", paymentId)
+    .eq("user_id", userId)   // verifica proprietà
     .single()
 
   if (pErr || !currentPayment) return { error: pErr?.message ?? "Pagamento non trovato" }
 
   const newRemaining = Math.max(0, (currentPayment.prepaid_remaining ?? 0) - totalEarned)
 
-  const { error: decErr } = await supabase
+  const { error: decErr } = await admin
     .from("payments")
     .update({ prepaid_remaining: newRemaining })
     .eq("id", paymentId)
+    .eq("user_id", userId)   // verifica proprietà anche in scrittura
 
   if (decErr) return { error: decErr.message }
 
