@@ -20,6 +20,7 @@ export async function registerPayment(
     reference?:      string
     notes?:          string
     prepaid_amount?: number
+    workspace_id?:   string
   },
 ): Promise<{ success?: true; error?: string }> {
   const user = await getCurrentUser()

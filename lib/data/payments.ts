@@ -12,14 +12,22 @@ import type { Payment, PaymentMethod, PaymentWithSessions, Session } from "@/typ
 /**
  * Tutti i pagamenti di un utente, dal più recente.
  * Include le sessioni collegate via join.
+ * Se workspaceId è specificato, filtra per workspace — i pagamenti sono isolati per workspace.
  */
-export async function getPaymentsByUser(userId: string): Promise<PaymentWithSessions[]> {
+export async function getPaymentsByUser(
+  userId: string,
+  workspaceId?: string,
+): Promise<PaymentWithSessions[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("payments")
     .select("*, payment_sessions(session_id, sessions(*))")
     .eq("user_id", userId)
+
+  if (workspaceId) query = query.eq("workspace_id", workspaceId)
+
+  const { data, error } = await query
     .order("payment_date", { ascending: false })
     .order("created_at", { ascending: false })
 
@@ -28,6 +36,7 @@ export async function getPaymentsByUser(userId: string): Promise<PaymentWithSess
   return data.map((p) => ({
     id:                p.id,
     user_id:           p.user_id,
+    workspace_id:      p.workspace_id ?? null,
     payment_date:      p.payment_date,
     amount:            p.amount,
     method:            p.method as PaymentMethod,
@@ -59,6 +68,7 @@ export async function createPayment(
     reference?:      string
     notes?:          string
     prepaid_amount?: number
+    workspace_id?:   string
   },
 ): Promise<{ error?: string; payment?: Payment }> {
   const supabase = await createClient()
@@ -70,6 +80,7 @@ export async function createPayment(
     .from("payments")
     .insert({
       user_id:           userId,
+      workspace_id:      data.workspace_id ?? null,
       payment_date:      data.payment_date,
       amount:            data.amount,
       method:            data.method,

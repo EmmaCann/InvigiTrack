@@ -54,6 +54,7 @@ interface Props {
   summaryPaidMonth: number
   summaryPaidTotal: number
   initialTab?:     "pending" | "history"
+  workspaceId:     string
 }
 
 type Tab = "pending" | "history"
@@ -67,6 +68,7 @@ export function PaymentList({
   summaryPaidMonth,
   summaryPaidTotal,
   initialTab = "pending",
+  workspaceId,
 }: Props) {
   const router = useRouter()
 
@@ -634,6 +636,7 @@ export function PaymentList({
       {showModal && (
         <RegisterPaymentDialog
           sessions={selectedSessions}
+          workspaceId={workspaceId}
           onClose={() => setShowModal(false)}
           onSuccess={handleSuccess}
         />

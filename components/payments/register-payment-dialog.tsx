@@ -30,14 +30,15 @@ function formatDate(dateStr: string) {
 // --- Props --------------------------------------------------------------------
 
 interface Props {
-  sessions:  Session[]
-  onClose:   () => void
-  onSuccess: () => void
+  sessions:    Session[]
+  workspaceId: string
+  onClose:     () => void
+  onSuccess:   () => void
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
+export function RegisterPaymentDialog({ sessions, workspaceId, onClose, onSuccess }: Props) {
   const router    = useRouter()
   const isMobile  = useIsMobile()
   const [, start] = useTransition()
@@ -95,6 +96,7 @@ export function RegisterPaymentDialog({ sessions, onClose, onSuccess }: Props) {
           reference:       reference || undefined,
           notes:           notes || undefined,
           prepaid_amount:  showAnticipo && anticipoNum > 0 ? anticipoNum : undefined,
+          workspace_id:    workspaceId,
         },
       )
 

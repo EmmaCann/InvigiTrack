@@ -21,7 +21,7 @@ export default async function PaymentsPage() {
 
   const [allSessions, payments] = await Promise.all([
     getSessionsByUser(user.id, category.workspaceId),
-    getPaymentsByUser(user.id),
+    getPaymentsByUser(user.id, category.workspaceId),
   ])
 
   // Sessioni non ancora pagate
@@ -64,6 +64,7 @@ export default async function PaymentsPage() {
         summaryPaidMonth={Math.round(summaryPaidMonth * 100) / 100}
         summaryPaidTotal={Math.round(summaryPaidTotal * 100) / 100}
         initialTab={profile.payments_prefs?.default_tab ?? "pending"}
+        workspaceId={category.workspaceId}
       />
 
       <PageHelpButton help={{

@@ -306,6 +306,7 @@ export type PaymentMethod = "bank_transfer" | "cash" | "other"
 export interface Payment {
   id:                string
   user_id:           string
+  workspace_id:      string | null   // FK → user_category_access.id — isola i pagamenti per workspace
   payment_date:      string          // "2026-04-01"
   amount:            number          // importo effettivamente ricevuto
   method:            PaymentMethod
