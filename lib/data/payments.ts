@@ -134,54 +134,44 @@ export async function usePrepaidCredit(
 
   if (sessionIds.length === 0) return { error: "Nessuna sessione selezionata" }
 
-  // 1. Recupera le sessioni per sommare gli earned
-  const { data: sessions, error: sErr } = await supabase
-    .from("sessions")
-    .select("id, earned")
-    .in("id", sessionIds)
-    .eq("user_id", userId)
-
-  if (sErr || !sessions) return { error: sErr?.message ?? "Sessioni non trovate" }
-
-  const totalEarned = sessions.reduce((sum: number, s: { earned: number }) => sum + s.earned, 0)
-
-  // 2. Inserisci le junction payment_sessions
-  const junctions = sessionIds.map((sid) => ({
-    payment_id: paymentId,
-    session_id: sid,
-  }))
-
-  const { error: jErr } = await supabase
-    .from("payment_sessions")
-    .insert(junctions)
-
-  if (jErr) return { error: jErr.message }
-
-  // 3. Marca le sessioni come pagate
-  const paidAt = new Date().toISOString()
-  const { error: updErr } = await supabase
-    .from("sessions")
-    .update({ payment_status: "paid", paid_at: paidAt })
-    .in("id", sessionIds)
-
-  if (updErr) return { error: updErr.message }
-
-  // 4. Decrementa prepaid_remaining — usa admin client per bypassare RLS sull'UPDATE
-  //    (il client utente può leggere ma l'UPDATE su payments viene bloccato silenziosamente)
   const admin = createAdminClient()
   if (!admin) return { error: "Configurazione server mancante (service role key)" }
 
-  const { data: currentPayment, error: pErr } = await admin
-    .from("payments")
-    .select("prepaid_remaining")
-    .eq("id", paymentId)
-    .eq("user_id", userId)   // verifica proprietà
-    .single()
+  const paidAt   = new Date().toISOString()
+  const junctions = sessionIds.map((sid) => ({ payment_id: paymentId, session_id: sid }))
 
-  if (pErr || !currentPayment) return { error: pErr?.message ?? "Pagamento non trovato" }
+  // Stage 1 — tutto in parallelo: fetch earned, insert junctions, mark paid, leggi remaining
+  // Nessuna di queste 4 dipende dalle altre.
+  const [sessionsRes, jRes, updRes, paymentRes] = await Promise.all([
+    supabase
+      .from("sessions")
+      .select("id, earned")
+      .in("id", sessionIds)
+      .eq("user_id", userId),
+    supabase
+      .from("payment_sessions")
+      .insert(junctions),
+    supabase
+      .from("sessions")
+      .update({ payment_status: "paid", paid_at: paidAt })
+      .in("id", sessionIds),
+    admin
+      .from("payments")
+      .select("prepaid_remaining")
+      .eq("id", paymentId)
+      .eq("user_id", userId)   // verifica proprietà
+      .single(),
+  ])
 
-  const newRemaining = Math.max(0, (currentPayment.prepaid_remaining ?? 0) - totalEarned)
+  if (sessionsRes.error || !sessionsRes.data) return { error: sessionsRes.error?.message ?? "Sessioni non trovate" }
+  if (jRes.error)                             return { error: jRes.error.message }
+  if (updRes.error)                           return { error: updRes.error.message }
+  if (paymentRes.error || !paymentRes.data)   return { error: paymentRes.error?.message ?? "Pagamento non trovato" }
 
+  const totalEarned  = sessionsRes.data.reduce((sum: number, s: { earned: number }) => sum + s.earned, 0)
+  const newRemaining = Math.max(0, (paymentRes.data.prepaid_remaining ?? 0) - totalEarned)
+
+  // Stage 2 — update remaining (dipende da stage 1)
   const { error: decErr } = await admin
     .from("payments")
     .update({ prepaid_remaining: newRemaining })

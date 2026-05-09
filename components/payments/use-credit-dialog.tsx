@@ -68,10 +68,14 @@ export function UseCreditDialog({ payment, unpaidSessions, onClose, onSuccess }:
 
     start(async () => {
       const result = await applyPrepaidCredit(payment.id, Array.from(selected))
-      setLoading(false)
-      if (result.error) { setError(result.error); return }
-      router.refresh()
+      if (result.error) {
+        setLoading(false)
+        setError(result.error)
+        return
+      }
+      // Chiudi subito il dialog — router.refresh() aggiorna la pagina in background
       onSuccess()
+      router.refresh()
     })
   }
 
