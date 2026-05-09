@@ -30,15 +30,16 @@ const inputCls =
 // --- Props --------------------------------------------------------------------
 
 interface Props {
-  event:        CalendarEvent
-  profile:      Profile
-  categorySlug: string
-  onClose:      () => void
+  event:         CalendarEvent
+  profile:       Profile
+  categorySlug:  string
+  workspaceRate: number
+  onClose:       () => void
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function ConvertEventDialog({ event, profile, categorySlug, onClose }: Props) {
+export function ConvertEventDialog({ event, profile, categorySlug, workspaceRate, onClose }: Props) {
   const router    = useRouter()
   const isMobile  = useIsMobile()
 
@@ -46,12 +47,14 @@ export function ConvertEventDialog({ event, profile, categorySlug, onClose }: Pr
 
   const [startTime, setStartTime] = useState("")
   const [endTime,   setEndTime]   = useState("")
-  const [rate,      setRate]      = useState(profile.default_hourly_rate)
+  // rateStr: stringa per il campo controllato — evita il blocco su "0" quando si svuota il campo
+  const [rateStr,   setRateStr]   = useState(String(workspaceRate))
   const [roleType,  setRoleType]  = useState<InvigilationRole>(profile.role_type ?? "invigilator")
   const [notes,     setNotes]     = useState(event.notes ?? "")
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState<string | null>(null)
 
+  const rate    = parseFloat(rateStr) || 0
   const preview = calcPreview(startTime, endTime, rate)
 
   const dateLabel = new Date(event.event_date + "T00:00:00").toLocaleDateString("it-IT", {
@@ -158,8 +161,8 @@ export function ConvertEventDialog({ event, profile, categorySlug, onClose }: Pr
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">€</span>
             <input
               type="number" step="0.01" min="0"
-              value={rate}
-              onChange={(e) => setRate(parseFloat(e.target.value) || 0)}
+              value={rateStr}
+              onChange={(e) => setRateStr(e.target.value)}
               className={`${inputCls} pl-7`}
             />
           </div>

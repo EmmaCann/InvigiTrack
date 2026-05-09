@@ -62,6 +62,7 @@ export default async function CalendarPage() {
         profile={profile}
         categorySlug={category.slug}
         timetables={allTimetables}
+        workspaceRate={category.default_hourly_rate ?? profile.default_hourly_rate}
       />
 
       <PageHelpButton help={{

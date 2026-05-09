@@ -34,16 +34,17 @@ function addDays(d: Date, n: number): Date {
 // --- Props --------------------------------------------------------------------
 
 interface Props {
-  sessions:     Session[]
-  events:       CalendarEvent[]
-  profile:      Profile
-  categorySlug: string
-  timetables:   Timetable[]
+  sessions:      Session[]
+  events:        CalendarEvent[]
+  profile:       Profile
+  categorySlug:  string
+  timetables:    Timetable[]
+  workspaceRate: number
 }
 
 // --- Componente --------------------------------------------------------------
 
-export function CalendarView({ sessions, events, profile, categorySlug, timetables }: Props) {
+export function CalendarView({ sessions, events, profile, categorySlug, timetables, workspaceRate }: Props) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const isMobile = useIsMobile()
@@ -392,6 +393,7 @@ export function CalendarView({ sessions, events, profile, categorySlug, timetabl
           lastSession={lastSession}
           categorySlug={categorySlug}
           timetables={timetables}
+          workspaceRate={workspaceRate}
         />
       </div>
 

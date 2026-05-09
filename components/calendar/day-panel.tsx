@@ -37,18 +37,19 @@ function isPast(dateStr: string): boolean {
 // isPast is kept for use in the event conversion CTA
 
 interface Props {
-  selectedDay:  number | null
-  year:         number
-  month:        number
-  sessions:     Session[]
-  events:       CalendarEvent[]
-  profile:      Profile
-  lastSession?: Session
-  categorySlug: string
-  timetables:   Timetable[]
+  selectedDay:   number | null
+  year:          number
+  month:         number
+  sessions:      Session[]
+  events:        CalendarEvent[]
+  profile:       Profile
+  lastSession?:  Session
+  categorySlug:  string
+  timetables:    Timetable[]
+  workspaceRate: number
 }
 
-export function DayPanel({ selectedDay, year, month, sessions, events, profile, lastSession, categorySlug, timetables }: Props) {
+export function DayPanel({ selectedDay, year, month, sessions, events, profile, lastSession, categorySlug, timetables, workspaceRate }: Props) {
   const router    = useRouter()
   const [, start] = useTransition()
 
@@ -341,6 +342,7 @@ export function DayPanel({ selectedDay, year, month, sessions, events, profile, 
           event={convertEvent}
           profile={profile}
           categorySlug={categorySlug}
+          workspaceRate={workspaceRate}
           onClose={() => setConvertEvent(null)}
         />
       )}
