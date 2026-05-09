@@ -128,7 +128,8 @@ export function TimetablePanel({ eventId, userId, title, timetable }: Props) {
 
     return (
       <>
-        <div className="mt-2.5 rounded-lg border border-blue-200/60 bg-blue-50/40 px-3 py-2.5">
+        <div className="mt-2.5 rounded-lg border border-blue-200/60 bg-blue-50/40 px-3 py-2.5 space-y-2">
+          {/* Riga 1: info file + cestino */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <FileText className="h-3.5 w-3.5 shrink-0 text-blue-500" />
@@ -144,25 +145,25 @@ export function TimetablePanel({ eventId, userId, title, timetable }: Props) {
                 )}
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                onClick={() => setViewerOpen(true)}
-                className="flex cursor-pointer items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-[10px] font-semibold text-white hover:bg-blue-700"
-              >
-                <Eye className="h-3 w-3" />
-                Visualizza
-              </button>
-              <button
-                onClick={() => setConfirmDel(true)}
-                className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </div>
+            <button
+              onClick={() => setConfirmDel(true)}
+              className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
           </div>
 
+          {/* Riga 2: bottone Visualizza */}
+          <button
+            onClick={() => setViewerOpen(true)}
+            className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md bg-blue-600 py-1.5 text-[11px] font-semibold text-white hover:bg-blue-700"
+          >
+            <Eye className="h-3 w-3" />
+            Visualizza
+          </button>
+
           {confirmDel && (
-            <div className="mt-2 flex items-center justify-end gap-2 border-t border-border/30 pt-2">
+            <div className="flex items-center justify-end gap-2 border-t border-border/30 pt-2">
               <button
                 onClick={() => setConfirmDel(false)}
                 className="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground"
