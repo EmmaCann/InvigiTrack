@@ -265,9 +265,9 @@ export function PaymentList({
           ) : (
             <>
               {/* Filter bar */}
-              <div className="glass-dashboard flex items-center gap-2 overflow-x-auto rounded-2xl px-3 py-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
-                {/* Search */}
-                <div className="flex min-w-[160px] flex-1 items-center gap-2 rounded-xl border border-border/30 bg-white/50 px-3 py-2">
+              <div className="glass-dashboard space-y-2 rounded-2xl px-3 py-2.5">
+                {/* Riga 1: Search */}
+                <div className="flex items-center gap-2 rounded-xl border border-border/30 bg-white/50 px-3 py-2">
                   <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                   <input
                     type="text"
@@ -283,61 +283,64 @@ export function PaymentList({
                   )}
                 </div>
 
-                {/* Date range */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
-                      <Calendar className="h-3.5 w-3.5 shrink-0" />
-                      {pendingDateRange === "all" ? "Tutto il periodo" : pendingDateRange === "30d" ? "Ultimi 30gg" : pendingDateRange === "3m" ? "Ultimi 3 mesi" : "Quest'anno"}
-                      <ChevronDown className="h-3 w-3" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
-                    {[
-                      { v: "all" as const,  l: "Tutto il periodo" },
-                      { v: "30d" as const,  l: "Ultimi 30 giorni" },
-                      { v: "3m" as const,   l: "Ultimi 3 mesi" },
-                      { v: "1y" as const,   l: "Quest'anno" },
-                    ].map(({ v, l }) => (
-                      <DropdownMenuItem key={v} onClick={() => { setPendingDateRange(v); setPendingPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
-                        {l} {pendingDateRange === v && <Check className="h-3 w-3 text-primary" />}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Location filter */}
-                {pendingLocations.length > 0 && (
+                {/* Riga 2: Dropdown filtri */}
+                <div className="flex items-center gap-2">
+                  {/* Date range */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
-                        <MapPin className="h-3.5 w-3.5 shrink-0" />
-                        {pendingLocation === "all" ? "Tutte le sedi" : pendingLocation}
-                        <ChevronDown className="h-3 w-3" />
+                      <button className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{pendingDateRange === "all" ? "Periodo" : pendingDateRange === "30d" ? "30gg" : pendingDateRange === "3m" ? "3 mesi" : "1 anno"}</span>
+                        <ChevronDown className="h-3 w-3 shrink-0" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
-                      <DropdownMenuItem onClick={() => { setPendingLocation("all"); setPendingPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
-                        Tutte le sedi {pendingLocation === "all" && <Check className="h-3 w-3 text-primary" />}
-                      </DropdownMenuItem>
-                      {pendingLocations.map((l) => (
-                        <DropdownMenuItem key={l} onClick={() => { setPendingLocation(l); setPendingPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
-                          {l} {pendingLocation === l && <Check className="h-3 w-3 text-primary" />}
+                    <DropdownMenuContent align="start" className="w-44 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+                      {[
+                        { v: "all" as const,  l: "Tutto il periodo" },
+                        { v: "30d" as const,  l: "Ultimi 30 giorni" },
+                        { v: "3m" as const,   l: "Ultimi 3 mesi" },
+                        { v: "1y" as const,   l: "Quest'anno" },
+                      ].map(({ v, l }) => (
+                        <DropdownMenuItem key={v} onClick={() => { setPendingDateRange(v); setPendingPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
+                          {l} {pendingDateRange === v && <Check className="h-3 w-3 text-primary" />}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                )}
 
-                {/* Clear */}
-                {hasPendingFilters && (
-                  <button
-                    onClick={() => { setPendingSearch(""); setPendingDateRange("all"); setPendingLocation("all"); setPendingPage(0) }}
-                    className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/30 bg-white/50 px-2.5 py-2 text-xs text-muted-foreground transition-colors hover:text-destructive"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
+                  {/* Location filter */}
+                  {pendingLocations.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{pendingLocation === "all" ? "Sede" : pendingLocation}</span>
+                          <ChevronDown className="h-3 w-3 shrink-0" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+                        <DropdownMenuItem onClick={() => { setPendingLocation("all"); setPendingPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
+                          Tutte le sedi {pendingLocation === "all" && <Check className="h-3 w-3 text-primary" />}
+                        </DropdownMenuItem>
+                        {pendingLocations.map((l) => (
+                          <DropdownMenuItem key={l} onClick={() => { setPendingLocation(l); setPendingPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
+                            {l} {pendingLocation === l && <Check className="h-3 w-3 text-primary" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+
+                  {/* Clear */}
+                  {hasPendingFilters && (
+                    <button
+                      onClick={() => { setPendingSearch(""); setPendingDateRange("all"); setPendingLocation("all"); setPendingPage(0) }}
+                      className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/30 bg-white/50 px-2.5 py-2 text-xs text-muted-foreground transition-colors hover:text-destructive"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Toolbar seleziona tutte */}
@@ -476,9 +479,9 @@ export function PaymentList({
           </div>
 
           {/* Filter bar */}
-          <div className="glass-dashboard flex items-center gap-2 overflow-x-auto rounded-2xl px-3 py-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
-            {/* Search */}
-            <div className="flex min-w-[160px] flex-1 items-center gap-2 rounded-xl border border-border/30 bg-white/50 px-3 py-2">
+          <div className="glass-dashboard space-y-2 rounded-2xl px-3 py-2.5">
+            {/* Riga 1: Search */}
+            <div className="flex items-center gap-2 rounded-xl border border-border/30 bg-white/50 px-3 py-2">
               <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
               <input
                 type="text"
@@ -494,62 +497,64 @@ export function PaymentList({
               )}
             </div>
 
-            {/* Method filter */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
-                  <Filter className="h-3.5 w-3.5 shrink-0" />
-                  {historyMethod === "all" ? "Tutti i metodi" : historyMethod === "bank_transfer" ? "Bonifico" : historyMethod === "cash" ? "Contanti" : "Altro"}
-                  <ChevronDown className="h-3 w-3" />
+            {/* Riga 2: Dropdown filtri */}
+            <div className="flex items-center gap-2">
+              {/* Method filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                    <Filter className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{historyMethod === "all" ? "Metodo" : historyMethod === "bank_transfer" ? "Bonifico" : historyMethod === "cash" ? "Contanti" : "Altro"}</span>
+                    <ChevronDown className="h-3 w-3 shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-40 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+                  {[
+                    { v: "all" as const,           l: "Tutti i metodi" },
+                    { v: "bank_transfer" as const, l: "Bonifico" },
+                    { v: "cash" as const,          l: "Contanti" },
+                    { v: "other" as const,         l: "Altro" },
+                  ].map(({ v, l }) => (
+                    <DropdownMenuItem key={v} onClick={() => { setHistoryMethod(v); setHistoryPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
+                      {l} {historyMethod === v && <Check className="h-3 w-3 text-primary" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Date range */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                    <Calendar className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{historyDateRange === "all" ? "Periodo" : historyDateRange === "30d" ? "30gg" : historyDateRange === "3m" ? "3 mesi" : "1 anno"}</span>
+                    <ChevronDown className="h-3 w-3 shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
+                  {[
+                    { v: "all" as const,  l: "Tutto il periodo" },
+                    { v: "30d" as const,  l: "Ultimi 30 giorni" },
+                    { v: "3m" as const,   l: "Ultimi 3 mesi" },
+                    { v: "1y" as const,   l: "Quest'anno" },
+                  ].map(({ v, l }) => (
+                    <DropdownMenuItem key={v} onClick={() => { setHistoryDateRange(v); setHistoryPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
+                      {l} {historyDateRange === v && <Check className="h-3 w-3 text-primary" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Clear */}
+              {hasHistoryFilters && (
+                <button
+                  onClick={() => { setHistorySearch(""); setHistoryMethod("all"); setHistoryDateRange("all"); setHistoryPage(0) }}
+                  className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/30 bg-white/50 px-2.5 py-2 text-xs text-muted-foreground transition-colors hover:text-destructive"
+                >
+                  <X className="h-3.5 w-3.5" />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
-                {[
-                  { v: "all" as const,           l: "Tutti i metodi" },
-                  { v: "bank_transfer" as const, l: "Bonifico" },
-                  { v: "cash" as const,          l: "Contanti" },
-                  { v: "other" as const,         l: "Altro" },
-                ].map(({ v, l }) => (
-                  <DropdownMenuItem key={v} onClick={() => { setHistoryMethod(v); setHistoryPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
-                    {l} {historyMethod === v && <Check className="h-3 w-3 text-primary" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Date range */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-border/30 bg-white/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
-                  <Calendar className="h-3.5 w-3.5 shrink-0" />
-                  {historyDateRange === "all" ? "Tutto il periodo" : historyDateRange === "30d" ? "Ultimi 30gg" : historyDateRange === "3m" ? "Ultimi 3 mesi" : "Quest'anno"}
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44 border-border/60 bg-white shadow-lg shadow-black/[0.08]">
-                {[
-                  { v: "all" as const,  l: "Tutto il periodo" },
-                  { v: "30d" as const,  l: "Ultimi 30 giorni" },
-                  { v: "3m" as const,   l: "Ultimi 3 mesi" },
-                  { v: "1y" as const,   l: "Quest'anno" },
-                ].map(({ v, l }) => (
-                  <DropdownMenuItem key={v} onClick={() => { setHistoryDateRange(v); setHistoryPage(0) }} className="flex cursor-pointer items-center justify-between text-xs">
-                    {l} {historyDateRange === v && <Check className="h-3 w-3 text-primary" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Clear */}
-            {hasHistoryFilters && (
-              <button
-                onClick={() => { setHistorySearch(""); setHistoryMethod("all"); setHistoryDateRange("all"); setHistoryPage(0) }}
-                className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/30 bg-white/50 px-2.5 py-2 text-xs text-muted-foreground transition-colors hover:text-destructive"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-
+              )}
+            </div>
           </div>
 
           {filteredPayments.length === 0 ? (
