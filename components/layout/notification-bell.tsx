@@ -86,17 +86,24 @@ export function NotificationBell({ initialUnreadCount }: Props) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-80 rounded-2xl border border-border/60 bg-white shadow-xl shadow-black/[0.10] sm:w-96">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">Notifiche</p>
-            <button onClick={() => setOpen(false)} className="rounded-lg p-1 text-muted-foreground hover:bg-muted">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
+        <>
+          {/* Backdrop — solo mobile, chiude cliccando fuori */}
+          <div
+            className="fixed inset-0 z-[249] bg-black/20 sm:hidden"
+            onClick={() => setOpen(false)}
+          />
 
-          {/* Content */}
-          <div className="max-h-[420px] overflow-y-auto">
+          <div className="fixed left-3 right-3 top-[62px] z-[250] rounded-2xl border border-border/60 bg-white shadow-xl shadow-black/[0.12] sm:absolute sm:left-auto sm:right-0 sm:top-10 sm:w-96">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
+              <p className="text-sm font-semibold text-foreground">Notifiche</p>
+              <button onClick={() => setOpen(false)} className="rounded-lg p-1 text-muted-foreground hover:bg-muted">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="max-h-[45dvh] overflow-y-auto sm:max-h-[420px]">
             {loading ? (
               <div className="flex items-center justify-center py-10">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -153,7 +160,8 @@ export function NotificationBell({ initialUnreadCount }: Props) {
               </ul>
             )}
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   )
