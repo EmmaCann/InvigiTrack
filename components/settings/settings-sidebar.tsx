@@ -10,7 +10,8 @@ const SECTION_GROUPS = [
       { id: "profilo",   label: "Profilo"       },
       { id: "password",  label: "Password"      },
       { id: "archivio",  label: "Archivio dati" },
-      { id: "workspace", label: "Workspace"     },
+      { id: "workspace",   label: "Workspace"    },
+      { id: "notifiche",   label: "Notifiche"    },
     ],
   },
   {
