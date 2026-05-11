@@ -149,12 +149,13 @@ export async function GET(request: Request) {
           const alreadySent = await hasReminderBeenSent(profile.id, ev.id, "push", minutesBefore)
           if (!alreadySent) {
             const userSubs = pushSubsByUser.get(profile.id) ?? []
-            let anySent    = false
+            if (isDebug) debugLog.push({ action: "push", subsCount: userSubs.length, event: ev.title })
+            let anySent = false
 
             await Promise.all(userSubs.map(async (sub) => {
               const result = await sendPushReminder(sub, eventData, minutesBefore)
+              if (isDebug) debugLog.push({ action: "push_send", endpoint: sub.endpoint.slice(0, 40) + "...", error: result.error ?? null, expired: result.expired ?? false })
               if (result.expired) {
-                // Subscription scaduta — rimuovi dal DB
                 await deletePushSubscription(profile.id, sub.endpoint)
               } else if (!result.error) {
                 anySent = true
@@ -165,20 +166,26 @@ export async function GET(request: Request) {
               await logReminder(profile.id, ev.id, "push", minutesBefore)
               totalSent++
             }
+          } else if (isDebug) {
+            debugLog.push({ action: "push", skip: "already sent", event: ev.title })
           }
         }
 
         // --- Telegram ---
         if (telegramEnabled && prefs.telegram.remind_minutes?.includes(minutesBefore)) {
           const chatId = prefs.telegram.chat_id
+          if (isDebug) debugLog.push({ action: "telegram", chatId, event: ev.title })
           if (chatId) {
             const alreadySent = await hasReminderBeenSent(profile.id, ev.id, "telegram", minutesBefore)
             if (!alreadySent) {
               const result = await sendTelegramReminder(chatId, eventData, minutesBefore)
+              if (isDebug) debugLog.push({ action: "telegram_send", error: result.error ?? null })
               if (!result.error) {
                 await logReminder(profile.id, ev.id, "telegram", minutesBefore)
                 totalSent++
               }
+            } else if (isDebug) {
+              debugLog.push({ action: "telegram", skip: "already sent", event: ev.title })
             }
           }
         }
