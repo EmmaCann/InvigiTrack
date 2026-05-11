@@ -31,6 +31,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { searchParams } = new URL(request.url)
+  const isDebug = searchParams.get("debug") === "true"
+
   const admin = createAdminClient()
   if (!admin) {
     return NextResponse.json({ error: "Admin client non disponibile" }, { status: 500 })
@@ -38,6 +41,7 @@ export async function GET(request: Request) {
 
   const now = new Date()
   let totalSent = 0
+  const debugLog: unknown[] = []
 
   // 2. Leggi tutti i profili con almeno un canale di notifiche abilitato
   const { data: profiles, error: profilesError } = await admin
@@ -66,7 +70,10 @@ export async function GET(request: Request) {
     const pushEnabled     = prefs.push?.enabled     === true
     const telegramEnabled = prefs.telegram?.enabled === true
 
-    if (!emailEnabled && !pushEnabled && !telegramEnabled) return
+    if (!emailEnabled && !pushEnabled && !telegramEnabled) {
+      if (isDebug) debugLog.push({ user: profile.email, skip: "no channels enabled" })
+      return
+    }
 
     // Raccoglie tutti i remind_minutes distinti tra i canali abilitati
     const allMinutes = new Set<number>()
@@ -76,36 +83,38 @@ export async function GET(request: Request) {
 
     if (allMinutes.size === 0) return
 
+    if (isDebug) debugLog.push({ user: profile.email, channels: { emailEnabled, pushEnabled, telegramEnabled }, allMinutes: Array.from(allMinutes) })
+
     // Per ogni minutesBefore, cerca eventi nella finestra corrispondente
     await Promise.all(Array.from(allMinutes).map(async (minutesBefore) => {
-      const targetTime = new Date(now.getTime() + minutesBefore * 60 * 1000)
+      const targetTime  = new Date(now.getTime() + minutesBefore * 60 * 1000)
       const windowStart = new Date(targetTime.getTime() - WINDOW_MS)
       const windowEnd   = new Date(targetTime.getTime() + WINDOW_MS)
 
-      // Costruisci intervallo di date e orari per la query
-      // Gli eventi senza start_time vengono trattati come ore 09:00 locali
-      // Qui lavoriamo in UTC — Supabase restituisce event_date come stringa "YYYY-MM-DD"
-      // Filtriamo per event_date nell'intervallo e combiniamo con start_time
-
-      // Date coinvolte (possono essere 1 o 2 se la finestra attraversa la mezzanotte)
       const startDateStr = windowStart.toISOString().split("T")[0]
       const endDateStr   = windowEnd.toISOString().split("T")[0]
 
+      if (isDebug) debugLog.push({ minutesBefore, now: now.toISOString(), targetTime: targetTime.toISOString(), windowStart: windowStart.toISOString(), windowEnd: windowEnd.toISOString(), queryDateRange: [startDateStr, endDateStr] })
+
       const { data: events, error: eventsError } = await admin
         .from("calendar_events")
-        .select("id, user_id, event_date, start_time, title, location")
+        .select("id, user_id, event_date, start_time, title, location, is_converted")
         .eq("user_id", profile.id)
-        .eq("is_converted", false)  // solo eventi non ancora convertiti in sessione
+        .eq("is_converted", false)
         .gte("event_date", startDateStr)
         .lte("event_date", endDateStr)
+
+      if (isDebug) debugLog.push({ eventsFound: events?.length ?? 0, eventsError: eventsError?.message, events: events?.map(e => ({ title: e.title, event_date: e.event_date, start_time: e.start_time, is_converted: e.is_converted })) })
 
       if (eventsError || !events || events.length === 0) return
 
       // Filtra gli eventi il cui datetime è nella finestra
       const matchingEvents = events.filter((ev) => {
-        const timeStr    = ev.start_time ?? "09:00:00"
-        const eventDt    = new Date(`${ev.event_date}T${timeStr}`)
-        return eventDt >= windowStart && eventDt <= windowEnd
+        const timeStr  = ev.start_time ?? "09:00:00"
+        const eventDt  = new Date(`${ev.event_date}T${timeStr}`)
+        const matches  = eventDt >= windowStart && eventDt <= windowEnd
+        if (isDebug) debugLog.push({ event: ev.title, eventDt: eventDt.toISOString(), matches })
+        return matches
       })
 
       if (matchingEvents.length === 0) return
@@ -125,10 +134,13 @@ export async function GET(request: Request) {
           if (!alreadySent) {
             const to      = prefs.email.address || profile.email
             const result  = await sendEmailReminder(to, eventData, minutesBefore)
+            if (isDebug) debugLog.push({ action: "email", to, event: ev.title, error: result.error ?? null })
             if (!result.error) {
               await logReminder(profile.id, ev.id, "email", minutesBefore)
               totalSent++
             }
+          } else if (isDebug) {
+            debugLog.push({ action: "email", skip: "already sent", event: ev.title })
           }
         }
 
@@ -174,5 +186,10 @@ export async function GET(request: Request) {
     }))
   }))
 
-  return NextResponse.json({ ok: true, sent: totalSent, timestamp: now.toISOString() })
+  return NextResponse.json({
+    ok: true,
+    sent: totalSent,
+    timestamp: now.toISOString(),
+    ...(isDebug && { debug: debugLog }),
+  })
 }
