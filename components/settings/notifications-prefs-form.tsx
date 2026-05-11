@@ -213,8 +213,13 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
     })
   }
 
-  const pushSupported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window
-  const botUsername   = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+  // Inizia `false` per far coincidere SSR e hydration; si aggiorna dopo il mount
+  const [pushSupported, setPushSupported] = useState(false)
+  useEffect(() => {
+    setPushSupported("serviceWorker" in navigator && "PushManager" in window)
+  }, [])
+
+  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
 
   return (
     <div className="space-y-4">
