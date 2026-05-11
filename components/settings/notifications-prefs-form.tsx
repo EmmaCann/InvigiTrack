@@ -291,11 +291,12 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
         {/* Info requisiti */}
         <div className="rounded-xl border border-border/30 bg-muted/20 px-3.5 py-3 space-y-1.5">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Come funziona</p>
-          <ul className="space-y-1 text-[12px] text-muted-foreground">
+          <ul className="space-y-1.5 text-[12px] text-muted-foreground">
             <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">📱</span><span><strong className="text-foreground">iPhone / iPad:</strong> aggiungi prima l&apos;app alla schermata Home (Safari → &quot;Aggiungi a Home&quot;), poi apri da lì e torna qui.</span></li>
             <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">💻</span><span><strong className="text-foreground">Desktop / Android:</strong> funziona su Chrome, Firefox e Edge. Safari su Mac richiede macOS 13+.</span></li>
-            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">🔔</span><span>Il browser ti chiederà il permesso — clicca <strong className="text-foreground">Consenti</strong>.</span></li>
-            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">⚡</span><span>Le notifiche arrivano anche se l&apos;app è chiusa, finché il browser è aperto.</span></li>
+            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">🔔</span><span>Il browser ti chiederà il permesso — clicca <strong className="text-foreground">Consenti</strong>. Su Chrome puoi verificare cliccando sull&apos;icona 🔒 accanto all&apos;indirizzo.</span></li>
+            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">🖥️</span><span><strong className="text-foreground">Su Chrome:</strong> la notifica appare solo se la pagina <strong className="text-foreground">non è in primo piano</strong> — minimizza il browser o cambia tab. Se non la vedi, controlla il <strong className="text-foreground">Centro notifiche di Windows</strong> (icona a campana in basso a destra).</span></li>
+            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">📲</span><span>Ogni dispositivo (PC, telefono, tablet) ha una sottoscrizione separata — attiva le notifiche da ciascun dispositivo che vuoi usare.</span></li>
           </ul>
         </div>
 
