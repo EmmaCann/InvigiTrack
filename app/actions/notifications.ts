@@ -10,6 +10,8 @@ import {
   type CreateNotificationData,
 } from "@/lib/data/notifications"
 import { getProfileByEmail } from "@/lib/data/profiles"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { sendViaChannels, sendViaChannelsToMany } from "@/lib/notifications/send-via-channels"
 import type { NotificationWithRead, PlatformRole } from "@/types/database"
 
 /** Segna tutte le notifiche dell'utente corrente come lette */
@@ -74,6 +76,39 @@ export async function createNotificationAction(data: {
 
   const res = await createNotification(payload)
   if (res.error) return { error: res.error }
+
+  // Dispatch via canali (email/push/Telegram) agli utenti che li hanno attivi
+  // Fire-and-forget — non blocca la risposta
+  const admin = createAdminClient()
+  if (admin) {
+    void (async () => {
+      let targetIds: string[] = []
+
+      if (payload.target_type === "user" && targetUserId) {
+        // Notifica a singolo utente — escludi il mittente (super_admin)
+        if (targetUserId !== user.id) targetIds = [targetUserId]
+
+      } else if (payload.target_type === "role" && payload.target_role) {
+        const { data } = await admin
+          .from("profiles")
+          .select("id")
+          .eq("platform_role", payload.target_role)
+          .neq("id", user.id)
+        targetIds = (data ?? []).map((p: { id: string }) => p.id)
+
+      } else if (payload.target_type === "all") {
+        const { data } = await admin
+          .from("profiles")
+          .select("id")
+          .neq("id", user.id)  // escludi il mittente
+        targetIds = (data ?? []).map((p: { id: string }) => p.id)
+      }
+
+      if (targetIds.length > 0) {
+        await sendViaChannelsToMany(targetIds, data.title, data.message, "/dashboard")
+      }
+    })()
+  }
 
   revalidatePath("/dashboard/admin")
   return { success: true }
