@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { Bell, Info, Wrench, AlertTriangle, MessageSquare, X } from "lucide-react"
 import { getNotificationsAction, markNotificationsReadAction } from "@/app/actions/notifications"
 import type { NotificationWithRead, NotificationType } from "@/types/database"
@@ -35,6 +36,7 @@ export function NotificationBell({ initialUnreadCount }: Props) {
   const [notifications, setNotifications] = useState<NotificationWithRead[]>([])
   const [loading,       setLoading]       = useState(false)
   const [expanded,      setExpanded]      = useState<Set<string>>(new Set())
+  const [mounted, setMounted] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   function toggleExpand(id: string) {
@@ -44,7 +46,10 @@ export function NotificationBell({ initialUnreadCount }: Props) {
       return next
     })
   }
-
+  
+  useEffect(() => {
+  setMounted(true)
+}, [])
   // Chiudi cliccando fuori
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -85,84 +90,94 @@ export function NotificationBell({ initialUnreadCount }: Props) {
         )}
       </button>
 
-      {open && (
-        <>
-          {/* Backdrop — solo mobile, chiude cliccando fuori */}
-          <div
-            className="fixed inset-0 z-[249] bg-black/20 sm:hidden"
+      {mounted &&
+  open &&
+  createPortal(
+    <>
+      <div
+        className="fixed inset-0 z-[9998] bg-black/20 sm:hidden"
+        onClick={() => setOpen(false)}
+      />
+
+      <div className="fixed left-3 right-3 top-[calc(62px+env(safe-area-inset-top))] z-[9999] max-h-[calc(100dvh-88px-env(safe-area-inset-bottom))] overflow-hidden rounded-2xl border border-border/60 bg-white shadow-2xl shadow-black/20 sm:absolute sm:left-auto sm:right-4 sm:top-16 sm:w-96">
+        <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
+          <p className="text-sm font-semibold text-foreground">Notifiche</p>
+          <button
             onClick={() => setOpen(false)}
-          />
+            className="rounded-lg p-1 text-muted-foreground hover:bg-muted"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
 
-          <div className="fixed left-3 right-3 top-[62px] z-[250] rounded-2xl border border-border/60 bg-white shadow-xl shadow-black/[0.12] sm:absolute sm:left-auto sm:right-0 sm:top-10 sm:w-96">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
-              <p className="text-sm font-semibold text-foreground">Notifiche</p>
-              <button onClick={() => setOpen(false)} className="rounded-lg p-1 text-muted-foreground hover:bg-muted">
-                <X className="h-3.5 w-3.5" />
-              </button>
+        <div className="max-h-[calc(100dvh-150px-env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain sm:max-h-[420px]">
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             </div>
+          ) : notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <Bell className="mb-2 h-8 w-8 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">Nessuna notifica</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-border/30">
+              {notifications.map((n) => {
+                const conf = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system
+                const Icon = conf.icon
+                const isExpanded = expanded.has(n.id)
+                const isLong = n.message.length > 100
 
-            {/* Content */}
-            <div className="max-h-[45dvh] overflow-y-auto sm:max-h-[420px]">
-            {loading ? (
-              <div className="flex items-center justify-center py-10">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              </div>
-            ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <Bell className="mb-2 h-8 w-8 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">Nessuna notifica</p>
-              </div>
-            ) : (
-              <ul className="divide-y divide-border/30">
-                {notifications.map((n) => {
-                  const conf       = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system
-                  const Icon       = conf.icon
-                  const isExpanded = expanded.has(n.id)
-                  const isLong     = n.message.length > 100
+                return (
+                  <li
+                    key={n.id}
+                    className={cn(
+                      "flex gap-3 px-4 py-3.5 transition-colors",
+                      !n.is_read && "bg-primary/[0.03]",
+                    )}
+                  >
+                    <div className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
+                      <Icon className={cn("h-3.5 w-3.5", conf.color)} />
+                    </div>
 
-                  return (
-                    <li
-                      key={n.id}
-                      className={cn(
-                        "flex gap-3 px-4 py-3.5 transition-colors",
-                        !n.is_read && "bg-primary/[0.03]",
-                      )}
-                    >
-                      <div className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
-                        <Icon className={cn("h-3.5 w-3.5", conf.color)} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className={cn("text-sm font-semibold leading-snug", !n.is_read ? "text-foreground" : "text-foreground/80")}>
-                            {n.title}
-                          </p>
-                          {!n.is_read && (
-                            <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                          )}
-                        </div>
-                        <p className={cn("mt-0.5 text-xs text-muted-foreground", !isExpanded && "line-clamp-2")}>
-                          {n.message}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={cn("text-sm font-semibold leading-snug", !n.is_read ? "text-foreground" : "text-foreground/80")}>
+                          {n.title}
                         </p>
-                        {isLong && (
-                          <button
-                            onClick={() => toggleExpand(n.id)}
-                            className="mt-0.5 text-[10px] font-medium text-primary/70 hover:text-primary"
-                          >
-                            {isExpanded ? "Riduci ↑" : "Leggi di più ↓"}
-                          </button>
+
+                        {!n.is_read && (
+                          <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                         )}
-                        <p className="mt-1 text-[10px] text-muted-foreground/60">{timeAgo(n.created_at)}</p>
                       </div>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </div>
-          </div>
-        </>
-      )}
+
+                      <p className={cn("mt-0.5 text-xs text-muted-foreground", !isExpanded && "line-clamp-2")}>
+                        {n.message}
+                      </p>
+
+                      {isLong && (
+                        <button
+                          onClick={() => toggleExpand(n.id)}
+                          className="mt-0.5 text-[10px] font-medium text-primary/70 hover:text-primary"
+                        >
+                          {isExpanded ? "Riduci ↑" : "Leggi di più ↓"}
+                        </button>
+                      )}
+
+                      <p className="mt-1 text-[10px] text-muted-foreground/60">
+                        {timeAgo(n.created_at)}
+                      </p>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
+    </>,
+    document.body,
+  )}
     </div>
   )
 }

@@ -159,7 +159,7 @@ export function SessionDialog({
   )
 
   const formContent = (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
 
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-black/[0.06] px-5 py-4 pr-12">
@@ -189,10 +189,10 @@ export function SessionDialog({
       </div>
 
       {/* Body — stack su mobile, 2 colonne su sm+ */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto sm:flex-row sm:overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 sm:flex sm:overflow-hidden">
 
         {/* Colonna sinistra: data/ora/tariffa/preview */}
-        <div className="flex shrink-0 flex-col gap-4 border-b border-black/[0.06] p-5 sm:w-[248px] sm:overflow-y-auto sm:border-b-0 sm:border-r">
+       <div className="flex flex-col gap-4 border-b border-black/[0.06] p-5 sm:w-[248px] sm:shrink-0 sm:overflow-y-auto sm:border-b-0 sm:border-r">
 
           {/* Preview live */}
           <div className={`rounded-xl border p-3 transition-all ${
@@ -234,12 +234,12 @@ export function SessionDialog({
             <Input type="date" max={todayISO()} className="h-10 rounded-xl text-sm" {...form.register("session_date")} />
           </Field>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid min-w-0 grid-cols-1 gap-3 min-[380px]:grid-cols-2">
             <Field label="Inizio" error={form.formState.errors.start_time?.message}>
-              <Input type="time" className="h-10 rounded-xl text-sm" {...form.register("start_time")} />
+              <Input type="time"  className="h-11 w-full min-w-0 rounded-xl text-base sm:h-10 sm:text-sm" {...form.register("start_time")} />
             </Field>
             <Field label="Fine" error={form.formState.errors.end_time?.message}>
-              <Input type="time" className="h-10 rounded-xl text-sm" {...form.register("end_time")} />
+              <Input type="time"  className="h-11 w-full min-w-0 rounded-xl text-base sm:h-10 sm:text-sm" {...form.register("end_time")} />
             </Field>
           </div>
 
@@ -256,7 +256,7 @@ export function SessionDialog({
         </div>
 
         {/* Colonna destra: dettagli esame */}
-        <div className="flex-1 space-y-4 overflow-y-auto p-5">
+        <div className="space-y-4 p-5 sm:min-h-0 sm:flex-1 sm:overflow-y-auto">
           <Field label="Nome esame" error={form.formState.errors.exam_name?.message}>
             <Input
               className="h-10 rounded-xl text-sm"
@@ -309,7 +309,10 @@ export function SessionDialog({
       </div>
 
       {/* Footer */}
-      <div className="flex shrink-0 gap-3 border-t border-black/[0.06] bg-muted/20 px-5 py-3.5" style={{ paddingBottom: "max(14px, env(safe-area-inset-bottom))" }}>
+     <div
+  className="z-10 flex shrink-0 gap-3 border-t border-black/[0.06] bg-background/95 px-5 py-3.5 backdrop-blur"
+  style={{ paddingBottom: "max(14px, env(safe-area-inset-bottom))" }}
+>
         <Button type="button" variant="outline" className="h-11 flex-1 rounded-xl font-semibold" onClick={() => setOpen(false)} disabled={isLoading}>
           Annulla
         </Button>
@@ -329,11 +332,11 @@ export function SessionDialog({
     return (
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>{trigger ?? defaultTrigger}</SheetTrigger>
-        <SheetContent
-          side="bottom"
-          className="flex flex-col gap-0 rounded-t-2xl p-0"
-          style={{ height: "92dvh" }}
-        >
+       <SheetContent
+  side="bottom"
+  className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-2xl p-0"
+  style={{ height: "min(92dvh, 760px)" }}
+>
           <SheetTitle className="sr-only">
             {isEdit ? "Modifica sessione" : "Registra sessione"}
           </SheetTitle>
@@ -451,7 +454,7 @@ function LocationCombobox({
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-2">
+   <div className="min-w-0 space-y-2">
       <Label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{label}</Label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}
