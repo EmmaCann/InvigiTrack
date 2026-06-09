@@ -612,25 +612,38 @@ export function PaymentList({
 
       {/* -- Toolbar contestuale (selezione attiva) --------------------- */}
       {selected.size > 0 && tab === "pending" && (
-        <div className="fixed bottom-[calc(56px+env(safe-area-inset-bottom)+16px)] left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/50 bg-foreground/95 px-5 py-3.5 shadow-2xl shadow-black/30 backdrop-blur-xl md:bottom-6">
-          <div className="text-sm text-white/80">
-            <span className="font-bold text-white">{selected.size}</span> selezionate ·{" "}
-            <span className="font-bold text-white">€{selectedTotal.toFixed(2)}</span>
-          </div>
-          <button
-            onClick={() => setSelected(new Set())}
-            className="cursor-pointer text-xs text-white/50 hover:text-white/80"
-          >
-            Annulla
-          </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="cursor-pointer rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary/30 transition-colors hover:bg-primary/90"
-          >
-            Registra Pagamento →
-          </button>
-        </div>
-      )}
+  <div className="pointer-events-none fixed inset-x-3 bottom-[calc(78px+env(safe-area-inset-bottom))] z-[80] md:inset-x-auto md:left-1/2 md:bottom-6 md:w-[440px] md:-translate-x-1/2">
+    <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-[1.6rem] border border-white/10 bg-slate-950/90 p-3.5 shadow-2xl shadow-black/30 ring-1 ring-white/10 backdrop-blur-xl">
+      <div className="min-w-0 flex-1">
+       <p className="text-xs font-medium text-white/65">
+          {selected.size} {selected.size === 1 ? "sessione selezionata" : "sessioni selezionate"}
+        </p>
+       <p className="mt-0.5 text-2xl font-bold tabular-nums text-white">
+          €{selectedTotal.toFixed(2)}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setSelected(new Set())}
+        className="h-11 cursor-pointer rounded-xl px-3 text-sm font-semibold text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          Annulla
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowModal(true)}
+          className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-colors hover:bg-primary/90"
+        >
+          <CheckCircle2 className="h-4 w-4" />
+          Registra
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* -- Modal registra pagamento ----------------------------------- */}
       {showModal && (
