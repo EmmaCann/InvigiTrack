@@ -1,0 +1,161 @@
+PROMEMORIA GIT — FEATURE NOTIFICHE / REMINDER EVENTI
+=====================================================
+
+SITUAZIONE
+----------
+
+La feature problematica era sviluppata nel branch:
+
+feature/notifiche-reminder-eventi
+
+Era stata inserita sia in develop sia in master e impediva il deploy.
+
+Il branch recente da mantenere era:
+
+fix/ui-modal-mobile
+
+Le modifiche di fix/ui-modal-mobile NON sono state rimosse.
+
+
+COSA È STATO FATTO
+------------------
+
+1. È stato creato un branch di backup prima del revert:
+
+backup-prima-revert
+
+2. È stato creato il branch:
+
+revert-notifiche-reminder-eventi
+
+3. Sono stati annullati i commit della vecchia feature notifiche:
+
+ef482f0  prima implementazione notifiche varie
+325dfdb  modifiche
+1ddce39  fixato reminder via email
+2abb606  fixato le notifiche tutte
+eb236b2  banner avviso notifiche
+d6ba584  reminders anche per notifiche
+201a834  aggiornamento descrizioni
+
+4. Durante il revert è stato risolto un conflitto nel file:
+
+components/settings/notifications-prefs-form.tsx
+
+Il file è stato poi eliminato perché apparteneva alla feature rimossa.
+
+5. Dopo il revert è stata cancellata la cartella generata .next perché conteneva
+riferimenti vecchi alla rotta eliminata:
+
+app/api/cron/event-reminders/route.ts
+
+Comando usato:
+
+rmdir /s /q .next
+
+6. La build è stata eseguita con successo:
+
+npm run build
+
+7. Il branch revert-notifiche-reminder-eventi è stato mergiato in develop.
+
+Il branch originale feature/notifiche-reminder-eventi è rimasto intatto.
+
+
+PRIMA DI PORTARE DEVELOP IN MASTER
+----------------------------------
+
+Controllare il progetto su develop:
+
+git checkout develop
+git pull
+git status
+npm run build
+npm run dev
+
+Verificare manualmente che:
+
+- il login e la registrazione funzionino;
+- le modifiche di fix/ui-modal-mobile siano ancora presenti;
+- le pagine impostazioni e calendario funzionino;
+- non compaiano errori relativi a notifiche, reminder, Telegram o push;
+- il deploy di anteprima o la build locale terminino correttamente.
+
+
+QUANDO VORRÒ RIPRENDERE LA FEATURE NOTIFICHE
+--------------------------------------------
+
+Non lavorare direttamente sul vecchio branch.
+
+1. Partire dall'ultima versione di develop:
+
+git checkout develop
+git pull
+
+2. Creare un nuovo branch:
+
+git checkout -b fix/notifiche-reminder-eventi-v2
+
+3. Recuperare i commit originali, dal più vecchio al più recente:
+
+git cherry-pick ef482f0 325dfdb 1ddce39 2abb606 eb236b2 d6ba584 201a834
+
+4. Se compaiono conflitti:
+
+- aprire i file segnalati;
+- risolvere i conflitti;
+- eseguire:
+
+git add .
+git cherry-pick --continue
+
+Per annullare completamente il cherry-pick in caso di problemi:
+
+git cherry-pick --abort
+
+5. Correggere gli errori della feature.
+
+6. Pulire la build e ricompilare:
+
+rmdir /s /q .next
+npm run build
+
+7. Avviare il progetto e testare tutto:
+
+npm run dev
+
+8. Pubblicare il nuovo branch:
+
+git push -u origin fix/notifiche-reminder-eventi-v2
+
+9. Creare una Pull Request verso develop.
+
+10. Solo dopo i test su develop, portare develop in master.
+
+
+BRANCH IMPORTANTI
+-----------------
+
+Branch originale della feature:
+feature/notifiche-reminder-eventi
+
+Branch di backup:
+backup-prima-revert
+
+Branch usato per il revert:
+revert-notifiche-reminder-eventi
+
+Branch della modifica recente da mantenere:
+fix/ui-modal-mobile
+
+
+NOTA IMPORTANTE
+---------------
+
+Non cancellare il branch originale e non usare:
+
+git reset --hard
+git push --force
+
+Il lavoro della feature notifiche non è stato perso: è ancora disponibile nel
+branch originale e nei commit elencati sopra.
