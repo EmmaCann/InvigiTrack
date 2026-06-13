@@ -176,67 +176,9 @@ export type SessionMetadata =
  * Estendibile: aggiungere nuove chiavi senza migration.
  */
 export interface UiState {
-  welcome_seen?:                    boolean   // popup di benvenuto al primo accesso
-  tour_seen?:                       boolean   // tour interattivo della dashboard
-  notifications_banner_dismissed?:  boolean   // banner scoperta notifiche nel calendario
+  welcome_seen?: boolean   // popup di benvenuto al primo accesso
+  tour_seen?:    boolean   // tour interattivo della dashboard
 }
-
-// --- Notifiche & Reminder -----------------------------------------------------
-
-/**
- * remind_minutes: array di minuti prima dell'evento a cui mandare il reminder.
- * Valori predefiniti: 10, 30, 60, 120, 360, 720, 1440, 2880, 10080
- * Esempi: [1440] = solo 1 giorno prima | [1440, 120] = 1 giorno + 2 ore prima
- */
-export interface NotificationsPrefs {
-  email: {
-    enabled:        boolean
-    address?:       string | null  // null = usa profile.email
-    remind_minutes: number[]
-  }
-  push: {
-    enabled:        boolean
-    remind_minutes: number[]
-  }
-  telegram: {
-    enabled:        boolean
-    chat_id?:       string | null
-    remind_minutes: number[]
-  }
-}
-
-/** Riga della tabella `push_subscriptions` */
-export interface PushSubscriptionRecord {
-  id:         string
-  user_id:    string
-  endpoint:   string
-  p256dh:     string
-  auth:       string
-  created_at: string
-}
-
-/** Riga della tabella `reminder_logs` */
-export interface ReminderLog {
-  id:             string
-  user_id:        string
-  event_id:       string
-  channel:        "email" | "push" | "telegram"
-  minutes_before: number
-  sent_at:        string
-}
-
-/** Opzioni di timing disponibili nella UI per i reminder */
-export const REMINDER_OPTIONS = [
-  { minutes: 10,    label: "10 minuti prima"   },
-  { minutes: 30,    label: "30 minuti prima"   },
-  { minutes: 60,    label: "1 ora prima"        },
-  { minutes: 120,   label: "2 ore prima"        },
-  { minutes: 360,   label: "6 ore prima"        },
-  { minutes: 720,   label: "12 ore prima"       },
-  { minutes: 1440,  label: "1 giorno prima"     },
-  { minutes: 2880,  label: "2 giorni prima"     },
-  { minutes: 10080, label: "1 settimana prima"  },
-] as const
 
 /** Riga della tabella `profiles` */
 export interface Profile {
@@ -251,8 +193,7 @@ export interface Profile {
   analytics_prefs:  AnalyticsPrefs   // preferenze pagina analytics
   sessions_prefs:   SessionsPrefs    // preferenze pagina sessioni
   payments_prefs:   PaymentsPrefs    // preferenze pagina pagamenti
-  ui_state:             UiState              // stato popup/dialog per-account
-  notifications_prefs:  NotificationsPrefs   // preferenze canali e timing reminder
+  ui_state:         UiState          // stato popup/dialog per-account
   created_at: string
   updated_at: string
 }

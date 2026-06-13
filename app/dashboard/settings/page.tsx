@@ -12,12 +12,11 @@ import { AnalyticsPrefsForm }         from "@/components/settings/analytics-pref
 import { SessionsPrefsForm }          from "@/components/settings/sessions-prefs-form"
 import { PaymentsPrefsForm }          from "@/components/settings/payments-prefs-form"
 import { DataManagementForm }         from "@/components/settings/data-management-form"
-import { NotificationsPrefsForm }     from "@/components/settings/notifications-prefs-form"
 import { SettingsSidebar }            from "@/components/settings/settings-sidebar"
 import { PageHelpButton }             from "@/components/help/page-help-button"
 import {
   User, KeyRound, Layers, LayoutDashboard, BarChart3,
-  CalendarCheck, CreditCard, HardDrive, Scale, Bell,
+  CalendarCheck, CreditCard, HardDrive, Scale,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -65,7 +64,6 @@ export default async function SettingsPage() {
             { id: "password",  label: "Password"      },
             { id: "archivio",  label: "Archivio dati" },
             { id: "workspace", label: "Workspace"     },
-            { id: "notifiche", label: "Notifiche"     },
             { id: "dashboard", label: "Dashboard"     },
             { id: "sessioni",  label: "Sessioni"      },
             { id: "pagamenti", label: "Pagamenti"     },
@@ -122,17 +120,6 @@ export default async function SettingsPage() {
                 <WorkspaceRateForm workspaces={workspaces} profileRate={profile.default_hourly_rate} />
               </div>
             )}
-          </section>
-
-          {/* ── Notifiche ────────────────────────────────────────── */}
-          <section id="notifiche" className="scroll-mt-6 space-y-5">
-            <SectionHeader icon={Bell} title="Notifiche" sub="Reminder eventi, notifiche di sistema e aggiornamenti — via email, browser o Telegram" />
-            <div className="glass-dashboard rounded-2xl px-6 py-6">
-              <NotificationsPrefsForm
-                currentPrefs={profile.notifications_prefs ?? null}
-                profileEmail={profile.email}
-              />
-            </div>
           </section>
 
           {/* ── Dashboard ────────────────────────────────────────── */}

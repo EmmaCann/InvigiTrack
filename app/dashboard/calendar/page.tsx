@@ -5,9 +5,8 @@ import { getEventsByUser }      from "@/lib/data/calendar-events"
 import { getTimetablesByUser }  from "@/lib/data/timetables"
 import { getActiveWorkspace }   from "@/lib/workspace"
 import { expireOldTimetables }  from "@/app/actions/timetables"
-import { CalendarView }                  from "@/components/calendar/calendar-view"
-import { RemindersDiscoveryBanner }      from "@/components/calendar/reminders-discovery-banner"
-import { PageHelpButton }               from "@/components/help/page-help-button"
+import { CalendarView }         from "@/components/calendar/calendar-view"
+import { PageHelpButton }       from "@/components/help/page-help-button"
 
 export default async function CalendarPage() {
   const user    = await getCurrentUser()
@@ -45,12 +44,6 @@ export default async function CalendarPage() {
     }
   }
 
-  // Mostra il banner solo se nessun canale è attivo e non è stato già chiuso
-  const prefs = profile.notifications_prefs
-  const hasAnyChannelEnabled = prefs?.email?.enabled || prefs?.push?.enabled || prefs?.telegram?.enabled
-  const bannerDismissed      = profile.ui_state?.notifications_banner_dismissed
-  const showBanner           = !hasAnyChannelEnabled && !bannerDismissed
-
   return (
     <div className="space-y-6">
       <div>
@@ -62,8 +55,6 @@ export default async function CalendarPage() {
           Visualizza e gestisci sessioni e appuntamenti nel calendario
         </p>
       </div>
-
-      {showBanner && <RemindersDiscoveryBanner />}
 
       <CalendarView
         sessions={sessions}

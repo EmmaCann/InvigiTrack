@@ -5,7 +5,7 @@
 
 import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
-import type { Profile, OnboardingData, PlatformRole, DashboardPrefs, AnalyticsPrefs, SessionsPrefs, PaymentsPrefs, UiState, NotificationsPrefs } from "@/types/database"
+import type { Profile, OnboardingData, PlatformRole, DashboardPrefs, AnalyticsPrefs, SessionsPrefs, PaymentsPrefs, UiState } from "@/types/database"
 
 // --- READ ---------------------------------------------------------------------
 
@@ -182,22 +182,6 @@ export async function updateUiState(
   const { error } = await supabase
     .from("profiles")
     .update({ ui_state: merged })
-    .eq("id", userId)
-  if (error) return { error: error.message }
-  return {}
-}
-
-/**
- * Salva le preferenze notifiche e reminder.
- */
-export async function updateNotificationsPrefs(
-  userId: string,
-  prefs: NotificationsPrefs,
-): Promise<{ error?: string }> {
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("profiles")
-    .update({ notifications_prefs: prefs })
     .eq("id", userId)
   if (error) return { error: error.message }
   return {}
