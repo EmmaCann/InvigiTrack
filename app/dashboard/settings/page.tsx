@@ -126,7 +126,7 @@ export default async function SettingsPage() {
 
           {/* ── Notifiche ────────────────────────────────────────── */}
           <section id="notifiche" className="scroll-mt-6 space-y-5">
-            <SectionHeader icon={Bell} title="Notifiche" sub="Reminder eventi, notifiche di sistema e aggiornamenti — via email, browser o Telegram" />
+            <SectionHeader icon={Bell} title="Notifiche" sub="Reminder automatici prima degli eventi del calendario" />
             <div className="glass-dashboard rounded-2xl px-6 py-6">
               <NotificationsPrefsForm
                 currentPrefs={profile.notifications_prefs ?? null}

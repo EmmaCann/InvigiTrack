@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
 import { insertFeedback, markFeedbackRead, type CreateFeedbackData } from "@/lib/data/feedback"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendViaChannels } from "@/lib/notifications/send-via-channels"
 import type { Profile } from "@/types/database"
 
 /** Invia un feedback — qualsiasi utente autenticato */
@@ -64,14 +63,6 @@ export async function sendFeedbackAction(
   if (notifError) {
     console.error("[sendFeedbackAction] createNotification error:", notifError.message)
   }
-
-  // Dispatch via canali (email/push/Telegram) al super_admin se li ha configurati
-  void sendViaChannels(
-    superAdmin.id,
-    `📬 ${typeLabel[data.type] ?? "Feedback"}: ${data.subject}`,
-    `Da ${profile.email} — ${data.message.slice(0, 200)}${data.message.length > 200 ? "…" : ""}`,
-    "/dashboard/admin",
-  )
 
   revalidatePath("/dashboard", "layout")
   return { success: true }

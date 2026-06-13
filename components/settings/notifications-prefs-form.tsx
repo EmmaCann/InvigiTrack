@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition, useEffect, useCallback } from "react"
-import { Mail, Bell, MessageCircle, ChevronDown, ChevronRight, CheckCircle2, AlertTriangle, Loader2, ExternalLink, Smartphone } from "lucide-react"
+import { Mail, Bell, MessageCircle, ChevronDown, ChevronRight, CheckCircle2, AlertTriangle, Loader2, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { updateNotificationsPrefs } from "@/app/actions/settings"
 import { REMINDER_OPTIONS } from "@/types/database"
@@ -107,14 +107,10 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
   const [saved,  setSaved]        = useState(false)
   const [error,  setError]        = useState<string | null>(null)
 
-  // FIX: stato separato per "usa altro indirizzo" — disaccoppiato dal valore
-  const [useAltroEmail, setUseAltroEmail] = useState(
-    currentPrefs?.email?.address != null && currentPrefs.email.address !== ""
-  )
-
   // Push subscription state
   const [pushStatus, setPushStatus] = useState<"unknown" | "subscribed" | "unsubscribed" | "denied">("unknown")
   const [pushLoading, setPushLoading] = useState(false)
+  const [currentEndpoint, setCurrentEndpoint] = useState<string | null>(null)
 
   // Check current push subscription on mount
   useEffect(() => {
@@ -122,45 +118,63 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
       setPushStatus("unsubscribed")
       return
     }
+
     if (Notification.permission === "denied") {
       setPushStatus("denied")
       return
     }
+
     navigator.serviceWorker.ready.then((reg) => {
       reg.pushManager.getSubscription().then((sub) => {
-        setPushStatus(sub ? "subscribed" : "unsubscribed")
+        if (sub) {
+          setPushStatus("subscribed")
+          setCurrentEndpoint(sub.endpoint)
+        } else {
+          setPushStatus("unsubscribed")
+        }
       })
     })
   }, [])
 
   const subscribeToPush = useCallback(async () => {
     if (!VAPID_PUBLIC_KEY) {
-      setError("VAPID public key non configurata.")
+      setError("VAPID public key non configurata. Contatta il supporto.")
       return
     }
+
     setPushLoading(true)
     try {
       const permission = await Notification.requestPermission()
       if (permission !== "granted") {
         setPushStatus("denied")
+        setPushLoading(false)
         return
       }
+
       const reg = await navigator.serviceWorker.register("/sw.js")
       await navigator.serviceWorker.ready
+
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly:      true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       })
+
       const subJson = sub.toJSON()
       const res = await fetch("/api/push/subscribe", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
+        body:    JSON.stringify({
+          endpoint: subJson.endpoint,
+          keys:     subJson.keys,
+        }),
       })
-      if (!res.ok) throw new Error("Errore salvataggio")
+
+      if (!res.ok) throw new Error("Errore salvataggio subscription")
+
       setPushStatus("subscribed")
+      setCurrentEndpoint(subJson.endpoint ?? null)
     } catch (err: unknown) {
-      setError((err as Error).message ?? "Errore iscrizione notifiche")
+      setError((err as Error).message ?? "Errore iscrizione push")
     } finally {
       setPushLoading(false)
     }
@@ -171,6 +185,7 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
     try {
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
+
       if (sub) {
         await sub.unsubscribe()
         await fetch("/api/push/subscribe", {
@@ -179,9 +194,11 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
           body:    JSON.stringify({ endpoint: sub.endpoint }),
         })
       }
+
       setPushStatus("unsubscribed")
+      setCurrentEndpoint(null)
     } catch (err: unknown) {
-      setError((err as Error).message ?? "Errore rimozione notifiche")
+      setError((err as Error).message ?? "Errore disiscrizione push")
     } finally {
       setPushLoading(false)
     }
@@ -201,6 +218,7 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
   async function handleSave() {
     setSaving(true)
     setError(null)
+
     startTransition(async () => {
       const result = await updateNotificationsPrefs(prefs)
       setSaving(false)
@@ -213,6 +231,7 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
     })
   }
 
+
   // Inizia `false` per far coincidere SSR e hydration; si aggiorna dopo il mount
   const [pushSupported, setPushSupported] = useState(false)
   useEffect(() => {
@@ -220,6 +239,7 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
   }, [])
 
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+
 
   return (
     <div className="space-y-4">
@@ -232,6 +252,7 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
         enabled={prefs.email.enabled}
         onToggle={(v) => update("email", { enabled: v })}
       >
+        {/* Indirizzo */}
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Indirizzo di ricezione
@@ -241,39 +262,38 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
               <input
                 type="radio"
                 name="email-addr"
-                checked={!useAltroEmail}
-                onChange={() => {
-                  setUseAltroEmail(false)
-                  update("email", { address: null })
-                }}
+                checked={!prefs.email.address}
+                onChange={() => update("email", { address: null })}
                 className="accent-primary"
               />
-              Usa indirizzo account{" "}
-              <span className="text-muted-foreground">({profileEmail})</span>
+              Usa indirizzo account <span className="text-muted-foreground">({profileEmail})</span>
             </label>
             <label className="flex cursor-pointer items-center gap-2.5 text-sm text-foreground">
               <input
                 type="radio"
                 name="email-addr"
-                checked={useAltroEmail}
-                onChange={() => setUseAltroEmail(true)}
+                checked={!!prefs.email.address}
+                onChange={() => update("email", { address: "" })}
                 className="accent-primary"
               />
               Altro indirizzo
             </label>
-            {useAltroEmail && (
+            {!!prefs.email.address !== undefined && prefs.email.address !== null && prefs.email.address !== undefined && (
               <input
                 type="email"
                 placeholder="altra@email.com"
-                autoFocus
                 value={prefs.email.address ?? ""}
                 onChange={(e) => update("email", { address: e.target.value || null })}
-                className="ml-6 w-full rounded-xl border border-border/60 bg-white/70 px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary/60"
+                className={cn(
+                  "ml-6 w-full rounded-xl border border-border/60 bg-white/70 px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary/60",
+                  !prefs.email.address && "hidden",
+                )}
               />
             )}
           </div>
         </div>
 
+        {/* Timing */}
         <div>
           <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Quando inviare il reminder
@@ -293,39 +313,24 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
         enabled={prefs.push.enabled}
         onToggle={(v) => update("push", { enabled: v })}
       >
-        {/* Info requisiti */}
-        <div className="rounded-xl border border-border/30 bg-muted/20 px-3.5 py-3 space-y-1.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Come funziona</p>
-          <ul className="space-y-1.5 text-[12px] text-muted-foreground">
-            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">📱</span><span><strong className="text-foreground">iPhone / iPad:</strong> aggiungi prima l&apos;app alla schermata Home (Safari → &quot;Aggiungi a Home&quot;), poi apri da lì e torna qui.</span></li>
-            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">💻</span><span><strong className="text-foreground">Desktop / Android:</strong> funziona su Chrome, Firefox e Edge. Safari su Mac richiede macOS 13+.</span></li>
-            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">🔔</span><span>Il browser ti chiederà il permesso — clicca <strong className="text-foreground">Consenti</strong>. Su Chrome puoi verificare cliccando sull&apos;icona 🔒 accanto all&apos;indirizzo.</span></li>
-            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">🖥️</span><span><strong className="text-foreground">Su Chrome:</strong> la notifica appare solo se la pagina <strong className="text-foreground">non è in primo piano</strong> — minimizza il browser o cambia tab. Se non la vedi, controlla il <strong className="text-foreground">Centro notifiche di Windows</strong> (icona a campana in basso a destra).</span></li>
-            <li className="flex items-start gap-1.5"><span className="mt-0.5 shrink-0">📲</span><span>Ogni dispositivo (PC, telefono, tablet) ha una sottoscrizione separata — attiva le notifiche da ciascun dispositivo che vuoi usare.</span></li>
-          </ul>
-        </div>
-
         {!pushSupported ? (
-          <div className="rounded-xl border border-amber-200/60 bg-amber-50/60 px-3 py-2.5 text-xs text-amber-700">
-            Questo browser non supporta le notifiche push. Prova con Chrome o Firefox.
-          </div>
+          <p className="rounded-xl border border-amber-200/60 bg-amber-50/60 px-3 py-2.5 text-xs text-amber-700">
+            Le notifiche push non sono supportate su questo browser.
+          </p>
         ) : pushStatus === "denied" ? (
-          <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2.5 space-y-1">
-            <p className="text-xs font-medium text-destructive">Notifiche bloccate</p>
-            <p className="text-[11px] text-destructive/80">
-              Hai bloccato le notifiche per questo sito. Per riattivarle: clicca sull&apos;icona 🔒 accanto all&apos;indirizzo del browser → Notifiche → Consenti.
-            </p>
-          </div>
+          <p className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2.5 text-xs text-destructive">
+            Hai bloccato le notifiche per questo sito. Per riattivarle, vai nelle impostazioni del browser.
+          </p>
         ) : (
           <div>
             <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Questo dispositivo
+              Questo browser
             </label>
             {pushStatus === "subscribed" ? (
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Notifiche attive
+                  Iscritto
                 </span>
                 <button
                   type="button"
@@ -333,7 +338,7 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
                   disabled={pushLoading}
                   className="cursor-pointer rounded-lg border border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
                 >
-                  {pushLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Disattiva"}
+                  {pushLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Rimuovi iscrizione"}
                 </button>
               </div>
             ) : (
@@ -341,18 +346,19 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
                 type="button"
                 onClick={subscribeToPush}
                 disabled={pushLoading}
-                className="flex cursor-pointer items-center gap-2 rounded-xl border border-violet-300/50 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
+                className="flex cursor-pointer items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
               >
                 {pushLoading
                   ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Smartphone className="h-4 w-4" />
+                  : <Bell className="h-4 w-4" />
                 }
-                Attiva notifiche su questo dispositivo
+                Abbonati alle notifiche
               </button>
             )}
           </div>
         )}
 
+        {/* Timing */}
         <div>
           <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Quando inviare il reminder
@@ -372,59 +378,36 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
         enabled={prefs.telegram.enabled}
         onToggle={(v) => update("telegram", { enabled: v })}
       >
-        {/* Istruzioni step-by-step */}
-        <div className="rounded-xl border border-border/30 bg-muted/20 px-3.5 py-3 space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Come collegare Telegram</p>
-          <ol className="space-y-2 text-[12px] text-muted-foreground list-none">
-            <li className="flex items-start gap-2">
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-sky-100 text-[9px] font-bold text-sky-700 mt-0.5">1</span>
-              <span>
-                {botUsername ? (
-                  <>
-                    Apri il bot{" "}
-                    <a
-                      href={`https://t.me/${botUsername}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-0.5 font-semibold text-sky-600 hover:underline"
-                    >
-                      @{botUsername} <ExternalLink className="h-2.5 w-2.5" />
-                    </a>
-                    {" "}su Telegram
-                  </>
-                ) : (
-                  "Apri il bot InvigiTrack su Telegram"
-                )}
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-sky-100 text-[9px] font-bold text-sky-700 mt-0.5">2</span>
-              <span>
-                Premi <strong className="text-foreground">Start</strong> o invia{" "}
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">/start</code>
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-sky-100 text-[9px] font-bold text-sky-700 mt-0.5">3</span>
-              <span>Il bot ti risponde con il tuo <strong className="text-foreground">Chat ID</strong> — copialo e incollalo qui sotto</span>
-            </li>
-          </ol>
-        </div>
-
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Il tuo Chat ID
+            Telegram Chat ID
           </label>
           <input
             type="text"
-            inputMode="numeric"
             placeholder="es. 123456789"
             value={prefs.telegram.chat_id ?? ""}
             onChange={(e) => update("telegram", { chat_id: e.target.value || null })}
             className="w-full rounded-xl border border-border/60 bg-white/70 px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary/60"
           />
+          <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+            Cerca
+            <a
+              href="https://t.me/userinfobot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-primary hover:underline"
+            >
+              @userinfobot <ExternalLink className="h-2.5 w-2.5" />
+            </a>
+            su Telegram e invia un messaggio per ottenere il tuo ID.
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Poi cerca il tuo bot su Telegram e invia{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">/start</code> per attivarlo.
+          </p>
         </div>
 
+        {/* Timing */}
         <div>
           <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Quando inviare il reminder
@@ -470,22 +453,22 @@ export function NotificationsPrefsForm({ currentPrefs, profileEmail }: Props) {
 
 const COLOR_MAP = {
   indigo: {
-    icon:   "bg-indigo-100 text-indigo-600",
-    badge:  "bg-indigo-50 text-indigo-700 border-indigo-200/60",
-    border: "border-indigo-200/50",
-    bg:     "bg-indigo-50/30",
+    icon:    "bg-indigo-100 text-indigo-600",
+    badge:   "bg-indigo-50 text-indigo-700 border-indigo-200/60",
+    border:  "border-indigo-200/50",
+    bg:      "bg-indigo-50/30",
   },
   violet: {
-    icon:   "bg-violet-100 text-violet-600",
-    badge:  "bg-violet-50 text-violet-700 border-violet-200/60",
-    border: "border-violet-200/50",
-    bg:     "bg-violet-50/30",
+    icon:    "bg-violet-100 text-violet-600",
+    badge:   "bg-violet-50 text-violet-700 border-violet-200/60",
+    border:  "border-violet-200/50",
+    bg:      "bg-violet-50/30",
   },
   sky: {
-    icon:   "bg-sky-100 text-sky-600",
-    badge:  "bg-sky-50 text-sky-700 border-sky-200/60",
-    border: "border-sky-200/50",
-    bg:     "bg-sky-50/30",
+    icon:    "bg-sky-100 text-sky-600",
+    badge:   "bg-sky-50 text-sky-700 border-sky-200/60",
+    border:  "border-sky-200/50",
+    bg:      "bg-sky-50/30",
   },
 } as const
 
@@ -507,10 +490,12 @@ function ChannelSection({
   const [open, setOpen] = useState(enabled)
   const colors = COLOR_MAP[color]
 
+  // Sync open state when enabled changes
   useEffect(() => { if (enabled) setOpen(true) }, [enabled])
 
   return (
     <div className={cn("rounded-2xl border transition-colors", enabled ? `${colors.border} ${colors.bg}` : "border-border/40 bg-muted/20")}>
+      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5">
         <button
           type="button"
@@ -524,7 +509,7 @@ function ChannelSection({
             {title}
           </span>
           {open
-            ? <ChevronDown  className="h-3.5 w-3.5 text-muted-foreground/50" />
+            ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />
             : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
           }
           {enabled && (
@@ -536,6 +521,7 @@ function ChannelSection({
         <Toggle on={enabled} onChange={onToggle} />
       </div>
 
+      {/* Body */}
       {open && (
         <div className="space-y-4 border-t border-border/30 px-4 pb-4 pt-4">
           {children}

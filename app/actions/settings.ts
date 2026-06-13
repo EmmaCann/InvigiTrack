@@ -156,13 +156,6 @@ export async function updatePaymentsPrefs(prefs: PaymentsPrefs): Promise<{ error
 
 // --- Notifications prefs ------------------------------------------------------
 
-export async function dismissNotificationsBanner(): Promise<void> {
-  const user = await getCurrentUser()
-  if (!user) return
-  await updateUiState(user.id, { notifications_banner_dismissed: true })
-  revalidatePath("/dashboard/calendar")
-}
-
 export async function updateNotificationsPrefs(prefs: NotificationsPrefs): Promise<{ error?: string }> {
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
