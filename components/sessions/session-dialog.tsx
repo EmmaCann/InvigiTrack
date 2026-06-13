@@ -234,7 +234,7 @@ export function SessionDialog({
             <Input type="date" max={todayISO()} className="h-10 rounded-xl text-sm" {...form.register("session_date")} />
           </Field>
 
-          <div className="grid min-w-0 grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+         <div className="grid min-w-0 grid-cols-1 gap-3 min-[430px]:grid-cols-2 sm:grid-cols-1">
             <Field label="Inizio" error={form.formState.errors.start_time?.message}>
               <Input type="time"  className="h-11 w-full min-w-0 rounded-xl text-base sm:h-10 sm:text-sm" {...form.register("start_time")} />
             </Field>
