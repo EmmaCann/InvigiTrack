@@ -108,7 +108,7 @@ export async function updateWorkspace(
 }
 
 /**
- * Elimina un workspace e (se è l'unico della sua categoria) tutti i dati correlati.
+ * Elimina un workspace operativo e i suoi dati.
  * Se era il workspace attivo, resetta il cookie.
  */
 export async function deleteWorkspace(

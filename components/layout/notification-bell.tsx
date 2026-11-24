@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { createPortal } from "react-dom"
 import { Bell, Info, Wrench, AlertTriangle, MessageSquare, X } from "lucide-react"
-import { getNotificationsAction, markNotificationsReadAction } from "@/app/actions/notifications"
+import { getNotificationsAction, markNotificationsReadAction, openSubmissionNotification } from "@/app/actions/notifications"
 import type { NotificationWithRead, NotificationType } from "@/types/database"
 import { cn } from "@/lib/utils"
 
@@ -31,6 +32,9 @@ interface Props {
 }
 
 export function NotificationBell({ initialUnreadCount }: Props) {
+  const router = useRouter()
+  const [noticeError, setNoticeError] = useState("")
+  const [openingSubmission, setOpeningSubmission] = useState(false)
   const [open,          setOpen]          = useState(false)
   const [unreadCount,   setUnreadCount]   = useState(initialUnreadCount)
   const [notifications, setNotifications] = useState<NotificationWithRead[]>([])
@@ -59,19 +63,45 @@ export function NotificationBell({ initialUnreadCount }: Props) {
     return () => document.removeEventListener("mousedown", handler)
   }, [open])
 
+  useEffect(() => {
+    let active = true
+    async function refreshUnread() {
+      if (document.visibilityState !== "visible") return
+      try {
+        const { notifications } = await getNotificationsAction()
+        if (active && notifications) setUnreadCount(notifications.filter((notice) => !notice.is_read).length)
+      } catch { /* The next refresh will retry. */ }
+    }
+    const timer = window.setInterval(refreshUnread, 60_000)
+    window.addEventListener("focus", refreshUnread)
+    document.addEventListener("visibilitychange", refreshUnread)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+      window.removeEventListener("focus", refreshUnread)
+      document.removeEventListener("visibilitychange", refreshUnread)
+    }
+  }, [])
+
   async function handleOpen() {
     if (open) { setOpen(false); return }
     setOpen(true)
+    setNoticeError("")
     setLoading(true)
-    const res = await getNotificationsAction()
-    setLoading(false)
-    if (res.notifications) {
-      setNotifications(res.notifications)
-      // Segna come lette ottimisticamente
-      if (unreadCount > 0) {
-        setUnreadCount(0)
-        markNotificationsReadAction()
+    try {
+      const result = await getNotificationsAction()
+      if (!result.notifications) {
+        setNoticeError("Impossibile caricare le notifiche.")
+        return
       }
+      setNotifications(result.notifications)
+      const count = result.notifications.filter((notice) => !notice.is_read).length
+      setUnreadCount(count)
+      if (count && !(await markNotificationsReadAction()).error) setUnreadCount(0)
+    } catch {
+      setNoticeError("Impossibile caricare le notifiche.")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -80,6 +110,8 @@ export function NotificationBell({ initialUnreadCount }: Props) {
       <button
         type="button"
         onClick={handleOpen}
+        aria-label="Notifiche"
+        aria-expanded={open}
         className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-white/75 bg-white/45 text-muted-foreground shadow-sm backdrop-blur-md transition-all hover:bg-white/65 hover:text-foreground"
       >
         <Bell className="h-4 w-4" />
@@ -104,12 +136,14 @@ export function NotificationBell({ initialUnreadCount }: Props) {
           <p className="text-sm font-semibold text-foreground">Notifiche</p>
           <button
             onClick={() => setOpen(false)}
+            aria-label="Chiudi notifiche"
             className="rounded-lg p-1 text-muted-foreground hover:bg-muted"
           >
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
 
+        {noticeError && <p role="status" className="px-4 py-2 text-xs text-muted-foreground">{noticeError}</p>}
         <div className="max-h-[calc(100dvh-150px-env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain sm:max-h-[420px]">
           {loading ? (
             <div className="flex items-center justify-center py-10">
@@ -163,6 +197,20 @@ export function NotificationBell({ initialUnreadCount }: Props) {
                           {isExpanded ? "Riduci ↑" : "Leggi di più ↓"}
                         </button>
                       )}
+
+                      {n.client_submission_id && <button type="button" disabled={openingSubmission}
+                        className="mt-2 text-xs font-semibold text-primary hover:underline"
+                        onClick={async () => {
+                          setNoticeError("")
+                          setOpeningSubmission(true)
+                          try {
+                            const result = await openSubmissionNotification(n.client_submission_id!)
+                            if (!result.href) { setNoticeError(result.error ?? "Consegna non disponibile."); return }
+                            setOpen(false)
+                            router.push(result.href)
+                          } catch { setNoticeError("Impossibile aprire la consegna.") }
+                          finally { setOpeningSubmission(false) }
+                        }}>Apri consegna</button>}
 
                       <p className="mt-1 text-[10px] text-muted-foreground/60">
                         {timeAgo(n.created_at)}

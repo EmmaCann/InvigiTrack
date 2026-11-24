@@ -74,9 +74,6 @@ export function ConvertEventDialog({ event, profile, categorySlug, workspaceRate
       hourly_rate: rate,
       role_type:   isInvigilation ? roleType : undefined,
       notes:       notes || undefined,
-      title:       event.title,
-      location:    event.location ?? undefined,
-      event_date:  event.event_date,
     })
 
     setLoading(false)

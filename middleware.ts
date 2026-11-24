@@ -10,6 +10,8 @@ import { NextResponse, type NextRequest } from "next/server"
  * Analogia Laravel: è come il gruppo di middleware "auth" su Route::middleware('auth')
  */
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/clienti/")) return NextResponse.next()
+
   // Partiamo con una risposta "vai avanti" di default
   let supabaseResponse = NextResponse.next({ request })
 

@@ -8,9 +8,8 @@ import {
   insertEvent,
   updateEvent,
   deleteEvent,
-  markEventConverted,
 } from "@/lib/data/calendar-events"
-import { insertSession }      from "@/lib/data/sessions"
+import { createClient } from "@/lib/supabase/server"
 import type { CreateEventData, InvigilationRole } from "@/types/database"
 
 function revalidate() {
@@ -43,7 +42,8 @@ export async function editEvent(
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
 
-  const result = await updateEvent(eventId, data)
+  const { category } = await getActiveWorkspace(user.id)
+  const result = await updateEvent(eventId, user.id, category.workspaceId, data)
   if (result.error) return { error: result.error }
 
   revalidate()
@@ -79,10 +79,6 @@ export async function convertEventToSession(
     hourly_rate: number
     role_type?:  InvigilationRole  // solo per workspace invigilation
     notes?:      string
-    // title, location, event_date vengono dall'evento
-    title:       string
-    location?:   string
-    event_date:  string
   },
 ): Promise<{ success?: true; error?: string }> {
   const user = await getCurrentUser()
@@ -93,27 +89,18 @@ export async function convertEventToSession(
 
   const { category } = await getActiveWorkspace(user.id)
 
-  // Inserisci la sessione
-  const sessionResult = await insertSession(user.id, category.id, category.workspaceId, {
-    session_date: sessionData.event_date,
-    start_time:   sessionData.start_time,
-    end_time:     sessionData.end_time,
-    location:     sessionData.location,
-    hourly_rate:  sessionData.hourly_rate,
-    notes:        sessionData.notes,
-    metadata: {
-      exam_name: sessionData.title,
-      // role_type solo per workspace invigilation — altri workspace non lo usano
-      ...(category.slug === "invigilation" && sessionData.role_type
-        ? { role_type: sessionData.role_type }
-        : {}),
-    },
+  if (!/^\d{2}:\d{2}$/.test(sessionData.start_time) || !/^\d{2}:\d{2}$/.test(sessionData.end_time)
+    || !Number.isFinite(sessionData.hourly_rate) || sessionData.hourly_rate < 0 || sessionData.hourly_rate > 999) {
+    return { error: "Controlla gli orari e la tariffa." }
+  }
+  const db = await createClient()
+  const { error } = await db.rpc("convert_calendar_event", {
+    p_user: user.id, p_workspace: category.workspaceId, p_event: eventId,
+    p_start: sessionData.start_time, p_end: sessionData.end_time, p_rate: sessionData.hourly_rate,
+    p_notes: sessionData.notes ?? null,
+    p_role: category.slug === "invigilation" ? sessionData.role_type ?? null : null,
   })
-
-  if (sessionResult.error) return { error: sessionResult.error }
-
-  // Marca l'evento come convertito
-  await markEventConverted(eventId, sessionResult.session!.id)
+  if (error) return { error: "Conversione non riuscita. Controlla gli orari e il workspace." }
 
   revalidate()
   revalidatePath("/dashboard/sessions")

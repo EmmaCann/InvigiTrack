@@ -24,6 +24,7 @@ export type FeedbackType = "feature_request" | "bug_report" | "suggestion"
 export type FeedbackStatus = "new" | "read"
 
 export interface Notification {
+  client_submission_id?: string | null
   id:             string
   target_type:    NotificationTargetType
   target_role:    PlatformRole | null  // se target_type = "role"
@@ -233,6 +234,9 @@ export interface UserWorkspace extends WorkCategory {
 
 /** Riga della tabella `sessions` */
 export interface Session {
+  client_id?: string | null
+  client_lesson_id?: string | null
+  archived_at?: string | null
   id: string
   user_id: string
   category_id: string
@@ -256,6 +260,8 @@ export interface Session {
 
 /** Riga della tabella `calendar_events` */
 export interface CalendarEvent {
+  client_id?: string | null
+  client_lesson_id?: string | null
   id:                   string
   user_id:              string
   event_date:           string        // "2026-04-28"
@@ -274,6 +280,7 @@ export interface CalendarEvent {
 
 /** Dati per creare un nuovo evento calendario */
 export interface CreateEventData {
+  client_id?: string | null
   event_date:    string
   start_time?:   string  // "09:00" opzionale
   end_time?:     string  // "12:30" opzionale
@@ -348,6 +355,7 @@ export interface OnboardingData {
 
 /** Dati per creare una nuova sessione */
 export interface CreateSessionData {
+  client_id?: string | null
   session_date: string
   start_time: string
   end_time: string

@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { CalendarClock, MapPin, Clock, BookOpen, ShieldCheck, MessageSquarePlus, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { NAV_ITEMS, SETTINGS_ITEM, isActiveRoute } from "./nav-items"
+import { useClientOptions } from "@/components/clients/client-picker"
+import { CLIENTS_ITEM, NAV_ITEMS, SETTINGS_ITEM, isActiveRoute } from "./nav-items"
 import { openHelpDialog, openDashboardTour } from "@/lib/help-events"
 import { FeedbackDialog } from "@/components/feedback/feedback-dialog"
 import type { CalendarEvent, PlatformRole } from "@/types/database"
@@ -67,6 +68,7 @@ export function Sidebar({
   nextEvent?:    CalendarEvent | null
   platformRole?: PlatformRole
 }) {
+  const showClients = useClientOptions() !== null
   const pathname = usePathname()
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
@@ -97,7 +99,7 @@ export function Sidebar({
         <p className="mb-2 px-6 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
           Menu
         </p>
-        {NAV_ITEMS.map((item) => (
+        {(showClients ? [...NAV_ITEMS, CLIENTS_ITEM] : NAV_ITEMS).map((item) => (
           <NavLink
             key={item.href}
             href={item.href}

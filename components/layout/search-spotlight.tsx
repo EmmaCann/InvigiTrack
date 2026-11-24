@@ -7,7 +7,8 @@ import {
   CreditCard, Calendar, Settings, Plus, FileDown, BarChart2, BookOpen,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { NAV_ITEMS, SETTINGS_ITEM } from "./nav-items"
+import { useClientOptions } from "@/components/clients/client-picker"
+import { CLIENTS_ITEM, NAV_ITEMS, SETTINGS_ITEM } from "./nav-items"
 import { TUTORIAL_ITEMS } from "@/lib/help-content"
 
 // --- Tipi --------------------------------------------------------------------
@@ -54,6 +55,7 @@ interface Props {
 // --- Componente --------------------------------------------------------------
 
 export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcomingEvents = [], onOpenHelp }: Props) {
+  const showClients = useClientOptions() !== null
   const router    = useRouter()
   const inputRef  = useRef<HTMLInputElement>(null)
   const listRef   = useRef<HTMLDivElement>(null)
@@ -63,13 +65,13 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
   // -- Tutti gli entry statici -----------------------------------------------
   const staticGroups = useMemo<Group[]>(() => {
     const pages: Entry[] = [
-      ...NAV_ITEMS.map((i) => ({
+      ...(showClients ? [...NAV_ITEMS, CLIENTS_ITEM] : NAV_ITEMS).map((i) => ({
         id:       `page-${i.href}`,
         type:     "page" as EntryType,
         label:    i.label.charAt(0).toUpperCase() + i.label.slice(1).toLowerCase(),
         hint:     "Vai alla sezione",
         href:     i.href,
-        icon:     NAV_ICONS[i.href],
+        icon:     NAV_ICONS[i.href] ?? i.icon,
         keywords: i.label.toLowerCase(),
       })),
       {
@@ -137,7 +139,7 @@ export function SearchSpotlight({ open, onOpenChange, recentSessions = [], upcom
       { title: "Sezioni",       entries: pages     },
       { title: "Tutorial",      entries: tutorials },
     ]
-  }, [onOpenHelp])
+  }, [onOpenHelp, showClients])
 
   // -- Entry dinamici da dati ------------------------------------------------
   const dynamicGroups = useMemo<Group[]>(() => {

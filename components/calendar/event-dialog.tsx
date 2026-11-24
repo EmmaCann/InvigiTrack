@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Pencil, X, CalendarDays, MapPin, AlignLeft, Clock, Upload, FileText } from "lucide-react"
+import { ClientPicker, useClientOptions } from "@/components/clients/client-picker"
 import { createEvent, editEvent }        from "@/app/actions/calendar-events"
 import { saveTimetable }                 from "@/app/actions/timetables"
 import { createClient }                  from "@/lib/supabase/client"
@@ -39,6 +40,7 @@ interface Props {
 // --- Componente --------------------------------------------------------------
 
 export function EventDialog({ defaultDate, event, trigger, showTimetable = false }: Props) {
+  const clientOptions = useClientOptions()
   const router   = useRouter()
   const isMobile = useIsMobile()
   const isEdit   = !!event
@@ -51,6 +53,7 @@ export function EventDialog({ defaultDate, event, trigger, showTimetable = false
   const [timetableFile,  setTimetableFile] = useState<File | null>(null)
   const [timetableError, setTimetableError] = useState<string | null>(null)
 
+  const [clientId, setClientId] = useState("")
   const [date,      setDate]      = useState(defaultDate ?? "")
   const [title,     setTitle]     = useState("")
   const [location,  setLocation]  = useState("")
@@ -60,6 +63,7 @@ export function EventDialog({ defaultDate, event, trigger, showTimetable = false
 
   useEffect(() => {
     if (open) {
+      setClientId(event?.client_id ?? "")
       if (event) {
         setDate(event.event_date)
         setTitle(event.title)
@@ -108,6 +112,7 @@ export function EventDialog({ defaultDate, event, trigger, showTimetable = false
     setError(null)
 
     const data = {
+      ...(!event?.client_lesson_id && !event?.is_converted && clientOptions && { client_id: clientId || null }),
       event_date: date,
       title:      title.trim(),
       location:   location  || undefined,
@@ -175,6 +180,7 @@ export function EventDialog({ defaultDate, event, trigger, showTimetable = false
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <div className="space-y-4 px-6 py-5">
 
+        <ClientPicker value={clientId} onChange={setClientId} disabled={!!event?.client_lesson_id || !!event?.is_converted} />
         <Field label="Data">
           <input
             type="date"

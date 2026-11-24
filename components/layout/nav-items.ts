@@ -5,6 +5,7 @@ import {
   BarChart3,
   CalendarDays,
   Settings,
+  Users,
 } from "lucide-react"
 
 export const NAV_ITEMS = [
@@ -14,6 +15,8 @@ export const NAV_ITEMS = [
   { href: "/dashboard/calendar",   label: "Calendario",  icon: CalendarDays    },
   { href: "/dashboard/analytics",  label: "Statistiche", icon: BarChart3       },
 ] as const
+
+export const CLIENTS_ITEM = { href: "/dashboard/clients", label: "Clienti", icon: Users } as const
 
 export const SETTINGS_ITEM = {
   href: "/dashboard/settings",

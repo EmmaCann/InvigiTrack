@@ -60,6 +60,7 @@ export async function insertEvent(
       end_time:     data.end_time    ?? null,
       title:        data.title,
       location:     data.location    ?? null,
+      ...(data.client_id !== undefined && { client_id: data.client_id }),
       notes:        data.notes       ?? null,
       category_id:  data.category_id ?? null,
       workspace_id: data.workspace_id ?? null,
@@ -72,12 +73,15 @@ export async function insertEvent(
 
 export async function updateEvent(
   eventId: string,
+  userId: string,
+  workspaceId: string,
   data: Partial<CreateEventData>,
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { error } = await supabase
     .from("calendar_events")
     .update({
+      ...(data.client_id !== undefined && { client_id: data.client_id }),
       ...(data.event_date  && { event_date:  data.event_date  }),
       ...(data.title       && { title:       data.title       }),
       ...(data.location    !== undefined && { location:   data.location   ?? null }),
@@ -85,7 +89,7 @@ export async function updateEvent(
       ...(data.start_time  !== undefined && { start_time: data.start_time ?? null }),
       ...(data.end_time    !== undefined && { end_time:   data.end_time   ?? null }),
     })
-    .eq("id", eventId)
+    .eq("id", eventId).eq("user_id", userId).eq("workspace_id", workspaceId)
   if (error) return { error: error.message }
   return {}
 }
@@ -95,20 +99,6 @@ export async function deleteEvent(eventId: string): Promise<{ error?: string }> 
   const { error } = await supabase
     .from("calendar_events")
     .delete()
-    .eq("id", eventId)
-  if (error) return { error: error.message }
-  return {}
-}
-
-/** Marca un evento come convertito e salva l'id della sessione creata */
-export async function markEventConverted(
-  eventId: string,
-  sessionId: string,
-): Promise<{ error?: string }> {
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("calendar_events")
-    .update({ is_converted: true, converted_session_id: sessionId })
     .eq("id", eventId)
   if (error) return { error: error.message }
   return {}
