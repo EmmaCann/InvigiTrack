@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import Link from "next/link"
 import { createPortal } from "react-dom"
 import { Bell, Info, Wrench, AlertTriangle, MessageSquare, X } from "lucide-react"
 import { getNotificationsAction, markNotificationsReadAction } from "@/app/actions/notifications"
@@ -59,19 +60,41 @@ export function NotificationBell({ initialUnreadCount }: Props) {
     return () => document.removeEventListener("mousedown", handler)
   }, [open])
 
+  useEffect(() => {
+    let active = true
+    async function refreshCount() {
+      if (document.visibilityState !== "visible" || !ref.current?.getClientRects().length) return
+      try {
+        const { notifications } = await getNotificationsAction()
+        if (active && notifications) setUnreadCount(notifications.filter((notice) => !notice.is_read).length)
+      } catch { /* The next refresh retries. */ }
+    }
+    const timer = window.setInterval(refreshCount, 60_000)
+    window.addEventListener("focus", refreshCount)
+    document.addEventListener("visibilitychange", refreshCount)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+      window.removeEventListener("focus", refreshCount)
+      document.removeEventListener("visibilitychange", refreshCount)
+    }
+  }, [])
+
   async function handleOpen() {
     if (open) { setOpen(false); return }
     setOpen(true)
     setLoading(true)
-    const res = await getNotificationsAction()
-    setLoading(false)
-    if (res.notifications) {
-      setNotifications(res.notifications)
-      // Segna come lette ottimisticamente
-      if (unreadCount > 0) {
-        setUnreadCount(0)
-        markNotificationsReadAction()
-      }
+    try {
+      const result = await getNotificationsAction()
+      if (!result.notifications) return
+      setNotifications(result.notifications)
+      const count = result.notifications.filter((notice) => !notice.is_read).length
+      setUnreadCount(count)
+      if (count && !(await markNotificationsReadAction()).error) setUnreadCount(0)
+    } catch {
+      setNotifications([])
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -80,6 +103,8 @@ export function NotificationBell({ initialUnreadCount }: Props) {
       <button
         type="button"
         onClick={handleOpen}
+        aria-label="Notifiche"
+        aria-expanded={open}
         className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-white/75 bg-white/45 text-muted-foreground shadow-sm backdrop-blur-md transition-all hover:bg-white/65 hover:text-foreground"
       >
         <Bell className="h-4 w-4" />
@@ -163,6 +188,11 @@ export function NotificationBell({ initialUnreadCount }: Props) {
                           {isExpanded ? "Riduci ↑" : "Leggi di più ↓"}
                         </button>
                       )}
+
+                      {n.location_lesson_session_id && <Link href={`/dashboard/sessions/${n.location_lesson_session_id}/contenuti`}
+                        onClick={() => setOpen(false)} className="mt-2 inline-block text-xs font-semibold text-primary hover:underline">
+                        Apri consegna
+                      </Link>}
 
                       <p className="mt-1 text-[10px] text-muted-foreground/60">
                         {timeAgo(n.created_at)}

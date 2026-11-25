@@ -78,6 +78,12 @@ export async function archiveYear(
     return { sessions: [], error: "Non puoi archiviare l'anno corrente." }
   }
 
+  const contents = await supabase.rpc("workspace_has_lesson_content", { p_workspace: workspaceId, p_year: year })
+  if (contents.data) return { sessions: [], error: "L’anno contiene lezioni con materiali o compiti e non può essere archiviato eliminando le sessioni." }
+  if (contents.error && contents.error.code !== "PGRST202") {
+    return { sessions: [], error: "Impossibile verificare i contenuti delle lezioni prima dell’archiviazione." }
+  }
+
   // Fetch sessioni dell'anno
   const { data: sessions, error: fetchErr } = await supabase
     .from("sessions")

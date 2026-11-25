@@ -24,6 +24,7 @@ export type FeedbackType = "feature_request" | "bug_report" | "suggestion"
 export type FeedbackStatus = "new" | "read"
 
 export interface Notification {
+  location_lesson_session_id?: string | null
   id:             string
   target_type:    NotificationTargetType
   target_role:    PlatformRole | null  // se target_type = "role"

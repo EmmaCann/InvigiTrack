@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import { useState, useMemo, useTransition } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   Trash2,
@@ -17,6 +18,7 @@ import {
   CreditCard,
   LayoutList,
   Layers2,
+  BookOpen,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -519,6 +521,11 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
 
                           {/* Azioni */}
                           <div className="flex items-center gap-0.5">
+                            {session.location?.trim() && <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                              <Link href={`/dashboard/sessions/${session.id}/contenuti`} aria-label="Contenuti lezione" title="Contenuti lezione">
+                                <BookOpen className="size-4" aria-hidden />
+                              </Link>
+                            </Button>}
                             <SessionDialog profile={profile} categorySlug={categorySlug} session={session} knownLocations={locations} />
 
                             {isConf ? (
@@ -629,6 +636,11 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  {session.location?.trim() && <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                    <Link href={`/dashboard/sessions/${session.id}/contenuti`} aria-label="Contenuti lezione" title="Contenuti lezione">
+                      <BookOpen className="size-4" aria-hidden />
+                    </Link>
+                  </Button>}
                   <SessionDialog profile={profile} categorySlug={categorySlug} session={session} knownLocations={locations} />
                   {isConf ? (
                     <div className="flex items-center gap-1">

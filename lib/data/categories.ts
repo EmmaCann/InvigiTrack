@@ -185,6 +185,12 @@ export async function deleteWorkspaceData(
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
 
+  const contents = await supabase.rpc("workspace_has_lesson_content", { p_workspace: workspaceId, p_year: null })
+  if (contents.data) return { error: "Il workspace contiene lezioni con materiali o compiti." }
+  if (contents.error && contents.error.code !== "PGRST202") {
+    return { error: "Impossibile verificare i contenuti delle lezioni del workspace." }
+  }
+
   // 1. Session IDs di questo workspace specifico
   const { data: sessRows } = await supabase
     .from("sessions")
