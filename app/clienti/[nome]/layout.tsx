@@ -23,8 +23,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       </div>
     </header>
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6 sm:py-10">{children}</main>
-    <footer className="border-t border-white/80 bg-white/45 px-4 py-4 text-center text-xs text-muted-foreground">
-      Realizzato da Emma Cannavò
+    <footer className="mx-auto w-full max-w-5xl px-4 sm:px-6">
+      <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 border-t border-border/60 py-4 text-xs sm:justify-end">
+        <span className="font-semibold text-primary">InvigiTrack</span>
+        <span aria-hidden className="text-muted-foreground/60">·</span>
+        <span className="text-muted-foreground">Un progetto di <span className="font-medium text-foreground/80">Emma Cannavò</span></span>
+      </div>
     </footer>
   </div>
 }
