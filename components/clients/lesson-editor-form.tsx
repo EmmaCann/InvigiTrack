@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 export function LessonEditorForm({ saveAction, label, children }: {
   saveAction: (form: FormData) => Promise<{ error?: string }>
   label: string
-  children: ReactNode
+  children?: ReactNode
 }) {
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState("")

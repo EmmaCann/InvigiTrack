@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, BookOpen, ClipboardList, FolderOpen } from "lucide-react"
-import { saveLocationLesson, saveLocationTask, uploadTeacherLessonFiles } from "@/app/actions/location-lessons"
+import { publishLocationHomework, saveLocationLesson, saveLocationTask, uploadTeacherLessonFiles } from "@/app/actions/location-lessons"
 import { getLesson, getLessonDetails, teacherSession, type Task } from "@/lib/clients/location-lessons"
 import { LessonEditorForm } from "@/components/clients/lesson-editor-form"
 import { LessonFileList, lessonDate } from "@/components/clients/lesson-content"
@@ -46,6 +46,7 @@ export default async function LessonEditor({ params }: { params: Promise<{ id: s
             </div>
             <div className="space-y-2 rounded-xl border border-border/70 bg-white/40 p-4 sm:p-5">
               <h3 className="text-sm font-semibold">Documenti allegati</h3>
+              <p className="text-xs text-muted-foreground">{lesson?.published ? "I documenti confermati sono visibili al cliente." : "I documenti saranno visibili quando pubblichi la lezione."}</p>
               {details?.uploads.some((upload) => upload.kind === "material") ? (
                 <LessonFileList uploads={details.uploads.filter((upload) => upload.kind === "material")} base={base} />
               ) : <p className="text-sm text-muted-foreground">Nessun documento allegato.</p>}
@@ -58,15 +59,19 @@ export default async function LessonEditor({ params }: { params: Promise<{ id: s
       {details?.tasks.map((task) => {
         const uploads = details.uploads.filter((upload) => upload.task_id === task.id)
         const submissions = uploads.filter((upload) => upload.kind === "submission")
-        return <details key={task.id} className="rounded-xl border border-border/70 bg-white/40 p-4" open={(submissions.length > 0 || !uploads.some((upload) => upload.kind === "assignment")) || undefined}>
+        const documents = uploads.filter((upload) => upload.kind === "assignment")
+        const status = task.published && lesson?.published ? "Visibile al cliente" : task.published ? "In attesa della pubblicazione della lezione" : "Bozza"
+        return <details key={task.id} className="rounded-xl border border-border/70 bg-white/40 p-4" open={(submissions.length > 0 || !task.published || !documents.length) || undefined}>
           <summary className="cursor-pointer text-sm font-medium">
-            {task.title} <Badge variant="outline" className="ml-2">{task.published ? "Pubblicato" : "Bozza"}</Badge>
+            {task.title} <Badge variant="outline" className="ml-2">{status}</Badge>
             <span className="ml-2 text-muted-foreground">{submissions.length} {submissions.length === 1 ? "consegna" : "consegne"}</span>
           </summary>
           <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
             <TaskForm id={id} task={task} />
             <div className="space-y-3">
-              <LessonFileList uploads={uploads.filter((upload) => upload.kind === "assignment")} base={base} />
+              <LessonFileList uploads={documents} base={base} />
+              {!task.published && documents.length > 0 && <LessonEditorForm
+                label="Pubblica compito" saveAction={publishLocationHomework.bind(null, id, task.id)} />}
               <LessonUploadForm task={task.id} label="Documenti del compito" uploadAction={uploadTeacherLessonFiles.bind(null, id, "assignment")} />
               {submissions.length > 0 && <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Consegne ricevute</h3>

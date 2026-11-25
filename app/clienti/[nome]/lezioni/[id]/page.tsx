@@ -23,6 +23,16 @@ export default async function PortalLesson({ params }: { params: Promise<{ nome:
     <header className="glass-dashboard rounded-3xl bg-gradient-to-br from-white/95 to-blue-50/60 p-5 sm:p-7">
       <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><BookOpen className="size-5" aria-hidden /></div>
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{lesson.title || "Lezione"}</h1>
+      {(materials.length > 0 || tasks.length > 0) && <nav aria-label="Contenuti della lezione" className="mt-4 flex flex-wrap gap-2">
+        {materials.length > 0 && <a href="#materiali"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/15">
+          <FolderOpen className="size-4" aria-hidden /> Materiali da scaricare
+        </a>}
+        {tasks.length > 0 && <a href="#compiti"
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo-100 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-200/70">
+          <ClipboardList className="size-4" aria-hidden /> Compiti per casa
+        </a>}
+      </nav>}
       {lesson.topics && <div className="mt-4 space-y-1">
         <h2 className="text-sm font-semibold">Argomenti svolti</h2>
         <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">{lesson.topics}</p>
@@ -32,7 +42,7 @@ export default async function PortalLesson({ params }: { params: Promise<{ nome:
       <h2 className="flex items-center gap-2 font-semibold"><FolderOpen className="size-4 text-primary" aria-hidden /> Materiali</h2>
       <LessonFileList uploads={materials} base={base} />
     </section>}
-    {tasks.length > 0 && <section aria-labelledby="homework-heading" className="space-y-3">
+    {tasks.length > 0 && <section id="compiti" aria-labelledby="homework-heading" className="scroll-mt-5 space-y-3">
       <h2 id="homework-heading" className="flex items-center gap-2 text-lg font-bold">
         <ClipboardList className="size-5 text-primary" aria-hidden /> Compiti per casa
       </h2>

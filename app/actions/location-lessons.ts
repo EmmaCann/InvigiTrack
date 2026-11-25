@@ -40,6 +40,24 @@ export async function saveLocationLesson(id: string, form: FormData) {
   return {}
 }
 
+async function hasHomeworkDocument(db: NonNullable<Awaited<ReturnType<typeof teacherSession>>>["db"], id: string, taskId: string) {
+  return db.from("location_lesson_uploads").select("id")
+    .eq("session_id", id).eq("task_id", taskId).eq("kind", "assignment").not("confirmed_at", "is", null).limit(1)
+}
+
+export async function publishLocationHomework(id: string, taskId: string): Promise<{ error?: string }> {
+  const actor = await teacherSession(id)
+  if (!actor || !identifier.safeParse(taskId).success || !(await getLesson(actor.db, actor.scope, id)).data) return unavailable
+  const { data: documents, error: documentsError } = await hasHomeworkDocument(actor.db, id, taskId)
+  if (documentsError) return failure
+  if (!documents?.length) return { error: "Carica e conferma il documento prima di pubblicare il compito." }
+  const { error } = await actor.db.from("location_lesson_tasks").update({ published: true })
+    .eq("id", taskId).eq("session_id", id).select("id").single()
+  if (error) return failure
+  revalidatePath(teacherPath(id))
+  return {}
+}
+
 export async function saveLocationTask(id: string, taskId: string, form: FormData) {
   const actor = await teacherSession(id)
   if (!actor || !identifier.safeParse(taskId).success) return unavailable
@@ -51,8 +69,7 @@ export async function saveLocationTask(id: string, taskId: string, form: FormDat
   if (!(await getLesson(db, scope, id)).data) return unavailable
   const published = form.has("published")
   if (published) {
-    const { data, error } = await db.from("location_lesson_uploads").select("id")
-      .eq("session_id", id).eq("task_id", taskId).eq("kind", "assignment").not("confirmed_at", "is", null).limit(1)
+    const { data, error } = await hasHomeworkDocument(db, id, taskId)
     if (error) return failure
     if (!data?.length) return { error: "Allega un documento prima di pubblicare il compito." }
   }

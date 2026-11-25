@@ -6,7 +6,9 @@ import { identifier, getLesson, type LessonFile } from "./location-lessons"
 import type { LocationScope } from "./location-access"
 import type { createAdminClient } from "@/lib/supabase/admin"
 
-export const lessonBucket = "location-lesson-files"
+import { lessonBucket } from "./lesson-storage"
+
+export { lessonBucket }
 const maxFileBytes = 20 * 1024 * 1024
 const mimeByExtension = {
   pdf: "application/pdf",
@@ -27,7 +29,7 @@ export const lessonUploadInput = z.discriminatedUnion("step", [
   z.object({ step: z.literal("confirm"), upload: identifier }),
 ])
 export type LessonUploadInput = z.infer<typeof lessonUploadInput>
-export type LessonUploadResult = { error?: string; upload?: string; urls?: { url: string; mime: string }[]; confirmed?: boolean }
+export type LessonUploadResult = { error?: string; upload?: string; files?: { path: string; token: string; mime: string }[]; confirmed?: boolean }
 
 export const lessonFilePath = (session: string, upload: string, file: string) => `${session}/${upload}/${file}`
 
@@ -102,31 +104,38 @@ export async function uploadLessonFiles(actor: Actor, session: string, kind: Kin
     const reserved = await db.rpc("reserve_location_lesson_upload", {
       p_id: upload, p_session: session, p_task: input.task, p_kind: kind, p_files: files,
     })
-    if (reserved.error) return failure
+    if (reserved.error?.code === "PGRST202") return { error: "La migrazione Supabase per i materiali non è disponibile." }
+    if (reserved.error) return { error: "Impossibile registrare il caricamento. Riprova." }
     if (!reserved.data) return { error: "Quota giornaliera raggiunta. Riprova domani." }
 
     const signed = await Promise.all(files.map(async (file) => {
-      const { data } = await storage.createSignedUploadUrl(lessonFilePath(session, upload, file.id), { upsert: false })
-      return data ? { url: data.signedUrl, mime: file.mime } : null
+      const path = lessonFilePath(session, upload, file.id)
+      const { data } = await storage.createSignedUploadUrl(path, { upsert: false })
+      return data ? { path, token: data.token, mime: file.mime } : null
     }))
-    if (signed.some((item) => !item)) return failure
-    return { upload, urls: signed.filter((item) => item !== null) }
+    if (signed.some((item) => !item)) return { error: "Storage non ha autorizzato il caricamento. Verifica il bucket privato dei materiali." }
+    return { upload, files: signed.filter((item) => item !== null) }
   }
 
   const { data } = await db.from("location_lesson_uploads")
-    .select("confirmed_at, created_at, location_lesson_files(id, mime, size_bytes)")
+    .select("confirmed_at, created_at, location_lesson_files(id, name, mime, size_bytes)")
     .eq("id", input.upload).eq("session_id", session).eq("kind", kind).maybeSingle()
-  if (!data) return failure
+  if (!data) return { error: "Caricamento non trovato. Seleziona di nuovo i file." }
   if (!data.confirmed_at) {
-    if (!data.location_lesson_files.length || Date.now() - Date.parse(data.created_at) >= 2 * 60 * 60 * 1000) return failure
+    if (!data.location_lesson_files.length) return { error: "Non risultano documenti da confermare." }
+    if (Date.now() - Date.parse(data.created_at) >= 2 * 60 * 60 * 1000) return { error: "Caricamento scaduto. Seleziona di nuovo i file." }
     for (const file of data.location_lesson_files) {
       const { data: object } = await storage.download(lessonFilePath(session, input.upload, file.id))
-      if (!object || object.size !== file.size_bytes || !matchesFileFormat(Buffer.from(await object.arrayBuffer()), file.mime)) return failure
+      if (!object) return { error: `Storage non ha restituito «${file.name}». Riprova la conferma.` }
+      if (object.size !== file.size_bytes) return { error: `«${file.name}» è incompleto. Seleziona di nuovo il file.` }
+      if (!matchesFileFormat(Buffer.from(await object.arrayBuffer()), file.mime)) {
+        return { error: `«${file.name}» non corrisponde al formato indicato dall’estensione.` }
+      }
     }
   }
 
   const result = await db.rpc("confirm_location_lesson_upload", { p_id: input.upload, p_session: session, p_kind: kind })
-  return result.data === true && !result.error ? { confirmed: true } : failure
+  return result.data === true && !result.error ? { confirmed: true } : { error: "I file sono arrivati a Storage, ma il salvataggio non è stato confermato. Riprova la conferma." }
 }
 
 export async function downloadLessonFile(actor: Actor, session: string, fileId: string, client = false) {

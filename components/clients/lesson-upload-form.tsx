@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { createClient } from "@supabase/supabase-js"
+import { lessonBucket } from "@/lib/clients/lesson-storage"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,7 +17,8 @@ export function LessonUploadForm({ task, label, submitLabel = "Carica file", end
 }) {
   const router = useRouter()
   const [message, setMessage] = useState("")
-  const [busy, setBusy] = useState(false)
+  const [progress, setProgress] = useState("")
+  const busy = Boolean(progress)
   const [awaitingConfirmation, setAwaitingConfirmation] = useState("")
 
   async function send(payload: LessonUploadInput): Promise<LessonUploadResult> {
@@ -30,7 +33,7 @@ export function LessonUploadForm({ task, label, submitLabel = "Carica file", end
     event.preventDefault()
     if (busy) return
     const form = event.currentTarget
-    setBusy(true)
+    setProgress("Preparazione…")
     setMessage("")
     try {
       let batch = awaitingConfirmation
@@ -41,22 +44,33 @@ export function LessonUploadForm({ task, label, submitLabel = "Carica file", end
           return
         }
         const result = await send({ step: "start", task, files: files.map(({ name, size }) => ({ name, size })) })
-        if (!result.upload || result.urls?.length !== files.length) {
-          setMessage(result.error ?? "Caricamento non disponibile.")
+        if (!result.upload || result.files?.length !== files.length) {
+          setMessage(result.error ?? "Impossibile preparare il caricamento.")
           return
         }
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        if (!supabaseUrl || !publishableKey) {
+          setMessage("Configurazione Storage mancante.")
+          return
+        }
+        const storage = createClient(supabaseUrl, publishableKey, { accessToken: async () => null })
+          .storage.from(lessonBucket)
         for (const [index, file] of files.entries()) {
-          const { url, mime } = result.urls[index]
-          const response = await fetch(url, {
-            method: "PUT",
-            headers: { "Content-Type": mime, "Cache-Control": "max-age=0", "x-upsert": "false" },
-            body: file,
-          })
-          if (!response.ok) throw new Error("Errore di caricamento")
+          setProgress(`Invio ${index + 1} di ${files.length}…`)
+          const { path, token, mime } = result.files[index]
+          const body = file.type === mime ? file : new File([file], file.name, { type: mime })
+          const { error } = await storage.uploadToSignedUrl(path, token, body, { cacheControl: "0" })
+          if (error) {
+            const code = "statusCode" in error && /^\d{3}$/.test(String(error.statusCode)) ? ` (${error.statusCode})` : ""
+            setMessage(`Storage non ha accettato «${file.name}»${code}. Riprova il caricamento.`)
+            return
+          }
         }
         batch = result.upload
         setAwaitingConfirmation(batch)
       }
+      setProgress("Conferma salvataggio…")
       const result = await send({ step: "confirm", upload: batch })
       if (!result.confirmed) {
         setMessage(result.error ?? "Conferma non riuscita. Riprova.")
@@ -69,7 +83,7 @@ export function LessonUploadForm({ task, label, submitLabel = "Carica file", end
     } catch {
       setMessage("Caricamento interrotto. Riprova.")
     } finally {
-      setBusy(false)
+      setProgress("")
     }
   }}>
     <label className="grid gap-1.5 text-sm font-medium">
@@ -79,7 +93,7 @@ export function LessonUploadForm({ task, label, submitLabel = "Carica file", end
     </label>
     <p className="text-xs text-muted-foreground">Fino a 5 file di massimo 20 MB ciascuno.</p>
     <div className="flex flex-wrap gap-2">
-      <Button type="submit" size="sm" disabled={busy}>{busy ? "Caricamento…" : awaitingConfirmation ? "Riprova conferma" : submitLabel}</Button>
+      <Button type="submit" size="sm" disabled={busy}>{busy ? progress : awaitingConfirmation ? "Riprova conferma" : submitLabel}</Button>
       {awaitingConfirmation && <Button type="button" size="sm" variant="outline" disabled={busy}
         onClick={() => { setAwaitingConfirmation(""); setMessage("") }}>Scegli altri file</Button>}
     </div>

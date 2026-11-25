@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowUpRight, BookOpen, CalendarDays, ClipboardList, Clock3, FolderOpen, Wallet } from "lucide-react"
+import { ArrowRight, ArrowUpRight, BookOpen, CalendarDays, ClipboardList, Clock3, FolderOpen, Wallet } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { cookies } from "next/headers"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -109,6 +109,8 @@ export default async function LocationPortal({ params }: { params: Promise<{ nom
   homework.sort((a, b) => Number(a.submitted) - Number(b.submitted)
     || (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"))
   const tasksDue = homework.filter((task) => !task.submitted).length
+  const latest = sessions.find((session) => published.has(session.id))
+  const latestTitle = latest && published.get(latest.id)?.title
 
   return <div className="space-y-6">
     <PortalEntry id={nome} authorized />
@@ -116,8 +118,16 @@ export default async function LocationPortal({ params }: { params: Promise<{ nom
       <div className="relative grid items-center gap-5 sm:grid-cols-[1fr_auto]">
         <div className="min-w-0">
           <div className="mb-3 flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><BookOpen className="size-5" aria-hidden /></div>
-          <h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl">{scope.location}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Le tue lezioni, i materiali e i compiti assegnati.</p>
+          <h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl">Le lezioni di {scope.location}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Ripassa gli argomenti, scarica i materiali e consegna i tuoi compiti.</p>
+          {latest && <Link href={`${lessonRoot}/${latest.id}`} prefetch={false}
+            className="mt-4 flex w-fit max-w-sm items-center gap-4 rounded-2xl bg-primary px-4 py-3 text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90">
+            <span className="min-w-0">
+              <span className="block text-xs font-semibold">Apri l’ultima lezione</span>
+              <span className="mt-0.5 block break-words text-sm font-medium">{latestTitle || dateLabel.format(new Date(`${latest.session_date}T00:00:00Z`))}</span>
+            </span>
+            <ArrowRight className="size-4 shrink-0" aria-hidden />
+          </Link>}
         </div>
         <dl className="grid grid-cols-2 gap-2 sm:min-w-[280px]">
           <div className="rounded-2xl border border-white/90 bg-white/70 px-3 py-3 sm:px-4">
@@ -151,10 +161,11 @@ export default async function LocationPortal({ params }: { params: Promise<{ nom
             <h3 className="text-sm font-semibold capitalize text-muted-foreground">{monthLabel.format(new Date(`${month}-01T00:00:00Z`))}</h3>
             <ul className="space-y-2">
               {entries.map((session) => {
-                const status = statuses[session.payment_status] ?? statuses.pending
                 const date = new Date(`${session.session_date}T00:00:00Z`)
                 const title = published.get(session.id)?.title
-                return <li key={session.id} className={cn("glass-card grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 rounded-2xl border-l-2 p-3 sm:grid-cols-[auto_1fr_auto] sm:gap-x-4 sm:px-4", status.edge)}>
+                const hasContent = published.has(session.id)
+                const status = statuses[session.payment_status] ?? statuses.pending
+                return <li key={session.id} className={cn("glass-card grid grid-cols-[auto_1fr] items-center gap-3 rounded-2xl border-l-2 p-3 sm:grid-cols-[auto_1fr_auto] sm:gap-x-4 sm:px-4", status.edge)}>
                   <div aria-hidden className="flex min-w-12 flex-col items-center rounded-xl bg-primary/5 px-2 py-1.5 text-primary">
                     <span className="text-lg font-bold leading-tight tabular-nums">{date.getUTCDate()}</span>
                     <span className="text-[10px] font-semibold uppercase">{monthDay.format(date)}</span>
@@ -164,9 +175,10 @@ export default async function LocationPortal({ params }: { params: Promise<{ nom
                     <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock3 className="size-3.5" aria-hidden /> {session.start_time.slice(0, 5)} – {session.end_time.slice(0, 5)} · {session.duration_minutes} min
                     </p>
-                    {published.has(session.id) && <Link href={`/clienti/${encodeURIComponent(nome)}/lezioni/${session.id}`}
-                      className="mt-2 inline-flex items-center gap-1 rounded-md text-xs font-semibold text-primary hover:underline">
-                      Apri contenuti <span className="sr-only">del {dateLabel.format(date)}</span><ArrowUpRight className="size-3.5" aria-hidden />
+                    {hasContent && <Link href={`${lessonRoot}/${session.id}`} prefetch={false}
+                      className="mt-2 inline-flex w-fit items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/15">
+                      <BookOpen className="size-4" aria-hidden /> Contenuti della lezione
+                      <span className="sr-only"> del {dateLabel.format(date)}</span><ArrowUpRight className="size-3.5" aria-hidden />
                     </Link>}
                   </div>
                   <div className="col-start-2 flex flex-wrap items-center gap-2 sm:col-start-3">
@@ -181,7 +193,7 @@ export default async function LocationPortal({ params }: { params: Promise<{ nom
       </TabsContent>
       <TabsContent value="materials" className="space-y-2.5">
         {!lessonsWithMaterials.length && <p className="glass-dashboard rounded-2xl p-5 text-sm text-muted-foreground">Nessun materiale pubblicato.</p>}
-        {lessonsWithMaterials.map((lesson) => <Link key={lesson.id} href={lesson.href}
+        {lessonsWithMaterials.map((lesson) => <Link key={lesson.id} href={lesson.href} prefetch={false}
           className="glass-card flex items-center gap-3 rounded-2xl p-4 hover:bg-white/80">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><FolderOpen className="size-5" aria-hidden /></span>
           <span className="min-w-0 flex-1">
@@ -193,7 +205,7 @@ export default async function LocationPortal({ params }: { params: Promise<{ nom
       </TabsContent>
       <TabsContent value="homework" className="space-y-2.5">
         {!homework.length && <p className="glass-dashboard rounded-2xl p-5 text-sm text-muted-foreground">Nessun compito assegnato.</p>}
-        {homework.map((task) => <Link key={task.id} href={task.href}
+        {homework.map((task) => <Link key={task.id} href={task.href} prefetch={false}
           className="glass-card flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl p-4 hover:bg-white/80">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700"><ClipboardList className="size-5" aria-hidden /></span>
           <span className="min-w-0 flex-1 basis-36">
