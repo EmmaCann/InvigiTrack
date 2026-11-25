@@ -5,6 +5,8 @@ import { z } from "zod"
 import { getLesson, identifier, teacherSession } from "@/lib/clients/location-lessons"
 import { lessonUploadInput, uploadLessonFiles, type LessonUploadResult } from "@/lib/clients/lesson-files"
 
+import { allowedLessonFilesMessage, lessonFileExtension } from "@/lib/clients/lesson-storage"
+
 const failure = { error: "Salvataggio non riuscito. Verifica i dati o le migrazioni Supabase." }
 const unavailable = { error: "Sessione non disponibile." }
 const fields = z.object({ title: z.string().trim().max(160), body: z.string().trim().max(6000) })
@@ -102,8 +104,8 @@ export async function startHomeworkUpload(id: string, draftId: string, payload: 
   if (!actor) return unavailable
   const input = lessonUploadInput.safeParse(payload)
   if (!input.success || input.data.step !== "start" || input.data.task !== null) return failure
-  if (!input.data.files.every(({ name }) => /\.(pdf|docx|txt|jpe?g|png)$/i.test(name))) {
-    return { error: "Formati consentiti: PDF, DOCX, TXT, JPG e PNG." }
+  if (!input.data.files.every(({ name }) => lessonFileExtension(name))) {
+    return { error: allowedLessonFilesMessage }
   }
 
   const { db, scope } = actor

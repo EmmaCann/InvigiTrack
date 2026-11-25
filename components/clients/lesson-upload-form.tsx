@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { createClient } from "@supabase/supabase-js"
-import { lessonBucket } from "@/lib/clients/lesson-storage"
+import { detectLessonFileExtension, lessonBucket, lessonFileAccept, lessonFileExtension, lessonFileTypes } from "@/lib/clients/lesson-storage"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,7 +43,20 @@ export function LessonUploadForm({ task, label, submitLabel = "Carica file", end
           setMessage("Seleziona fino a 5 file, massimo 20 MB ciascuno.")
           return
         }
-        const result = await send({ step: "start", task, files: files.map(({ name, size }) => ({ name, size })) })
+        const names: string[] = []
+        for (const file of files) {
+          const namedExtension = lessonFileExtension(file.name)
+          const pagesHint = file.type === lessonFileTypes.pages || file.type === "application/x-iwork-pages-sffpages"
+          const extension = namedExtension ?? detectLessonFileExtension(new Uint8Array(await file.arrayBuffer()), pagesHint)
+          if (!extension) {
+            setMessage(`Formato non riconosciuto per «${file.name}». Esporta il documento come PDF o DOCX e riprova.`)
+            return
+          }
+          const suffix = `.${extension}`
+          const basename = namedExtension ? file.name.slice(0, -suffix.length) : file.name
+          names.push(basename.slice(0, 160 - suffix.length) + suffix)
+        }
+        const result = await send({ step: "start", task, files: files.map((file, index) => ({ name: names[index], size: file.size })) })
         if (!result.upload || result.files?.length !== files.length) {
           setMessage(result.error ?? "Impossibile preparare il caricamento.")
           return
@@ -59,7 +72,7 @@ export function LessonUploadForm({ task, label, submitLabel = "Carica file", end
         for (const [index, file] of files.entries()) {
           setProgress(`Invio ${index + 1} di ${files.length}…`)
           const { path, token, mime } = result.files[index]
-          const body = file.type === mime ? file : new File([file], file.name, { type: mime })
+          const body = file.type === mime && file.name === names[index] ? file : new File([file], names[index], { type: mime })
           const { error } = await storage.uploadToSignedUrl(path, token, body, { cacheControl: "0" })
           if (error) {
             const code = "statusCode" in error && /^\d{3}$/.test(String(error.statusCode)) ? ` (${error.statusCode})` : ""
@@ -89,7 +102,7 @@ export function LessonUploadForm({ task, label, submitLabel = "Carica file", end
     <label className="grid gap-1.5 text-sm font-medium">
       {label}
       <Input type="file" name="files" multiple required={!awaitingConfirmation} disabled={busy || !!awaitingConfirmation}
-        accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" className="h-auto" />
+        accept={lessonFileAccept} className="h-auto" />
     </label>
     <p className="text-xs text-muted-foreground">Fino a 5 file di massimo 20 MB ciascuno.</p>
     <div className="flex flex-wrap gap-2">

@@ -6,19 +6,10 @@ import { identifier, getLesson, type LessonFile } from "./location-lessons"
 import type { LocationScope } from "./location-access"
 import type { createAdminClient } from "@/lib/supabase/admin"
 
-import { lessonBucket } from "./lesson-storage"
+import { allowedLessonFilesMessage, detectLessonFileExtension, lessonBucket, lessonFileExtension, lessonFileTypes } from "./lesson-storage"
 
 export { lessonBucket }
 const maxFileBytes = 20 * 1024 * 1024
-const mimeByExtension = {
-  pdf: "application/pdf",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  txt: "text/plain",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-} as const
-
 type Db = NonNullable<ReturnType<typeof createAdminClient>>
 type Kind = "material" | "assignment" | "submission"
 type Actor = { db: Db; scope: LocationScope }
@@ -32,40 +23,6 @@ export type LessonUploadInput = z.infer<typeof lessonUploadInput>
 export type LessonUploadResult = { error?: string; upload?: string; files?: { path: string; token: string; mime: string }[]; confirmed?: boolean }
 
 export const lessonFilePath = (session: string, upload: string, file: string) => `${session}/${upload}/${file}`
-
-function matchesFileFormat(bytes: Buffer, mime: string) {
-  switch (mime) {
-    case mimeByExtension.pdf:
-      return bytes.subarray(0, 5).toString("ascii") === "%PDF-"
-    case mimeByExtension.png:
-      return bytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex"))
-    case mimeByExtension.jpg:
-      return bytes.subarray(0, 3).equals(Buffer.from("ffd8ff", "hex"))
-    case mimeByExtension.txt:
-      try {
-        new TextDecoder("utf-8", { fatal: true }).decode(bytes)
-        return !bytes.some((byte) => byte < 32 && byte !== 9 && byte !== 10 && byte !== 13)
-      } catch { return false }
-    case mimeByExtension.docx: {
-      // Validate the ZIP central directory without decompressing user content.
-      if (bytes.length < 22 || bytes.readUInt32LE(0) !== 0x04034b50) return false
-      const end = bytes.lastIndexOf(Buffer.from("504b0506", "hex"))
-      if (end < 0 || end + 22 > bytes.length || end + 22 + bytes.readUInt16LE(end + 20) !== bytes.length) return false
-      const entries = bytes.readUInt16LE(end + 10)
-      let offset = bytes.readUInt32LE(end + 16)
-      const names = new Set<string>()
-      for (let i = 0; i < entries; i++) {
-        if (offset + 46 > end || bytes.readUInt32LE(offset) !== 0x02014b50) return false
-        const length = bytes.readUInt16LE(offset + 28)
-        if (offset + 46 + length > end) return false
-        names.add(bytes.subarray(offset + 46, offset + 46 + length).toString("utf8"))
-        offset += 46 + length + bytes.readUInt16LE(offset + 30) + bytes.readUInt16LE(offset + 32)
-      }
-      return names.has("[Content_Types].xml") && names.has("word/document.xml") && !names.has("word/vbaProject.bin")
-    }
-    default: return false
-  }
-}
 
 export async function uploadLessonFiles(actor: Actor, session: string, kind: Kind, input: LessonUploadInput): Promise<LessonUploadResult> {
   const { db, scope } = actor
@@ -89,15 +46,15 @@ export async function uploadLessonFiles(actor: Actor, session: string, kind: Kin
 
     const files: LessonFile[] = []
     for (const file of input.files) {
-      const ext = file.name.split(".").pop()?.toLowerCase() as keyof typeof mimeByExtension
-      if (!Object.hasOwn(mimeByExtension, ext)) return { error: "Formati consentiti: PDF, DOCX, TXT, JPG e PNG." }
+      const ext = lessonFileExtension(file.name)
+      if (!ext) return { error: allowedLessonFilesMessage }
       files.push({
         id: randomUUID(),
         name: Array.from(file.name, (char) => {
           const code = char.charCodeAt(0)
           return code < 32 || code === 127 || char === "/" || char === "\\" ? "_" : char
         }).join(""),
-        mime: mimeByExtension[ext], size_bytes: file.size,
+        mime: lessonFileTypes[ext], size_bytes: file.size,
       })
     }
     const upload = randomUUID()
@@ -128,7 +85,8 @@ export async function uploadLessonFiles(actor: Actor, session: string, kind: Kin
       const { data: object } = await storage.download(lessonFilePath(session, input.upload, file.id))
       if (!object) return { error: `Storage non ha restituito «${file.name}». Riprova la conferma.` }
       if (object.size !== file.size_bytes) return { error: `«${file.name}» è incompleto. Seleziona di nuovo il file.` }
-      if (!matchesFileFormat(Buffer.from(await object.arrayBuffer()), file.mime)) {
+      const extension = detectLessonFileExtension(new Uint8Array(await object.arrayBuffer()), file.mime === lessonFileTypes.pages)
+      if (!extension || lessonFileTypes[extension] !== file.mime) {
         return { error: `«${file.name}» non corrisponde al formato indicato dall’estensione.` }
       }
     }
