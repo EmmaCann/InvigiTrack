@@ -3,11 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useClientOptions } from "@/components/clients/client-picker"
-import { CLIENTS_ITEM, NAV_ITEMS, isActiveRoute } from "./nav-items"
+import { NAV_ITEMS, isActiveRoute } from "./nav-items"
 
 export function BottomNav() {
-  const showClients = useClientOptions() !== null
   const pathname = usePathname()
 
   return (
@@ -16,7 +14,7 @@ export function BottomNav() {
       className="relative flex shrink-0 items-center border-t border-border/60 bg-white/80 backdrop-blur-xl px-1"
       style={{ paddingBottom: "env(safe-area-inset-bottom)", height: "calc(56px + env(safe-area-inset-bottom))" }}
     >
-      {(showClients ? [...NAV_ITEMS, CLIENTS_ITEM] : NAV_ITEMS).map((item) => {
+      {NAV_ITEMS.map((item) => {
         const active = isActiveRoute(item.href, pathname)
         return (
           <Link

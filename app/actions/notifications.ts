@@ -1,8 +1,5 @@
 "use server"
 
-import { createAdminClient } from "@/lib/supabase/admin"
-import { getClientWorkspace, uuidPattern } from "@/lib/clients/access"
-import { switchWorkspace } from "@/app/actions/workspace"
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
@@ -80,25 +77,4 @@ export async function createNotificationAction(data: {
 
   revalidatePath("/dashboard/admin")
   return { success: true }
-}
-
-
-export async function openSubmissionNotification(submissionId: string): Promise<{ href?: string; error?: string }> {
-  const user = await getCurrentUser()
-  const db = createAdminClient()
-  const unavailable = { error: "La consegna non è disponibile." }
-  if (!user || !db || !uuidPattern.test(submissionId)) return unavailable
-
-  const [{ data: notice }, { data: submission }] = await Promise.all([
-    db.from("notifications").select("id").eq("client_submission_id", submissionId)
-      .eq("target_type", "user").eq("target_user_id", user.id).maybeSingle(),
-    db.from("client_uploads").select("client_id, clients!inner(workspace_id, user_id, disabled_at)")
-      .eq("id", submissionId).eq("kind", "submission").not("confirmed_at", "is", null)
-      .eq("clients.user_id", user.id).maybeSingle(),
-  ])
-  const client = submission && (Array.isArray(submission.clients) ? submission.clients[0] : submission.clients)
-  if (!notice || !submission || !client || client.disabled_at) return unavailable
-  if (!(await getClientWorkspace(user.id, client.workspace_id))?.clients_enabled) return unavailable
-  await switchWorkspace(client.workspace_id)
-  return { href: `/dashboard/clients/${submission.client_id}?consegna=${submissionId}#consegna-${submissionId}` }
 }

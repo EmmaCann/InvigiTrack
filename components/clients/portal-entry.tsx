@@ -11,7 +11,7 @@ export function PortalEntry({ id, authorized }: { id: string; authorized: boolea
     const secret = window.location.hash.slice(1)
     if (!secret) return
     window.history.replaceState(null, "", window.location.pathname)
-    void fetch(`/clienti/${id}/accesso`, { method: "POST", body: secret })
+    void fetch(`/clienti/${encodeURIComponent(id)}/accesso`, { method: "POST", body: secret })
       .then((response) => {
         if (response.ok) window.location.reload()
         else setError(true)

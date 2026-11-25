@@ -172,14 +172,50 @@ export async function getWorkspaceStats(
   return { sessions: s ?? 0, events: e ?? 0 }
 }
 
-/** Elimina il workspace e i dati operativi in un’unica transazione. */
+/**
+ * Elimina un workspace e (se è l'unico di quella categoria) tutti i dati correlati:
+ * payment_sessions → sessions → calendar_events → user_category_access.
+ *
+ * Se esistono altri workspace con la stessa categoria, elimina solo la riga
+ * di user_category_access senza toccare sessioni ed eventi (condivisi).
+ */
 export async function deleteWorkspaceData(
   userId: string,
   workspaceId: string,
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
-  const { error } = await supabase.rpc("delete_workspace_data", { p_user: userId, p_workspace: workspaceId })
-  return error ? { error: error.message } : {}
+
+  // 1. Session IDs di questo workspace specifico
+  const { data: sessRows } = await supabase
+    .from("sessions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("workspace_id", workspaceId)
+  const sessionIds = (sessRows ?? []).map((r: { id: string }) => r.id)
+
+  // 2. Elimina i link payment_sessions
+  if (sessionIds.length > 0) {
+    const { error } = await supabase.from("payment_sessions").delete().in("session_id", sessionIds)
+    if (error) return { error: error.message }
+  }
+
+  // 3. Elimina sessioni di questo workspace
+  const { error: eS } = await supabase.from("sessions").delete().eq("user_id", userId).eq("workspace_id", workspaceId)
+  if (eS) return { error: eS.message }
+
+  // 4. Elimina eventi calendario di questo workspace
+  const { error: eE } = await supabase.from("calendar_events").delete().eq("user_id", userId).eq("workspace_id", workspaceId)
+  if (eE) return { error: eE.message }
+
+  // 5. Rimuovi questa riga workspace specifica
+  const { error: eA } = await supabase
+    .from("user_category_access")
+    .delete()
+    .eq("user_id", userId)
+    .eq("id", workspaceId)
+  if (eA) return { error: eA.message }
+
+  return {}
 }
 
 // --- WRITE --------------------------------------------------------------------

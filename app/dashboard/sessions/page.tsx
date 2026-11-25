@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
 import { getSessionsByUser } from "@/lib/data/sessions"
 import { getActiveWorkspace } from "@/lib/workspace"
+import { LocationLinkDialog } from "@/components/clients/location-link-dialog"
 import { SessionDialog } from "@/components/sessions/session-dialog"
 import { SessionList } from "@/components/sessions/session-list"
 import { PageHelpButton } from "@/components/help/page-help-button"
@@ -31,7 +32,7 @@ export default async function SessionsPage() {
     <div className="space-y-6 ">
 
       {/* -- Header --------------------------------------------------- */}
-      <div className="flex items-start justify-between ">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
             Gestione sessioni
@@ -41,7 +42,10 @@ export default async function SessionsPage() {
             Registra e gestisci tutte le tue sessioni di lavoro
           </p>
         </div>
-        <SessionDialog profile={profile} categorySlug={category.slug} lastSession={lastCreated} knownLocations={knownLocations} />
+        <div className="flex flex-wrap gap-2">
+          <LocationLinkDialog key={category.workspaceId} workspaceId={category.workspaceId} locations={knownLocations.filter((location) => location.trim())} />
+          <SessionDialog profile={profile} categorySlug={category.slug} lastSession={lastCreated} knownLocations={knownLocations} />
+        </div>
       </div>
 
       {/* -- Lista ---------------------------------------------------- */}

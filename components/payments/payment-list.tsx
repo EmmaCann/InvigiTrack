@@ -418,7 +418,6 @@ export function PaymentList({
                           <span className="sm:hidden">{formatDate(session.session_date)} · </span>
                           {formatTime(session.start_time)} – {formatTime(session.end_time)}
                           {session.location && ` · ${session.location}`}
-                          {session.archived_at && " · Archiviata"}
                         </p>
                       </div>
 

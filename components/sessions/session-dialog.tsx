@@ -19,7 +19,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 
-import { ClientPicker, useClientOptions } from "@/components/clients/client-picker"
 import { createSession, editSession } from "@/app/actions/sessions"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import type { Profile, Session, InvigilationRole } from "@/types/database"
@@ -27,7 +26,6 @@ import type { Profile, Session, InvigilationRole } from "@/types/database"
 // ── Schema ────────────────────────────────────────────────────────────────────
 
 const sessionSchema = z.object({
-  client_id: z.string().optional(),
   session_date: z.string().min(1, "Seleziona una data"),
   start_time:   z.string().regex(/^\d{2}:\d{2}$/, "Formato HH:MM"),
   end_time:     z.string().regex(/^\d{2}:\d{2}$/, "Formato HH:MM"),
@@ -78,7 +76,6 @@ export function SessionDialog({
   profile, categorySlug, session, lastSession, knownLocations = [],
   defaultDate, defaultStartTime, trigger, onSuccess,
 }: Props) {
-  const clientOptions = useClientOptions()
   const router  = useRouter()
   const isMobile = useIsMobile()
   const [open, setOpen]     = useState(false)
@@ -91,7 +88,6 @@ export function SessionDialog({
     if (src) {
       const meta = src.metadata as { exam_name?: string; role_type?: string }
       return {
-        client_id: src.client_id ?? "",
         session_date: src.session_date,
         start_time:   src.start_time.slice(0, 5),
         end_time:     src.end_time.slice(0, 5),
@@ -135,7 +131,6 @@ export function SessionDialog({
   async function onSubmit(values: SessionValues) {
     setError(null); setLoading(true)
     const data = {
-      ...(!session?.client_lesson_id && clientOptions && { client_id: values.client_id || null }),
       session_date: values.session_date,
       start_time:   values.start_time,
       end_time:     values.end_time,
@@ -235,8 +230,7 @@ export function SessionDialog({
             )}
           </div>
 
-          <ClientPicker value={form.watch("client_id") ?? ""} onChange={(value) => form.setValue("client_id", value)} disabled={!!session?.client_lesson_id} />
-        <Field label="Data" error={form.formState.errors.session_date?.message}>
+          <Field label="Data" error={form.formState.errors.session_date?.message}>
             <Input type="date" max={todayISO()} className="h-10 rounded-xl text-sm" {...form.register("session_date")} />
           </Field>
 

@@ -50,22 +50,12 @@ export const getSessionsByUser = cache(async (
     .select("*")
     .eq("user_id", userId)
   if (workspaceId) query = query.eq("workspace_id", workspaceId)
-  query = query.is("archived_at", null)
   const { data, error } = await query
     .order("session_date", { ascending: false })
     .order("start_time", { ascending: false })
   if (error || !data) return []
   return data as Session[]
 })
-
-export async function getUnpaidArchivedSessions(userId: string, workspaceId: string): Promise<Session[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("sessions").select("*")
-    .eq("user_id", userId).eq("workspace_id", workspaceId)
-    .not("archived_at", "is", null).neq("payment_status", "paid")
-    .order("session_date", { ascending: false }).order("start_time", { ascending: false })
-  return error ? [] : (data ?? []) as Session[]
-}
 
 /**
  * Sessioni di un utente in un mese specifico.
@@ -85,7 +75,6 @@ export async function getSessionsByMonth(
     .from("sessions")
     .select("*")
     .eq("user_id", userId)
-    .is("archived_at", null)
     .gte("session_date", from)
     .lte("session_date", to)
   if (workspaceId) query = query.eq("workspace_id", workspaceId)
@@ -113,7 +102,6 @@ export async function getPaymentSummary(
   let query = supabase
     .from("sessions")
     .select("earned, payment_status, duration_minutes")
-    .is("archived_at", null)
     .eq("user_id", userId)
   if (workspaceId) query = query.eq("workspace_id", workspaceId)
   const { data, error } = await query
@@ -176,7 +164,6 @@ export async function insertSession(
       hourly_rate:    data.hourly_rate,
       earned,
       metadata:       data.metadata,
-      ...(data.client_id !== undefined && { client_id: data.client_id }),
       notes:          data.notes ?? null,
     })
     .select()
@@ -192,8 +179,6 @@ export async function insertSession(
  */
 export async function updateSession(
   sessionId: string,
-  userId: string,
-  workspaceId: string,
   data: CreateSessionData,
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -215,10 +200,9 @@ export async function updateSession(
       hourly_rate:  data.hourly_rate,
       earned,
       metadata:     data.metadata,
-      ...(data.client_id !== undefined && { client_id: data.client_id }),
       notes:        data.notes ?? null,
     })
-    .eq("id", sessionId).eq("user_id", userId).eq("workspace_id", workspaceId)
+    .eq("id", sessionId)
 
   if (error) return { error: error.message }
   return {}

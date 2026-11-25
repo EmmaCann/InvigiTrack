@@ -6,8 +6,6 @@ import { getSessionsByUser } from "@/lib/data/sessions"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { getActiveCategories } from "@/lib/data/categories"
 import { getUnreadCountForUser } from "@/lib/data/notifications"
-import { getClientOptions } from "@/lib/clients/access"
-import { ClientOptionsProvider } from "@/components/clients/client-picker"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileHeader } from "@/components/layout/mobile-header"
@@ -42,13 +40,12 @@ export default async function DashboardLayout({
   if (!workspaceResult) redirect("/auth/login")
   const { category: activeWorkspace, userCategories } = workspaceResult
 
-  const [nextEvent, availableCategories, allSessions, allEvents, unreadNotifications, clientOptions] = await Promise.all([
+  const [nextEvent, availableCategories, allSessions, allEvents, unreadNotifications] = await Promise.all([
     getNextEvent(user.id, activeWorkspace.workspaceId),
     getActiveCategories(),
     getSessionsByUser(user.id, activeWorkspace.workspaceId),
     getEventsByUser(user.id, activeWorkspace.workspaceId),
     getUnreadCountForUser(user.id, profile.platform_role),
-    getClientOptions(),
   ])
   const today = new Date().toISOString().split("T")[0]
 
@@ -70,54 +67,52 @@ export default async function DashboardLayout({
     }))
 
   return (
-    <ClientOptionsProvider options={clientOptions}>
-      <div className="relative flex h-[100dvh] overflow-hidden">
+    <div className="relative flex h-[100dvh] overflow-hidden">
 
-        {/* -- Gradient mesh background ------------------------------- */}
-        <GradientMesh />
+      {/* -- Gradient mesh background ------------------------------- */}
+      <GradientMesh />
 
-        <DashboardSearchLayer recentSessions={recentSessions} upcomingEvents={upcomingEvents} platformRole={profile.platform_role} />
+      <DashboardSearchLayer recentSessions={recentSessions} upcomingEvents={upcomingEvents} platformRole={profile.platform_role} />
 
-        {/* -- Sidebar — solo desktop ----------------------------------- */}
-        <div className="hidden md:flex">
-          <Sidebar nextEvent={nextEvent} platformRole={profile.platform_role} />
+      {/* -- Sidebar — solo desktop ----------------------------------- */}
+      <div className="hidden md:flex">
+        <Sidebar nextEvent={nextEvent} platformRole={profile.platform_role} />
+      </div>
+
+      {/* -- Colonna destra ------------------------------------------ */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+
+        <div className="hidden md:block">
+          <Header profile={profile} activeWorkspace={activeWorkspace} userCategories={userCategories} availableCategories={availableCategories} unreadNotifications={unreadNotifications} />
         </div>
 
-        {/* -- Colonna destra ------------------------------------------ */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-
-          <div className="hidden md:block">
-            <Header profile={profile} activeWorkspace={activeWorkspace} userCategories={userCategories} availableCategories={availableCategories} unreadNotifications={unreadNotifications} />
-          </div>
-
-          <div className="md:hidden">
-            <MobileHeader
-              profile={profile}
-              activeWorkspace={activeWorkspace}
-              userCategories={userCategories}
-              availableCategories={availableCategories}
-              unreadNotifications={unreadNotifications}
-            />
-          </div>
-
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            {children}
-          </main>
-
-          <div className="md:hidden">
-            <BottomNav />
-          </div>
-
+        <div className="md:hidden">
+          <MobileHeader
+            profile={profile}
+            activeWorkspace={activeWorkspace}
+            userCategories={userCategories}
+            availableCategories={availableCategories}
+            unreadNotifications={unreadNotifications}
+          />
         </div>
 
-        {/* Welcome popup — rendered last so it's always above everything */}
-        {!profile.ui_state?.welcome_seen && <WelcomeDialog />}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          {children}
+        </main>
 
-        {/* Tour interattivo — auto-start dopo il welcome, sempre riattivabile */}
-        <DashboardTour autoStart={!!profile.ui_state?.welcome_seen && !profile.ui_state?.tour_seen} />
+        <div className="md:hidden">
+          <BottomNav />
+        </div>
 
       </div>
-    </ClientOptionsProvider>
+
+      {/* Welcome popup — rendered last so it's always above everything */}
+      {!profile.ui_state?.welcome_seen && <WelcomeDialog />}
+
+      {/* Tour interattivo — auto-start dopo il welcome, sempre riattivabile */}
+      <DashboardTour autoStart={!!profile.ui_state?.welcome_seen && !profile.ui_state?.tour_seen} />
+
+    </div>
   )
 }
 

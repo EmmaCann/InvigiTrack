@@ -5,7 +5,7 @@
 
 import { getCurrentUser }   from "@/lib/data/auth"
 import { getProfileById }   from "@/lib/data/profiles"
-import { getSessionsByUser, getUnpaidArchivedSessions } from "@/lib/data/sessions"
+import { getSessionsByUser } from "@/lib/data/sessions"
 import { getPaymentsByUser } from "@/lib/data/payments"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { PaymentList }      from "@/components/payments/payment-list"
@@ -19,14 +19,13 @@ export default async function PaymentsPage() {
 
   const { category } = await getActiveWorkspace(user.id)
 
-  const [allSessions, payments, unpaidArchived] = await Promise.all([
+  const [allSessions, payments] = await Promise.all([
     getSessionsByUser(user.id, category.workspaceId),
     getPaymentsByUser(user.id, category.workspaceId),
-    getUnpaidArchivedSessions(user.id, category.workspaceId),
   ])
 
   // Sessioni non ancora pagate
-  const unpaidSessions = [...allSessions.filter((s) => s.payment_status !== "paid"), ...unpaidArchived]
+  const unpaidSessions = allSessions.filter((s) => s.payment_status !== "paid")
 
   // Summary
   const summaryUnpaid = unpaidSessions.reduce((a, s) => a + s.earned, 0)

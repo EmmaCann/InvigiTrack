@@ -33,8 +33,7 @@ export async function editSession(sessionId: string, data: CreateSessionData) {
   const user = await getCurrentUser()
   if (!user) return { error: "Non autenticato" }
 
-  const { category } = await getActiveWorkspace(user.id)
-  const result = await updateSession(sessionId, user.id, category.workspaceId, data)
+  const result = await updateSession(sessionId, data)
   if (result.error) return { error: result.error }
 
   revalidateSessions()

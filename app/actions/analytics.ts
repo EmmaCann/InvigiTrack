@@ -14,7 +14,8 @@ export async function updateAnalyticsPrefs(
 }
 
 /**
- * Salva il riepilogo annuale e restituisce le sessioni originali per l’esportazione CSV.
+ * Archivia un anno: aggrega le sessioni, salva in yearly_archives, elimina le sessioni.
+ * Ritorna le sessioni raw (già eliminate dal DB) per il CSV export lato client.
  */
 export async function archiveYearAction(
   workspaceId: string,

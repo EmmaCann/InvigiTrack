@@ -1,5 +1,3 @@
-import { getClientManager } from "@/lib/clients/access"
-import { WorkspaceClientToggle } from "@/components/clients/client-controls"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/data/auth"
 import { getProfileById } from "@/lib/data/profiles"
@@ -27,10 +25,9 @@ export default async function SettingsPage() {
   const profile = user ? await getProfileById(user.id) : null
   if (!user || !profile) redirect("/auth/login")
 
-  const [workspaces, allCategories, clientManager] = await Promise.all([
+  const [workspaces, allCategories] = await Promise.all([
     getUserCategories(user.id),
     getActiveCategories(),
-    getClientManager(false),
   ])
   const statsArr = await Promise.all(
     workspaces.map((ws) => getWorkspaceStats(user.id, ws.workspaceId)),
@@ -111,10 +108,6 @@ export default async function SettingsPage() {
             {profile.platform_role !== "user" && (
               <WorkspaceSettings workspaces={workspaces} stats={stats} allCategories={allCategories} />
             )}
-            {clientManager && <div className="glass-dashboard space-y-3 rounded-2xl px-6 py-6">
-              <h4 className="text-sm font-semibold">Area clienti del workspace attivo</h4>
-              <WorkspaceClientToggle key={clientManager.workspaceId} workspaceId={clientManager.workspaceId} enabled={clientManager.enabled} />
-            </div>}
             {/* Tariffe orarie — tutti gli utenti */}
             {workspaces.length > 0 && (
               <div className="glass-dashboard rounded-2xl px-6 py-6 space-y-4">

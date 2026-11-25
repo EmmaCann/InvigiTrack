@@ -103,7 +103,6 @@ export async function archiveAllPastYears(): Promise<{ archived: number; error?:
     const { data: sessionYears } = await supabase
       .from("sessions")
       .select("session_date")
-      .is("archived_at", null)
       .eq("user_id", user.id)
       .eq("workspace_id", ws.workspaceId)
 
