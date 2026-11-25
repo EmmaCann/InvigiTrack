@@ -5,6 +5,7 @@ import { saveLocationLesson, saveLocationTask, uploadTeacherLessonFiles } from "
 import { getLesson, getLessonDetails, teacherSession, type Task } from "@/lib/clients/location-lessons"
 import { LessonEditorForm } from "@/components/clients/lesson-editor-form"
 import { LessonFileList, lessonDate } from "@/components/clients/lesson-content"
+import { HomeworkUploadForm } from "@/components/clients/homework-upload-form"
 import { LessonUploadForm } from "@/components/clients/lesson-upload-form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -28,27 +29,36 @@ export default async function LessonEditor({ params }: { params: Promise<{ id: s
       <p className="mt-1 text-sm text-muted-foreground">{scope.location} · {lessonDate(session.session_date)}</p>
     </header>
     {error ? <p className="glass-dashboard rounded-2xl p-5 text-sm">Contenuti non disponibili. Verifica la migrazione dei contenuti lezione in Supabase.</p> :
-      <div className="grid items-start gap-5 lg:grid-cols-2">
+      <div className="space-y-5">
         <section className="glass-dashboard space-y-4 rounded-2xl p-5">
           <h2 className="flex items-center gap-2 font-semibold"><BookOpen className="size-4 text-primary" aria-hidden /> Argomenti</h2>
           <LessonEditorForm label="Salva lezione" saveAction={saveLocationLesson.bind(null, id)}>
-            <label className="grid gap-1.5 text-sm font-medium">Titolo pubblico<Input name="title" defaultValue={lesson?.title} maxLength={160} /></label>
-            <label className="grid gap-1.5 text-sm font-medium">Argomenti svolti<Textarea name="topics" rows={5} defaultValue={lesson?.topics} maxLength={6000} /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Titolo pubblico (facoltativo)<Input name="title" defaultValue={lesson?.title} maxLength={160} placeholder="Es. Il verbo avere alla forma interrogativa" /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Argomenti svolti<Textarea name="topics" rows={12} className="min-h-64 leading-relaxed" defaultValue={lesson?.topics} maxLength={6000} /></label>
             <label className="flex items-center gap-2 text-sm"><input name="published" type="checkbox" defaultChecked={lesson?.published} className="accent-primary" /> Pubblica nell’area cliente</label>
           </LessonEditorForm>
         </section>
-        {details ? <section className="glass-dashboard space-y-4 rounded-2xl p-5">
+        <section className="glass-dashboard space-y-4 rounded-2xl p-5">
           <h2 className="flex items-center gap-2 font-semibold"><FolderOpen className="size-4 text-primary" aria-hidden /> Materiali della lezione</h2>
-          <LessonFileList uploads={details.uploads.filter((upload) => upload.kind === "material")} base={base} />
-          <LessonUploadForm task={null} label="Aggiungi materiali" uploadAction={uploadTeacherLessonFiles.bind(null, id, "material")} />
-        </section> : <p className="glass-dashboard rounded-2xl p-5 text-sm text-muted-foreground">Salva la lezione per aggiungere materiali e compiti.</p>}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-dashed border-primary/25 bg-primary/[0.035] p-4 sm:p-5">
+              <LessonUploadForm task={null} label="Scegli documenti da allegare" uploadAction={uploadTeacherLessonFiles.bind(null, id, "material")} />
+            </div>
+            <div className="space-y-2 rounded-xl border border-border/70 bg-white/40 p-4 sm:p-5">
+              <h3 className="text-sm font-semibold">Documenti allegati</h3>
+              {details?.uploads.some((upload) => upload.kind === "material") ? (
+                <LessonFileList uploads={details.uploads.filter((upload) => upload.kind === "material")} base={base} />
+              ) : <p className="text-sm text-muted-foreground">Nessun documento allegato.</p>}
+            </div>
+          </div>
+        </section>
       </div>}
-    {details && <section className="glass-dashboard space-y-4 rounded-2xl p-5">
-      <h2 className="flex items-center gap-2 font-semibold"><ClipboardList className="size-4 text-primary" aria-hidden /> Compiti e consegne</h2>
-      {details.tasks.map((task) => {
+    {!error && <section aria-labelledby="homework-heading" className="glass-dashboard space-y-4 rounded-2xl p-5">
+      <h2 id="homework-heading" className="flex items-center gap-2 font-semibold"><ClipboardList className="size-4 text-primary" aria-hidden /> Compiti per casa</h2>
+      {details?.tasks.map((task) => {
         const uploads = details.uploads.filter((upload) => upload.task_id === task.id)
         const submissions = uploads.filter((upload) => upload.kind === "submission")
-        return <details key={task.id} className="rounded-xl border border-border/70 bg-white/40 p-4" open={submissions.length > 0 || undefined}>
+        return <details key={task.id} className="rounded-xl border border-border/70 bg-white/40 p-4" open={(submissions.length > 0 || !uploads.some((upload) => upload.kind === "assignment")) || undefined}>
           <summary className="cursor-pointer text-sm font-medium">
             {task.title} <Badge variant="outline" className="ml-2">{task.published ? "Pubblicato" : "Bozza"}</Badge>
             <span className="ml-2 text-muted-foreground">{submissions.length} {submissions.length === 1 ? "consegna" : "consegne"}</span>
@@ -57,7 +67,7 @@ export default async function LessonEditor({ params }: { params: Promise<{ id: s
             <TaskForm id={id} task={task} />
             <div className="space-y-3">
               <LessonFileList uploads={uploads.filter((upload) => upload.kind === "assignment")} base={base} />
-              <LessonUploadForm task={task.id} label="Allega una scheda al compito" uploadAction={uploadTeacherLessonFiles.bind(null, id, "assignment")} />
+              <LessonUploadForm task={task.id} label="Documenti del compito" uploadAction={uploadTeacherLessonFiles.bind(null, id, "assignment")} />
               {submissions.length > 0 && <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Consegne ricevute</h3>
                 <LessonFileList uploads={submissions} base={base} deliveries />
@@ -66,16 +76,16 @@ export default async function LessonEditor({ params }: { params: Promise<{ id: s
           </div>
         </details>
       })}
-      <details className="rounded-xl border border-border/70 bg-white/40 p-4">
+      <details className="rounded-xl border border-border/70 bg-white/40 p-4" open={!details?.tasks.length || undefined}>
         <summary className="cursor-pointer text-sm font-semibold text-primary">Nuovo compito</summary>
-        <div className="mt-4"><TaskForm id={id} /></div>
+        <div className="mt-3"><HomeworkUploadForm sessionId={id} /></div>
       </details>
     </section>}
   </div>
 }
 
-function TaskForm({ id, task }: { id: string; task?: Task }) {
-  return <LessonEditorForm label={task ? "Salva compito" : "Crea compito"} resetOnSave={!task} saveAction={saveLocationTask.bind(null, id, task?.id ?? null)}>
+function TaskForm({ id, task }: { id: string; task: Task }) {
+  return <LessonEditorForm label="Salva compito" saveAction={saveLocationTask.bind(null, id, task.id)}>
     <label className="grid gap-1.5 text-sm font-medium">Titolo<Input name="title" defaultValue={task?.title} required maxLength={160} /></label>
     <label className="grid gap-1.5 text-sm font-medium">Istruzioni<Textarea name="instructions" rows={4} defaultValue={task?.instructions} maxLength={6000} /></label>
     <label className="grid gap-1.5 text-sm font-medium">Scadenza (facoltativa)<Input name="due" type="date" defaultValue={task?.due_date ?? ""} /></label>

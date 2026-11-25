@@ -521,9 +521,9 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
 
                           {/* Azioni */}
                           <div className="flex items-center gap-0.5">
-                            {session.location?.trim() && <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                            {session.location?.trim() && <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs font-semibold text-primary hover:bg-primary/10">
                               <Link href={`/dashboard/sessions/${session.id}/contenuti`} aria-label="Contenuti lezione" title="Contenuti lezione">
-                                <BookOpen className="size-4" aria-hidden />
+                                <BookOpen className="size-3.5" aria-hidden /> Contenuti
                               </Link>
                             </Button>}
                             <SessionDialog profile={profile} categorySlug={categorySlug} session={session} knownLocations={locations} />
@@ -618,7 +618,7 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                     <p className="text-xs text-muted-foreground/80 italic mt-0.5">{session.notes}</p>
                   )}
                 </div>
-                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
                   <span className="text-sm font-bold tabular-nums text-foreground">€{session.earned.toFixed(2)}</span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -636,9 +636,9 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  {session.location?.trim() && <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                  {session.location?.trim() && <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs font-semibold text-primary hover:bg-primary/10">
                     <Link href={`/dashboard/sessions/${session.id}/contenuti`} aria-label="Contenuti lezione" title="Contenuti lezione">
-                      <BookOpen className="size-4" aria-hidden />
+                      <BookOpen className="size-3.5" aria-hidden /> Contenuti
                     </Link>
                   </Button>}
                   <SessionDialog profile={profile} categorySlug={categorySlug} session={session} knownLocations={locations} />

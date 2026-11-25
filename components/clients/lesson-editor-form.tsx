@@ -3,10 +3,9 @@
 import { useState, useTransition, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 
-export function LessonEditorForm({ saveAction, label, resetOnSave = false, children }: {
+export function LessonEditorForm({ saveAction, label, children }: {
   saveAction: (form: FormData) => Promise<{ error?: string }>
   label: string
-  resetOnSave?: boolean
   children: ReactNode
 }) {
   const [pending, startTransition] = useTransition()
@@ -19,7 +18,6 @@ export function LessonEditorForm({ saveAction, label, resetOnSave = false, child
     startTransition(async () => {
       try {
         const result = await saveAction(data)
-        if (!result.error && resetOnSave) form.reset()
         setMessage(result.error ?? "Salvato.")
       } catch { setMessage("Salvataggio non riuscito. Riprova.") }
     })

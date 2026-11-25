@@ -70,9 +70,12 @@ export async function getLessonDetails(db: Db, sessionId: string, client = false
     .eq("session_id", sessionId).not("confirmed_at", "is", null).order("confirmed_at", { ascending: false })
   const [{ data: taskRows, error: taskError }, { data: uploadRows, error: uploadError }] = await Promise.all([tasks, uploads])
   if (taskError || uploadError) throw new Error("Impossibile caricare i contenuti della lezione.")
-  const visible = new Set((taskRows ?? []).map((task) => task.id))
+  const allUploads = (uploadRows ?? []) as Upload[]
+  const assigned = new Set(allUploads.filter((upload) => upload.kind === "assignment").map((upload) => upload.task_id))
+  const visibleTasks = ((taskRows ?? []) as Task[]).filter((task) => !client || assigned.has(task.id))
+  const visible = new Set(visibleTasks.map((task) => task.id))
   return {
-    tasks: (taskRows ?? []) as Task[],
-    uploads: ((uploadRows ?? []) as Upload[]).filter((file) => !file.task_id || visible.has(file.task_id)),
+    tasks: visibleTasks,
+    uploads: allUploads.filter((file) => !file.task_id || visible.has(file.task_id)),
   }
 }

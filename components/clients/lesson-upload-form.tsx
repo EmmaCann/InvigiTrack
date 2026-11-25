@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { LessonUploadInput, LessonUploadResult } from "@/lib/clients/lesson-files"
 
-export function LessonUploadForm({ task, label, endpoint, uploadAction }: {
+export function LessonUploadForm({ task, label, submitLabel = "Carica file", endpoint, uploadAction }: {
   task: string | null
   label: string
+  submitLabel?: string
   endpoint?: string
   uploadAction?: (payload: LessonUploadInput) => Promise<LessonUploadResult>
 }) {
@@ -78,7 +79,7 @@ export function LessonUploadForm({ task, label, endpoint, uploadAction }: {
     </label>
     <p className="text-xs text-muted-foreground">Fino a 5 file di massimo 20 MB ciascuno.</p>
     <div className="flex flex-wrap gap-2">
-      <Button type="submit" size="sm" disabled={busy}>{busy ? "Caricamento…" : awaitingConfirmation ? "Riprova conferma" : "Carica file"}</Button>
+      <Button type="submit" size="sm" disabled={busy}>{busy ? "Caricamento…" : awaitingConfirmation ? "Riprova conferma" : submitLabel}</Button>
       {awaitingConfirmation && <Button type="button" size="sm" variant="outline" disabled={busy}
         onClick={() => { setAwaitingConfirmation(""); setMessage("") }}>Scegli altri file</Button>}
     </div>

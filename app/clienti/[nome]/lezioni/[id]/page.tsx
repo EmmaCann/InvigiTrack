@@ -28,17 +28,20 @@ export default async function PortalLesson({ params }: { params: Promise<{ nome:
         <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">{lesson.topics}</p>
       </div>}
     </header>
-    {materials.length > 0 && <section className="glass-dashboard space-y-3 rounded-2xl p-5">
+    {materials.length > 0 && <section id="materiali" className="glass-dashboard scroll-mt-5 space-y-3 rounded-2xl p-5">
       <h2 className="flex items-center gap-2 font-semibold"><FolderOpen className="size-4 text-primary" aria-hidden /> Materiali</h2>
       <LessonFileList uploads={materials} base={base} />
     </section>}
-    {tasks.length > 0 && <section aria-label="Compiti" className="space-y-3">
+    {tasks.length > 0 && <section aria-labelledby="homework-heading" className="space-y-3">
+      <h2 id="homework-heading" className="flex items-center gap-2 text-lg font-bold">
+        <ClipboardList className="size-5 text-primary" aria-hidden /> Compiti per casa
+      </h2>
       {tasks.map((task) => {
         const files = uploads.filter((upload) => upload.task_id === task.id)
         const deliveries = files.filter((upload) => upload.kind === "submission")
-        return <article key={task.id} className="glass-dashboard space-y-3 rounded-2xl p-5">
+        return <article key={task.id} id={`compito-${task.id}`} className="glass-dashboard scroll-mt-5 space-y-3 rounded-2xl p-5">
           <header className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="flex items-center gap-2 font-semibold"><ClipboardList className="size-4 text-primary" aria-hidden />{task.title}</h2>
+            <h3 className="font-semibold">{task.title}</h3>
             <Badge className={deliveries.length ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"}>
               {deliveries.length ? "Consegnato" : "Da consegnare"}
             </Badge>
@@ -47,11 +50,11 @@ export default async function PortalLesson({ params }: { params: Promise<{ nome:
           {task.instructions && <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{task.instructions}</p>}
           <LessonFileList uploads={files.filter((upload) => upload.kind === "assignment")} base={base} />
           {deliveries.length > 0 && <div className="space-y-2">
-            <h3 className="text-sm font-semibold">Consegne precedenti</h3>
+            <h4 className="text-sm font-semibold">Consegne precedenti</h4>
             <LessonFileList uploads={deliveries} base={base} deliveries />
           </div>}
           <div className="border-t border-border/60 pt-3">
-            <LessonUploadForm task={task.id} label={deliveries.length ? "Nuova consegna" : "Consegna il compito"} endpoint={`${base}/consegne`} />
+            <LessonUploadForm task={task.id} label={deliveries.length ? "Allega nuove soluzioni" : "Allega le soluzioni"} submitLabel="Invia soluzioni" endpoint={`${base}/consegne`} />
           </div>
         </article>
       })}

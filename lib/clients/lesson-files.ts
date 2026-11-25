@@ -78,6 +78,11 @@ export async function uploadLessonFiles(actor: Actor, session: string, kind: Kin
       const task = db.from("location_lesson_tasks").select("id").eq("id", input.task).eq("session_id", session)
       if (client) task.eq("published", true)
       if (!(await task.maybeSingle()).data) return failure
+      if (client) {
+        const { data } = await db.from("location_lesson_uploads").select("id")
+          .eq("task_id", input.task).eq("session_id", session).eq("kind", "assignment").not("confirmed_at", "is", null).limit(1)
+        if (!data?.length) return failure
+      }
     }
 
     const files: LessonFile[] = []
