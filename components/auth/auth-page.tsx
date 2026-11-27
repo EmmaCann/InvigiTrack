@@ -7,20 +7,15 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Loader2, KeyRound } from "lucide-react"
-import { login, register } from "@/app/actions/auth"
+import { register, registerWithoutClient } from "@/app/actions/auth"
 
 // ── Schemi ────────────────────────────────────────────────────────────────────
 
-const loginSchema = z.object({
-  email:    z.string().email("Email non valida"),
-  password: z.string().min(1, "Inserisci la password"),
-})
 const registerSchema = z.object({
   email:      z.string().email("Email non valida"),
   password:   z.string().min(6, "Minimo 6 caratteri"),
   secret_key: z.string().optional(),
 })
-type LV = z.infer<typeof loginSchema>
 type RV = z.infer<typeof registerSchema>
 
 // ── Stile input underline ─────────────────────────────────────────────────────
@@ -30,38 +25,26 @@ const inp =
 
 // ── Componente principale ─────────────────────────────────────────────────────
 
-export function AuthPage() {
+export function AuthPage({ fallbackError }: { fallbackError?: string }) {
   const [reg,        setReg]        = useState(false)
-  const [errL,       setErrL]       = useState<string | null>(null)
   const [errR,       setErrR]       = useState<string | null>(null)
   const [loadL,      setLoadL]      = useState(false)
   const [loadR,      setLoadR]      = useState(false)
   const [loadML,     setLoadML]     = useState(false)
   const [loadMR,     setLoadMR]     = useState(false)
-  const [errML,      setErrML]      = useState<string | null>(null)
   const [errMR,      setErrMR]      = useState<string | null>(null)
   const [showCode,   setShowCode]   = useState(false)   // desktop
   const [showCodeM,  setShowCodeM]  = useState(false)   // mobile
 
   // Istanze desktop
-  const lf = useForm<LV>({ resolver: zodResolver(loginSchema),    defaultValues: { email: "", password: "" } })
   const rf = useForm<RV>({ resolver: zodResolver(registerSchema), defaultValues: { email: "", password: "", secret_key: "" } })
   // Istanze mobile separate (evita conflitti sui ref dei campi)
-  const mlf = useForm<LV>({ resolver: zodResolver(loginSchema),    defaultValues: { email: "", password: "" } })
   const mrf = useForm<RV>({ resolver: zodResolver(registerSchema), defaultValues: { email: "", password: "", secret_key: "" } })
 
   function toggle() {
     setReg(v => !v)
-    setErrL(null); setErrR(null); lf.reset(); rf.reset()
-    setErrML(null); setErrMR(null); mlf.reset(); mrf.reset()
-  }
-
-  async function handleLogin(v: LV) {
-    setErrL(null); setLoadL(true)
-    const fd = new FormData()
-    fd.set("email", v.email); fd.set("password", v.password)
-    const r = await login(fd)
-    if (r?.error) { setErrL(r.error); setLoadL(false) }
+    setErrR(null); rf.reset()
+    setErrMR(null); mrf.reset()
   }
 
   async function handleRegister(v: RV) {
@@ -71,14 +54,6 @@ export function AuthPage() {
     if (v.secret_key) fd.set("secret_key", v.secret_key)
     const r = await register(fd)
     if (r?.error) { setErrR(r.error); setLoadR(false) }
-  }
-
-  async function handleMobileLogin(v: LV) {
-    setErrML(null); setLoadML(true)
-    const fd = new FormData()
-    fd.set("email", v.email); fd.set("password", v.password)
-    const r = await login(fd)
-    if (r?.error) { setErrML(r.error); setLoadML(false) }
   }
 
   async function handleMobileRegister(v: RV) {
@@ -119,6 +94,10 @@ export function AuthPage() {
 
       {/* ── Sfondo: foto Big Ben ── */}
       <div className="relative flex min-h-[100dvh] overflow-hidden bg-[#0a0c14]">
+        {fallbackError && <p role="alert" className="absolute inset-x-4 top-3 z-30 mx-auto w-fit max-w-[calc(100%-2rem)] rounded-xl border border-red-200/30 bg-red-950 px-4 py-2 text-sm text-red-100">
+          {fallbackError}
+        </p>}
+
 
         {/* Immagine di sfondo */}
         <Image
@@ -151,12 +130,11 @@ export function AuthPage() {
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/30">Bentornato/a</p>
               <h2 className="text-[32px] font-bold leading-tight tracking-tight text-white">Accedi al tuo<br />account</h2>
             </div>
-            <form onSubmit={lf.handleSubmit(handleLogin)} className="space-y-7">
+            <form action="/auth/login/submit" method="post" onSubmit={() => setLoadL(true)} className="space-y-7">
               <UField id="le" label="Email" type="email" placeholder="tu@esempio.com"
-                reg={lf.register("email")} err={lf.formState.errors.email?.message} />
+                name="email" autoComplete="username" required />
               <UField id="lp" label="Password" type="password" placeholder="••••••••"
-                reg={lf.register("password")} err={lf.formState.errors.password?.message} />
-              {errL && <ErrMsg msg={errL} />}
+                name="password" autoComplete="current-password" required />
               <DarkBtn loading={loadL} label="Accedi" loadingLabel="Accesso…" />
             </form>
           </div>
@@ -180,7 +158,7 @@ export function AuthPage() {
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/30">Inizia ora</p>
               <h2 className="text-[32px] font-bold leading-tight tracking-tight text-white">Crea il tuo<br />account</h2>
             </div>
-            <form onSubmit={rf.handleSubmit(handleRegister)} className="space-y-7">
+            <form action={registerWithoutClient} onSubmit={rf.handleSubmit(handleRegister)} className="space-y-7">
               <UField id="re" label="Email" type="email" placeholder="tu@esempio.com"
                 reg={rf.register("email")} err={rf.formState.errors.email?.message} />
               <UField id="rp" label="Password" type="password" placeholder="Min. 6 caratteri"
@@ -298,7 +276,7 @@ export function AuthPage() {
               {(["login", "register"] as const).map(t => (
                 <button
                   key={t}
-                  onClick={() => { setReg(t === "register"); setErrL(null); setErrR(null); lf.reset(); rf.reset() }}
+                  onClick={() => { setReg(t === "register"); setErrR(null); rf.reset() }}
                   className={`-mb-px flex-1 py-3.5 text-[13px] font-semibold transition-all ${
                     (t === "register") === reg
                       ? "border-b-2 border-white/70 text-white"
@@ -313,16 +291,15 @@ export function AuthPage() {
             {/* Form con animazione al cambio tab */}
             <div key={reg ? "reg" : "login"} className="fi px-7 py-7">
               {!reg ? (
-                <form onSubmit={mlf.handleSubmit(handleMobileLogin)} className="space-y-6">
+                <form action="/auth/login/submit" method="post" onSubmit={() => setLoadML(true)} className="space-y-6">
                   <UField id="mle" label="Email" type="email" placeholder="tu@esempio.com"
-                    reg={mlf.register("email")} err={mlf.formState.errors.email?.message} />
+                    name="email" autoComplete="username" required />
                   <UField id="mlp" label="Password" type="password" placeholder="••••••••"
-                    reg={mlf.register("password")} err={mlf.formState.errors.password?.message} />
-                  {errML && <ErrMsg msg={errML} />}
+                    name="password" autoComplete="current-password" required />
                   <DarkBtn loading={loadML} label="Accedi" loadingLabel="Accesso…" />
                 </form>
               ) : (
-                <form onSubmit={mrf.handleSubmit(handleMobileRegister)} className="space-y-6">
+                <form action={registerWithoutClient} onSubmit={mrf.handleSubmit(handleMobileRegister)} className="space-y-6">
                   <UField id="mre" label="Email" type="email" placeholder="tu@esempio.com"
                     reg={mrf.register("email")} err={mrf.formState.errors.email?.message} />
                   <UField id="mrp" label="Password" type="password" placeholder="Min. 6 caratteri"
@@ -366,16 +343,17 @@ export function AuthPage() {
 
 // ── Sotto-componenti ──────────────────────────────────────────────────────────
 
-function UField({ id, label, type, placeholder, reg, err }: {
+function UField({ id, label, type, placeholder, name, autoComplete, required, reg, err }: {
   id: string; label: string; type: string; placeholder: string
-  reg: ReturnType<ReturnType<typeof useForm>["register"]>; err?: string
+  name?: string; autoComplete?: string; required?: boolean
+  reg?: ReturnType<ReturnType<typeof useForm>["register"]>; err?: string
 }) {
   return (
     <div>
       <label htmlFor={id} className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
         {label}
       </label>
-      <input id={id} type={type} placeholder={placeholder}
+      <input id={id} type={type} placeholder={placeholder} name={name} autoComplete={autoComplete} required={required}
         className="w-full border-0 border-b border-white/20 bg-transparent pb-2.5 pt-1 text-sm text-white placeholder:text-white/25 outline-none transition-all duration-300 focus:border-white/60"
         {...reg}
       />

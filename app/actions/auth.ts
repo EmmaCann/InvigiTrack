@@ -9,7 +9,7 @@
 
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { getCurrentUser } from "@/lib/data/auth"
+import { getCurrentUser, signInWithPassword } from "@/lib/data/auth"
 import { insertProfile } from "@/lib/data/profiles"
 import { getCategoryBySlug, grantCategoryAccess, insertCategory } from "@/lib/data/categories"
 import { createNotification } from "@/lib/data/notifications"
@@ -18,11 +18,7 @@ import type { OnboardingData } from "@/types/database"
 // --- LOGIN --------------------------------------------------------------------
 
 export async function login(formData: FormData) {
-  const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({
-    email:    formData.get("email") as string,
-    password: formData.get("password") as string,
-  })
+  const { error } = await signInWithPassword(formData)
   if (error) return { error: error.message }
   redirect("/dashboard")
 }
@@ -51,6 +47,12 @@ export async function register(formData: FormData) {
 
   if (error) return { error: error.message }
   redirect("/dashboard")
+}
+
+// Invii HTML prima che React abbia montato i gestori del modulo.
+export async function registerWithoutClient(formData: FormData): Promise<void> {
+  await register(formData)
+  redirect("/auth/login?auth_error=register")
 }
 
 // --- LOGOUT ------------------------------------------------------------------

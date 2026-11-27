@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Loader2, KeyRound, ArrowRight } from "lucide-react"
-import { login, register } from "@/app/actions/auth"
+import { login, register, registerWithoutClient } from "@/app/actions/auth"
 
 // --- Schemi -------------------------------------------------------------------
 
@@ -104,7 +104,7 @@ export function AuthForm({ dark: _ = false }: { dark?: boolean }) {
 
       {/* ── Login ── */}
       {tab === "login" && (
-        <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+        <form action="/auth/login/submit" method="post" onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
           <Field
             id="l-email" label="Email" type="email"
             placeholder="tu@esempio.com"
@@ -126,7 +126,7 @@ export function AuthForm({ dark: _ = false }: { dark?: boolean }) {
 
       {/* ── Registrati ── */}
       {tab === "register" && (
-        <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+        <form action={registerWithoutClient} onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
           <Field
             id="r-email" label="Email" type="email"
             placeholder="tu@esempio.com"

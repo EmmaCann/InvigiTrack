@@ -10,6 +10,11 @@ import { NextResponse, type NextRequest } from "next/server"
  * Analogia Laravel: è come il gruppo di middleware "auth" su Route::middleware('auth')
  */
 export async function middleware(request: NextRequest) {
+  if ((request.method === "GET" || request.method === "HEAD")
+    && request.nextUrl.pathname === "/auth/login"
+    && ["email", "password", "secret_key"].some((key) => request.nextUrl.searchParams.has(key))) {
+    return NextResponse.redirect(new URL("/auth/login", request.url), 303)
+  }
   if (request.nextUrl.pathname.startsWith("/clienti/")) return NextResponse.next()
 
   // Partiamo con una risposta "vai avanti" di default
@@ -53,7 +58,7 @@ export async function middleware(request: NextRequest) {
 
   // Utente GIÀ loggato che va su /auth/* → redirect alla dashboard
   if (user && pathname.startsWith("/auth")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
+    return NextResponse.redirect(new URL("/dashboard", request.url), request.method === "POST" ? 303 : 307)
   }
 
   // Passa la risposta con i cookie aggiornati

@@ -33,3 +33,14 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   if (error || !user) return null
   return user
 })
+
+export async function signInWithPassword(formData: FormData) {
+  const email = formData.get("email")
+  const password = formData.get("password")
+  if (typeof email !== "string" || !email.trim() || typeof password !== "string" || !password) {
+    return { error: { code: "invalid_credentials", message: "Email o password non corrette." } }
+  }
+
+  const supabase = await createClient()
+  return supabase.auth.signInWithPassword({ email: email.trim(), password })
+}
