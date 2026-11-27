@@ -66,10 +66,11 @@ export default async function LocationPortal({ params }: { params: Promise<{ nom
   if (db) {
     for (let offset = 0; offset < sessions.length; offset += 100) {
       const { data } = await db.from("location_lessons")
-        .select("session_id, title, location_lesson_tasks(id, title, due_date), location_lesson_uploads(kind, task_id)")
+        .select("session_id, title, location_lesson_tasks(id, title, due_date), location_lesson_uploads(kind, task_id, location_lesson_files!inner(id))")
         .eq("owner_id", scope.owner).eq("workspace_id", scope.workspace).eq("location", scope.location)
         .eq("published", true).in("session_id", sessions.slice(offset, offset + 100).map((session) => session.id))
         .eq("location_lesson_tasks.published", true).not("location_lesson_uploads.confirmed_at", "is", null)
+        .is("location_lesson_uploads.location_lesson_files.removed_at", null)
       for (const row of data ?? []) published.set(row.session_id, row)
     }
   }

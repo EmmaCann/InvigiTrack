@@ -3,8 +3,7 @@ import "server-only"
 import { cookies } from "next/headers"
 import { z } from "zod"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getCurrentUser } from "@/lib/data/auth"
-import { locationCookie, readLocationToken, type LocationScope } from "./location-access"
+import { getLocationManager, locationCookie, readLocationToken, type LocationScope } from "./location-access"
 
 export const identifier = z.uuid()
 export type Lesson = {
@@ -27,7 +26,7 @@ export async function authorizedLocation(slug: string) {
 
 export async function teacherSession(id: string) {
   if (!identifier.safeParse(id).success) return null
-  const user = await getCurrentUser()
+  const user = await getLocationManager()
   const db = user && createAdminClient()
   if (!user || !db) return null
   const { data: session } = await db.from("sessions").select("id, location, workspace_id, session_date")
@@ -66,8 +65,9 @@ export async function getLessonDetails(db: Db, sessionId: string, client = false
     .eq("session_id", sessionId).order("id")
   if (client) tasks.eq("published", true)
   const uploads = db.from("location_lesson_uploads")
-    .select("id, kind, task_id, confirmed_at, location_lesson_files(id, name, mime, size_bytes)")
-    .eq("session_id", sessionId).not("confirmed_at", "is", null).order("confirmed_at", { ascending: false })
+    .select("id, kind, task_id, confirmed_at, location_lesson_files!inner(id, name, mime, size_bytes)")
+    .eq("session_id", sessionId).not("confirmed_at", "is", null)
+    .is("location_lesson_files.removed_at", null).order("confirmed_at", { ascending: false })
   const [{ data: taskRows, error: taskError }, { data: uploadRows, error: uploadError }] = await Promise.all([tasks, uploads])
   if (taskError || uploadError) throw new Error("Impossibile caricare i contenuti della lezione.")
   const allUploads = (uploadRows ?? []) as Upload[]

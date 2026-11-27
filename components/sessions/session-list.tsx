@@ -521,7 +521,7 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
 
                           {/* Azioni */}
                           <div className="flex items-center gap-0.5">
-                            {session.location?.trim() && <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs font-semibold text-primary hover:bg-primary/10">
+                            {profile.platform_role === "super_admin" && session.location?.trim() && <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs font-semibold text-primary hover:bg-primary/10">
                               <Link href={`/dashboard/sessions/${session.id}/contenuti`} aria-label="Contenuti lezione" title="Contenuti lezione">
                                 <BookOpen className="size-3.5" aria-hidden /> Contenuti
                               </Link>
@@ -636,7 +636,7 @@ export function SessionList({ sessions, profile, categorySlug, initialFilter = "
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  {session.location?.trim() && <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs font-semibold text-primary hover:bg-primary/10">
+                  {profile.platform_role === "super_admin" && session.location?.trim() && <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs font-semibold text-primary hover:bg-primary/10">
                     <Link href={`/dashboard/sessions/${session.id}/contenuti`} aria-label="Contenuti lezione" title="Contenuti lezione">
                       <BookOpen className="size-3.5" aria-hidden /> Contenuti
                     </Link>
