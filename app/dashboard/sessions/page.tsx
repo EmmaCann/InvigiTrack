@@ -43,7 +43,9 @@ export default async function SessionsPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <LocationLinkDialog key={category.workspaceId} workspaceId={category.workspaceId} locations={knownLocations.filter((location) => location.trim())} />
+          {profile.platform_role === "super_admin" && (
+            <LocationLinkDialog key={category.workspaceId} workspaceId={category.workspaceId} locations={knownLocations.filter((location) => location.trim())} />
+          )}
           <SessionDialog profile={profile} categorySlug={category.slug} lastSession={lastCreated} knownLocations={knownLocations} />
         </div>
       </div>

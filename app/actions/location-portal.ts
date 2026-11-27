@@ -1,13 +1,12 @@
 "use server"
 
-import { getCurrentUser } from "@/lib/data/auth"
 import { getActiveWorkspace } from "@/lib/workspace"
 import { createClient } from "@/lib/supabase/server"
-import { createLocationToken, locationSlug } from "@/lib/clients/location-access"
+import { createLocationToken, getLocationManager, locationSlug } from "@/lib/clients/location-access"
 
 export async function getLocationPortalLink(workspaceId: string, location: string): Promise<{ path?: string; error?: string }> {
-  const user = await getCurrentUser()
-  if (!user) return { error: "Accedi per condividere una pagina cliente." }
+  const user = await getLocationManager()
+  if (!user) return { error: "Solo i super admin possono generare link cliente." }
   const active = await getActiveWorkspace(user.id).catch(() => null)
   if (!active || active.category.workspaceId !== workspaceId || typeof location !== "string" || !location.trim() || location.length > 500) {
     return { error: "Seleziona un cliente del workspace attivo." }

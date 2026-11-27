@@ -1,6 +1,8 @@
 import "server-only"
 
 import { createDecipheriv, createHash, createHmac } from "node:crypto"
+import { getCurrentUser } from "@/lib/data/auth"
+import { getProfileById } from "@/lib/data/profiles"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { z } from "zod"
 
@@ -11,6 +13,13 @@ const scopeSchema = z.object({
 })
 
 export type LocationScope = z.infer<typeof scopeSchema>
+
+export async function getLocationManager() {
+  const user = await getCurrentUser()
+  if (!user) return null
+  const profile = await getProfileById(user.id)
+  return profile?.platform_role === "super_admin" ? user : null
+}
 
 export function locationSlug(location: string) {
   return location.trim().toLocaleLowerCase("it-IT")
@@ -48,15 +57,23 @@ export async function createLocationToken(scope: LocationScope) {
 
 export async function readLocationToken(token: string | undefined, slug: string): Promise<LocationScope | null> {
   if (!token) return null
+  const db = createAdminClient()
+  if (!db) return null
+
+  let scope: LocationScope | null
   if (/^[A-Za-z0-9_-]{22}$/.test(token)) {
-    const db = createAdminClient()
-    if (!db) return null
     const { data, error } = await db.from("location_portal_links")
       .select("owner_id, workspace_id, location").eq("token_hash", hashToken(token)).maybeSingle()
     if (error || !data || locationSlug(data.location) !== slug) return null
-    return { owner: data.owner_id, workspace: data.workspace_id, location: data.location }
+    scope = { owner: data.owner_id, workspace: data.workspace_id, location: data.location }
+  } else {
+    scope = readLegacyToken(token, slug)
   }
-  return readLegacyToken(token, slug)
+
+  if (!scope) return null
+  const { data: owner, error } = await db.from("profiles").select("id")
+    .eq("id", scope.owner).eq("platform_role", "super_admin").maybeSingle()
+  return !error && owner ? scope : null
 }
 
 function readLegacyToken(token: string, slug: string) {

@@ -46,6 +46,7 @@ export async function getNotificationsForUser(
   // Deduplicare per id (non dovrebbe accadere ma per sicurezza)
   const seen = new Set<string>()
   const unique = rows.filter((r) => {
+    if (r.location_lesson_session_id && userRole !== "super_admin") return false
     if (seen.has(r.id)) return false
     seen.add(r.id)
     return true

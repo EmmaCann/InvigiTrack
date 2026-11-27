@@ -3,8 +3,7 @@ import "server-only"
 import { cookies } from "next/headers"
 import { z } from "zod"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getCurrentUser } from "@/lib/data/auth"
-import { locationCookie, readLocationToken, type LocationScope } from "./location-access"
+import { getLocationManager, locationCookie, readLocationToken, type LocationScope } from "./location-access"
 
 export const identifier = z.uuid()
 export type Lesson = {
@@ -27,7 +26,7 @@ export async function authorizedLocation(slug: string) {
 
 export async function teacherSession(id: string) {
   if (!identifier.safeParse(id).success) return null
-  const user = await getCurrentUser()
+  const user = await getLocationManager()
   const db = user && createAdminClient()
   if (!user || !db) return null
   const { data: session } = await db.from("sessions").select("id, location, workspace_id, session_date")
