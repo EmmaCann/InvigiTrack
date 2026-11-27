@@ -38,8 +38,8 @@ export async function uploadLessonFiles(actor: Actor, session: string, kind: Kin
       if (client) task.eq("published", true)
       if (!(await task.maybeSingle()).data) return failure
       if (client) {
-        const { data } = await db.from("location_lesson_uploads").select("id")
-          .eq("task_id", input.task).eq("session_id", session).eq("kind", "assignment").not("confirmed_at", "is", null).limit(1)
+        const { data } = await db.from("location_lesson_uploads").select("id, location_lesson_files!inner(id)")
+          .eq("task_id", input.task).eq("session_id", session).eq("kind", "assignment").not("confirmed_at", "is", null).is("location_lesson_files.removed_at", null).limit(1)
         if (!data?.length) return failure
       }
     }
@@ -96,25 +96,41 @@ export async function uploadLessonFiles(actor: Actor, session: string, kind: Kin
   return result.data === true && !result.error ? { confirmed: true } : { error: "I file sono arrivati a Storage, ma il salvataggio non è stato confermato. Riprova la conferma." }
 }
 
-export async function downloadLessonFile(actor: Actor, session: string, fileId: string, client = false) {
-  const missing = () => new Response(null, { status: 404 })
+async function getAccessibleFile(actor: Actor, session: string, fileId: string, client: boolean) {
   const { db, scope } = actor
-  if (!identifier.safeParse(fileId).success || !(await getLesson(db, scope, session, client)).data) return missing()
+  if (!identifier.safeParse(fileId).success || !(await getLesson(db, scope, session, client)).data) return null
   const { data: file } = await db.from("location_lesson_files")
-    .select("id, name, location_lesson_uploads!inner(id, task_id)")
-    .eq("id", fileId).eq("location_lesson_uploads.session_id", session)
+    .select("id, name, location_lesson_uploads!inner(id, task_id, kind)")
+    .eq("id", fileId).is("removed_at", null).eq("location_lesson_uploads.session_id", session)
     .not("location_lesson_uploads.confirmed_at", "is", null).maybeSingle()
-  if (!file) return missing()
+  if (!file) return null
   const upload = Array.isArray(file.location_lesson_uploads) ? file.location_lesson_uploads[0] : file.location_lesson_uploads
-  if (!upload) return missing()
+  if (!upload) return null
 
   if (client && upload.task_id) {
     const { data } = await db.from("location_lesson_tasks").select("id")
       .eq("id", upload.task_id).eq("session_id", session).eq("published", true).maybeSingle()
-    if (!data) return missing()
+    if (!data) return null
   }
+  return { id: file.id, name: file.name, uploadId: upload.id, kind: upload.kind }
+}
 
-  const { data: object } = await db.storage.from(lessonBucket).download(lessonFilePath(session, upload.id, file.id))
+export async function removeLessonFile(actor: Actor, session: string, fileId: string, client = false): Promise<{ error?: string }> {
+  const file = await getAccessibleFile(actor, session, fileId, client)
+  if (!file || (client ? file.kind !== "submission" : !["material", "assignment"].includes(file.kind))) {
+    return { error: "Questo file non è disponibile per la rimozione." }
+  }
+  const { error } = await actor.db.from("location_lesson_files").update({ removed_at: new Date().toISOString() })
+    .eq("id", file.id).eq("upload_id", file.uploadId).is("removed_at", null)
+  return error ? { error: "Impossibile rimuovere il file. Riprova." } : {}
+}
+
+export async function downloadLessonFile(actor: Actor, session: string, fileId: string, client = false) {
+  const missing = () => new Response(null, { status: 404 })
+  const file = await getAccessibleFile(actor, session, fileId, client)
+  if (!file) return missing()
+  const { db } = actor
+  const { data: object } = await db.storage.from(lessonBucket).download(lessonFilePath(session, file.uploadId, file.id))
   if (!object) return missing()
   const filename = encodeURIComponent(file.name).replace(/[!'()*]/g, (char) => "%" + char.charCodeAt(0).toString(16))
   return new Response(object.stream(), { headers: {

@@ -65,8 +65,9 @@ export async function getLessonDetails(db: Db, sessionId: string, client = false
     .eq("session_id", sessionId).order("id")
   if (client) tasks.eq("published", true)
   const uploads = db.from("location_lesson_uploads")
-    .select("id, kind, task_id, confirmed_at, location_lesson_files(id, name, mime, size_bytes)")
-    .eq("session_id", sessionId).not("confirmed_at", "is", null).order("confirmed_at", { ascending: false })
+    .select("id, kind, task_id, confirmed_at, location_lesson_files!inner(id, name, mime, size_bytes)")
+    .eq("session_id", sessionId).not("confirmed_at", "is", null)
+    .is("location_lesson_files.removed_at", null).order("confirmed_at", { ascending: false })
   const [{ data: taskRows, error: taskError }, { data: uploadRows, error: uploadError }] = await Promise.all([tasks, uploads])
   if (taskError || uploadError) throw new Error("Impossibile caricare i contenuti della lezione.")
   const allUploads = (uploadRows ?? []) as Upload[]

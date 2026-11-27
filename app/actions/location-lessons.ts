@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { getLesson, identifier, teacherSession } from "@/lib/clients/location-lessons"
-import { lessonUploadInput, uploadLessonFiles, type LessonUploadResult } from "@/lib/clients/lesson-files"
+import { lessonUploadInput, removeLessonFile, uploadLessonFiles, type LessonUploadResult } from "@/lib/clients/lesson-files"
 
 import { allowedLessonFilesMessage, lessonFileExtension } from "@/lib/clients/lesson-storage"
 
@@ -43,8 +43,8 @@ export async function saveLocationLesson(id: string, form: FormData) {
 }
 
 async function hasHomeworkDocument(db: NonNullable<Awaited<ReturnType<typeof teacherSession>>>["db"], id: string, taskId: string) {
-  return db.from("location_lesson_uploads").select("id")
-    .eq("session_id", id).eq("task_id", taskId).eq("kind", "assignment").not("confirmed_at", "is", null).limit(1)
+  return db.from("location_lesson_uploads").select("id, location_lesson_files!inner(id)")
+    .eq("session_id", id).eq("task_id", taskId).eq("kind", "assignment").not("confirmed_at", "is", null).is("location_lesson_files.removed_at", null).limit(1)
 }
 
 export async function publishLocationHomework(id: string, taskId: string): Promise<{ error?: string }> {
@@ -116,4 +116,13 @@ export async function startHomeworkUpload(id: string, draftId: string, payload: 
     .upsert({ id: draftId, session_id: id, title }, { onConflict: "id", ignoreDuplicates: true })
   if (error) return failure
   return uploadLessonFiles(actor, id, "assignment", { ...input.data, task: draftId })
+}
+
+
+export async function removeTeacherLessonFile(id: string, fileId: string): Promise<{ error?: string }> {
+  const actor = await teacherSession(id)
+  if (!actor) return unavailable
+  const result = await removeLessonFile(actor, id, fileId)
+  if (!result.error) revalidatePath(teacherPath(id))
+  return result
 }

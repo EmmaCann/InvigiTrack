@@ -61,7 +61,7 @@ export default async function PortalLesson({ params }: { params: Promise<{ nome:
           <LessonFileList uploads={files.filter((upload) => upload.kind === "assignment")} base={base} />
           {deliveries.length > 0 && <div className="space-y-2">
             <h4 className="text-sm font-semibold">Consegne precedenti</h4>
-            <LessonFileList uploads={deliveries} base={base} deliveries />
+            <LessonFileList uploads={deliveries} base={base} deliveries allowPortalRemoval />
           </div>}
           <div className="border-t border-border/60 pt-3">
             <LessonUploadForm task={task.id} label={deliveries.length ? "Allega nuove soluzioni" : "Allega le soluzioni"} submitLabel="Invia soluzioni" endpoint={`${base}/consegne`} />
